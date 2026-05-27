@@ -14,7 +14,7 @@ N 830 -290 830 -230 {lab=0}
 N 910 -370 990 -370 {lab=out}
 N 830 -490 830 -450 {lab=VDD}
 C {title.sym} 170 -40 0 0 {name=l1 author="Bruno R.M."}
-C {inv1.sym} 750 -270 0 0 {name=x1}
+C {inv1.sym} 1070 -530 0 0 {name=x1}
 C {vsource.sym} 400 -320 0 0 {name=V1 value=3.3 savecurrent=false}
 C {vsource.sym} 570 -320 0 0 {name=VIN value=3.3 savecurrent=false}
 C {vdd.sym} 830 -490 0 0 {name=l2 lab=VDD}
@@ -58,3 +58,4 @@ tran $&tstep $&tstop
 write inv1_tb.raw
 .endc
 "}
+C {comparator/schematic/inv1.sym} 750 -270 0 0 {name=x2}
