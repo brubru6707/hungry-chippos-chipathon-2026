@@ -27,8 +27,8 @@
 | COMP-1 | StrongARM latch schematic entry | Bruno | 🟢 Complete | `comparator/schematic/strongarm.sch` |
 | COMP-2 | Comparator symbol creation | Bruno | 🟢 Complete | `comparator/schematic/strongarm.sym` |
 | COMP-3 | Functional transient testbench (single-shot) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_tb.sch` |
-| COMP-4 | Monte Carlo testbench setup (N ≥ 200 runs) | TBD | ⚪ Not Started | `designs/libs/tb_comparator/tb_comparator_mc/tb_comparator_mc.sch` |
-| COMP-5 | **Gate 1** — σ_offset < 2 mV & delay < 2 ns (MC pass) | Bruno | ⚪ Not Started | `designs/simulations/comp_mc/comp_mc_distribution.png` |
+| COMP-4 | Monte Carlo testbench setup (N ≥ 200 runs) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_mc_tb.sch` |
+| COMP-5 | **Gate 1** — σ_offset < 2 mV & delay < 2 ns (MC pass) | Bruno | 🔴 Blocked | `comparator/mc_offsets_plot.png` — σ = 4.46 mV (spec < 2 mV), mean = +15.1 mV (large systematic offset) |
 | COMP-6 | Comparator physical layout (KLayout) | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/comparator.gds` |
 | COMP-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/drc/comp_drc.log` |
 | COMP-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/lvs/comp_lvs.log` |
@@ -80,7 +80,7 @@
 
 | Gate | Criterion | Block | Status |
 |------|-----------|-------|--------|
-| Gate 1 | σ_offset < 2 mV, delay < 2 ns @ TT (MC N≥200) | Comparator | ⚪ |
+| Gate 1 | σ_offset < 2 mV, delay < 2 ns @ TT (MC N≥200) | Comparator | 🔴 |
 | Gate 2 | DAC settling ≤ 0.5 LSB within 40 ns @ TT | Cap DAC | ⚪ |
 | Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | ⚪ |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
