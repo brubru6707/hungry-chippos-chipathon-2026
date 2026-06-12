@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-05-30
+
+### Added
+- **Comparator Block (COMP-1, COMP-2, COMP-3)**: StrongARM latch comparator designed by Bruno. Schematic based on Fig. 1b from B. Razavi, "The StrongARM Latch," IEEE Solid-State Circuits Magazine, 2015 (UCLA). Simulation verified: outputs high when `ck` is low (reset phase); when `ck` goes high, the input with higher voltage resolves to high and the other to low. Netlist/testbench may show a benign warning that can be ignored — simulation still runs correctly.
+- **Block ownership finalized**: Bruno → Comparator; Max → DAC; Sam → SAR Logic. Emily and Mimi currently unavailable.
+
+---
+
 ## [v1.0.0] - 2025-07-25
 
 ### Added

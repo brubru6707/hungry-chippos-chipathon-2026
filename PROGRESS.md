@@ -24,15 +24,15 @@
 
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| COMP-1 | Regenerative dynamic latch schematic entry | Emily | 🟡 In Progress | `designs/libs/core_comparator/comparator/comparator.sch` |
-| COMP-2 | Comparator symbol creation | Emily | ⚪ Not Started | `designs/libs/core_comparator/comparator/comparator.sym` |
-| COMP-3 | Functional transient testbench (single-shot) | Luc | ⚪ Not Started | `designs/libs/tb_comparator/tb_comparator/tb_comparator.sch` |
-| COMP-4 | Monte Carlo testbench setup (N ≥ 200 runs) | Luc | ⚪ Not Started | `designs/libs/tb_comparator/tb_comparator_mc/tb_comparator_mc.sch` |
-| COMP-5 | **Gate 1** — σ_offset < 2 mV & delay < 2 ns (MC pass) | Emily / Luc | ⚪ Not Started | `designs/simulations/comp_mc/comp_mc_distribution.png` |
-| COMP-6 | Comparator physical layout (KLayout) | Emily | ⚪ Not Started | `designs/libs/core_comparator/comparator/comparator.gds` |
-| COMP-7 | Sub-block DRC clean | Luc | ⚪ Not Started | `designs/libs/core_comparator/comparator/drc/comp_drc.log` |
-| COMP-8 | Sub-block LVS clean (Netgen) | Luc | ⚪ Not Started | `designs/libs/core_comparator/comparator/lvs/comp_lvs.log` |
-| COMP-9 | Post-layout extraction (PEX) corner simulation | Emily / Luc | ⚪ Not Started | `designs/simulations/comp_pex/comp_pex_transient.log` |
+| COMP-1 | StrongARM latch schematic entry | Bruno | 🟢 Complete | `comparator/schematic/strongarm.sch` |
+| COMP-2 | Comparator symbol creation | Bruno | 🟢 Complete | `comparator/schematic/strongarm.sym` |
+| COMP-3 | Functional transient testbench (single-shot) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_tb.sch` |
+| COMP-4 | Monte Carlo testbench setup (N ≥ 200 runs) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_mc_tb.sch` |
+| COMP-5 | **Gate 1** — σ_offset < 2 mV & delay < 2 ns (MC pass) | Bruno | 🔴 Blocked | `comparator/mc_offsets_plot.png` — σ = 4.46 mV (spec < 2 mV), mean = +15.1 mV (large systematic offset) |
+| COMP-6 | Comparator physical layout (KLayout) | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/comparator.gds` |
+| COMP-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/drc/comp_drc.log` |
+| COMP-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/lvs/comp_lvs.log` |
+| COMP-9 | Post-layout extraction (PEX) corner simulation | TBD | ⚪ Not Started | `designs/simulations/comp_pex/comp_pex_transient.log` |
 
 ---
 
@@ -40,14 +40,14 @@
 
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| DAC-1 | Binary-weighted 8-bit cap array schematic (C_u ≥ 50 fF) | Sam | 🟡 In Progress | `designs/libs/core_cap_dac/cap_array/cap_array.sch` |
-| DAC-2 | Cap array symbol | Sam | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.sym` |
-| DAC-3 | 256×C_u switching & settling time testbench | Sam | ⚪ Not Started | `designs/libs/tb_cap_dac/tb_cap_array/tb_cap_array.sch` |
-| DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT) | Sam | ⚪ Not Started | `designs/simulations/dac_settling/dac_settling_curves.png` |
-| DAC-5 | Unit-cell layout with common-centroid placement (KLayout) | Mimi | ⚪ Not Started | `designs/libs/core_cap_dac/cu_cell/cu_cell.gds` |
-| DAC-6 | Full array layout with dummy/fringe peripheral caps | Mimi | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.gds` |
-| DAC-7 | Sub-block DRC clean | Mimi | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/drc/dac_drc.log` |
-| DAC-8 | Sub-block LVS clean (Netgen) | Mimi | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/lvs/dac_lvs.log` |
+| DAC-1 | Binary-weighted 8-bit cap array schematic (C_u ≥ 50 fF) | Max | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.sch` |
+| DAC-2 | Cap array symbol | Max | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.sym` |
+| DAC-3 | 256×C_u switching & settling time testbench | Max | ⚪ Not Started | `designs/libs/tb_cap_dac/tb_cap_array/tb_cap_array.sch` |
+| DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT) | Max | ⚪ Not Started | `designs/simulations/dac_settling/dac_settling_curves.png` |
+| DAC-5 | Unit-cell layout with common-centroid placement (KLayout) | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cu_cell/cu_cell.gds` |
+| DAC-6 | Full array layout with dummy/fringe peripheral caps | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.gds` |
+| DAC-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/drc/dac_drc.log` |
+| DAC-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/lvs/dac_lvs.log` |
 
 ---
 
@@ -55,12 +55,12 @@
 
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| SAR-1 | Synchronous FSM Verilog RTL coding | Max | 🟡 In Progress | `designs/libs/core_sar_ctrl/rtl/sar_ctrl.v` |
-| SAR-2 | RTL functional validation — Icarus Verilog testbench | Max | ⚪ Not Started | `designs/libs/core_sar_ctrl/tb/tb_sar_ctrl.v` |
-| SAR-3 | Yosys synthesis (gf180mcu standard cells) | Max | ⚪ Not Started | `designs/libs/core_sar_ctrl/syn/synth.tcl` |
-| SAR-4 | OpenROAD floorplan & place-and-route | Max | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/` |
-| SAR-5 | Timing closure — 20 MHz minimum / 200 MHz target | Max | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/timing_slack.rpt` |
-| SAR-6 | Exported GDS from OpenROAD, DRC/LVS verify | Max | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/sar_ctrl.gds` |
+| SAR-1 | Synchronous FSM Verilog RTL coding | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/rtl/sar_ctrl.v` |
+| SAR-2 | RTL functional validation — Icarus Verilog testbench | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/tb/tb_sar_ctrl.v` |
+| SAR-3 | Yosys synthesis (gf180mcu standard cells) | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/syn/synth.tcl` |
+| SAR-4 | OpenROAD floorplan & place-and-route | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/` |
+| SAR-5 | Timing closure — 20 MHz minimum / 200 MHz target | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/timing_slack.rpt` |
+| SAR-6 | Exported GDS from OpenROAD, DRC/LVS verify | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/sar_ctrl.gds` |
 
 ---
 
@@ -80,7 +80,7 @@
 
 | Gate | Criterion | Block | Status |
 |------|-----------|-------|--------|
-| Gate 1 | σ_offset < 2 mV, delay < 2 ns @ TT (MC N≥200) | Comparator | ⚪ |
+| Gate 1 | σ_offset < 2 mV, delay < 2 ns @ TT (MC N≥200) | Comparator | 🔴 |
 | Gate 2 | DAC settling ≤ 0.5 LSB within 40 ns @ TT | Cap DAC | ⚪ |
 | Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | ⚪ |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |

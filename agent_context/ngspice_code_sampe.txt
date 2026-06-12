@@ -1,0 +1,508 @@
+Hi all,
+
+Well, I had some trouble learning how to work with variables and vectors and ngspice - so here is a commented script, which performs some purely mathematical operations (there is no circuit defined whatsoever) - and demonstrates some basic usage of vectors and variables referencing, as well as linear interpolation between vectors.
+
+Note that the the script first goes to demonstrate the linear interpolation, then resets the plot, and then shows additional basic examples. You could in principle also execute it command by command in interactive mode in ngspice - however the output of the script is also posted below for reference. (Its kinda big, but I think it demonstrates a lot of things n00bs with ngspice could find strange at first).
+
+The linear interpolation part deals with the problem of how do you plot, if you have two vectors that cover the same x-range, however, are different in size? In the script, the smaller vector is "resampled" into a new version of the same size as the larger vector, with the values being linearly interpolated. The linear interpolation is as simple as it gets, and it looks kinda crappy for the default large vector size of 10 elements, and small size of 6 elements … however, the looks improve with increased number of elements, say large = 100 and small = 20 elements:
+
+
+
+Well, I hope some may find this useful (though, I've noticed, Google at least doesn't seem to crawl keywords in SourceForge forums, which is rather unfortunate…)
+
+Cheers!
+
+Here is the script 'vec_manip.net':
+
+* Schematics Netlist *
+.control
+echo ...........
+* set color for postscript output
+set hcopypscolor=1
+* create new plot (collection of vectors)
+set curplot = new
+* some variables: larger num. of elements/samples (default 10), and smaller (default 6)
+set NUML=10
+set NUMS=6
+* show what is in new plot
+echo _____________ P_01
+display 
+echo
+* create x axis (vector xx) - 10 points
+* we do it here just to allocate it first:
+* http://iecon02.us.es/ASIGN/DCSE_1IE/WinSpice_tutorial.pdf:
+* "Note how the first vector brought in becomes the default scale. This is an important point to remember because all the other vectors are plotted in reference to the scale. However, even if this were not set properly, NUTMEG allows plots to specify the scale explicitly as shown below: 'asciiplot all vs input' ... "
+* let xx = vector(10); 'vector' gives elements as 1,2,3,... - 'unitvec' gives 1,1,1,... 
+let xx = vector({$NUML})
+* show what is in the plot
+* note the first plot automatically becomes [default scale]
+echo _____________ P_02
+display 
+echo
+* define twopi via set (stwopi) - it gets defined as string!
+* so must add enclosing (), to force algebraic interpretation! 
+* but that works only with 'let' - 'compose' cannot use stwopi!
+* set sets values to variables
+set stwopi=(2*pi)
+* let sets values to vectors
+* however, if this is first, it will become [default scale] !! 
+let ltwopi=2*pi
+* .... 
+* only sltwopi - which demands a 'let' vector - will work in a compose command!! 
+* "$&..." syntax from ngspice/ng-spice-rework/examples/control_structs/MonteCarlo.sp
+set sltwopi="$&ltwopi"
+echo _____________ P_03
+print $stwopi ltwopi $sltwopi
+* in the echo for ltwopi, we must have & as we refer to a vector
+echo $stwopi $&ltwopi $sltwopi
+echo 
+* create x axis (vector xx) - going from 0 to 2pi, 10 points
+* we could also use let as in: 
+*~ let xx = vector(10)*($stwopi/10)
+* but, here let's use compose for that 
+compose xx start = 0 stop = {$sltwopi} lin = {$NUML}
+* show what is in the plot
+echo _____________ P_04
+display 
+echo
+* define a type of vector called 'angle' in units 'rad' .. and assign it to xx
+* http://newton.ex.ac.uk/teaching/CDHW/Electronics2/userguide/sec5.html
+deftype v angle rad
+settype angle xx
+* show what is in the plot
+* note the change of type from 'notype'
+echo _____________ P_05
+display 
+echo
+* create the output (y-axis) vector; lets say sine
+* note yy becomes of type 'angle' here too!
+let yy = sin(xx)
+* show what is in the plot
+echo _____________ P_06
+display 
+echo
+* now let's create 'shorter' versions of xx and yy
+compose xxs start = 0 stop = {$sltwopi} lin = {$NUMS}
+settype angle xxs
+* lets use cosine here
+let yys = cos(xxs)
+echo _____________ P_07
+* printout all vectors so far:
+print xx yy xxs yys
+* notice even if xx and xxs have the same range, 
+* they have different number of elements;
+* and so a command like 
+asciiplot yy yys
+echo
+* will not 'stretch' yys across the plot; 
+* instead, both yy and yys will refer to 
+* 'Index' as x-axis parameter! 
+* so, we basically have to 'resample' yys 
+* from current 6 samples to 10, in order to chart it
+* together with yy! 
+* there is a function for that, interpolate; however
+*~ let yysi = interpolate(yys)
+* will result here with 'Error: lengths don't match'
+* 'linearize' will also fail: 'Error: can't get transient parameters from circuit'
+echo _____________ P_08
+* so we resample manually.. 
+* syntax: ngspice/ng-spice-rework/examples/control_structs/repeat3.sp
+let yysi = vector(length(xx))*0
+let mainindex = 0
+while mainindex < length(xx)
+  let shortindex = 0
+  while shortindex < length(xxs)
+    if xxs[shortindex] >= xx[mainindex]
+      break
+    end
+    let shortindex = shortindex + 1
+  end
+  if shortindex >= length(xxs) 
+    let shortindex = length(xxs)-1 
+  end
+  echo mainindex "$&mainindex" "$&shortindex"
+*  here we should have shortindex, copy to interpolated array
+*   direct resample - just
+*  let yysi[mainindex] = yys[shortindex]
+*
+*   crude linear interpolation
+  if shortindex = length(xxs)-1
+    let yysi[mainindex] = (xx[mainindex] - xxs[shortindex-1])*( (yys[shortindex]-yys[shortindex-1])/(xxs[shortindex]-xxs[shortindex-1]) ) + yys[shortindex-1]
+  else
+    let yysi[mainindex] = (xx[mainindex] - xxs[shortindex])*( (yys[shortindex+1]-yys[shortindex])/(xxs[shortindex+1]-xxs[shortindex]) ) + yys[shortindex]
+  end
+  let mainindex = mainindex + 1
+end
+echo _____________ P_09
+* show what is in the plot
+* notice, for some reason, 'mainindex < length(xx)' is a vector now?? 
+display 
+echo
+* printout all vectors so far:
+print xx yy xxs yys yysi
+* plot the interpolated now:
+asciiplot yy yysi
+echo
+* well, it is stretched, but quite ugly due to 
+* really low number of points, and no interpolation.. 
+* with interpolation looks a bit better.. and also with a larger number of samples
+* plot the diagram 
+hardcopy interplot.ps yy yysi
+* some final notes;
+* note that you cannot downsize a vector once 
+* its has been defined, and its size specified: 
+* yy was originally 10 ( NUML ) elements long
+* try replacing it with 6 (NUMS) elements one:
+* "left-hand expression is too small (need 100)"
+let yy = vector({$NUMS})
+* check it back - still NUML elements, which haven't been replaced
+echo _____________ P_10
+display yy 
+print yy 
+echo 
+* note about redimensioning with 'reshape'..
+* yy/xx are currently NUML = 10 long, i.e. 1 column 10 rows
+* reshape can redim only where newwidth*newheight = NUML
+* so NUMLxNUML being bigger than NUML, will clearly fail
+* 'dimensions don't fit "yy" (total size = 10)'
+echo _____________ P_11
+echo ...+++
+reshape yy xx [{$NUML},{$NUML}] 
+echo ...+++
+* however, for 10; 10,1 / 1,10 / 2,5 / 5,2 will work
+reshape yy xx [10,1]
+reshape yy xx [1,10]
+reshape yy xx [5,2]
+reshape yy xx [2,5]
+echo ...+++
+* show what is in the plot
+* note the "dims = [2,5] " appearing for xx,yy
+echo _____________ P_12
+display 
+echo
+* the extra dimensions will be interpreted as parameters,
+* which can be seen by repeating the plot
+* note since yysi was not redim'd, it will still be graphed as before. 
+* however yy will be shown in several parts.. 
+*~ hardcopy interplot.ps yy yysi
+* now that we have extra dimensions, we could use transpose, say:
+echo _____________ P_13
+transpose yy
+* note after traspose "dims = [5,2] " for yy
+display 
+echo
+* Finally, note there is no way to delete a vector;
+* we can only delete a whole plot ! 
+* as we created this plot with new, it is probably called 'unknown1'
+destroy unknown1
+* check it - show what is in the plot
+echo _____________ P_14
+display 
+echo 
+* we are in the "Constants" plot; 
+* so we should again create a new one:
+* create new plot (collection of vectors)
+set curplot = new
+* check it - show what is in the plot
+echo _____________ P_15
+display 
+echo 
+* just to show some final points:
+* variable names which are already defined as 'Constants'
+* cannot be used !
+echo _____________ P_16
+* print the old const value for c:
+print c
+* try to make 'c' a new vector
+let c=vector(10)
+* check it - show what is in the plot
+display 
+* dimension hasn't changed - but variable 'c' got reset to 0 !! 
+print c
+echo 
+* also quite easy to extract subranges of vectors:
+echo _____________ P_17
+let uu=vector(5)
+let ww=uu[2,4]
+print uu ww
+echo
+* direct assignment :
+echo _____________ P_18
+* this gives a syntax error
+let zz = [12,176,278]
+* compose with 'values' statement works though
+compose zz values 12 176 278
+print zz
+echo
+* concatenation; probably through redim? 
+echo _____________ P_19
+let qq = vector(6)*0
+reshape qq [2,3]
+let qq[0] = ww
+let qq[1] = zz
+* print line show vector in a row.. 
+print line qq
+* show what is in the current plot
+display 
+echo
+echo ...........
+echo
+.endc
+And its output is:
+
+$ ngspice -b vec_manip.net 
+Circuit: * schematics netlist *
+...........
+_____________ p_01
+There are no vectors currently active.
+_____________ p_02
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    xx                  : notype, real, 10 long [default scale]
+_____________ p_03
+(2*pi) = 6.283185e+00
+ltwopi = 6.283185e+00
+6.28319 = 6.283190e+00
+(2*pi) 6.28319 6.28319
+_____________ p_04
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    ltwopi              : notype, real, 1 long
+    xx                  : notype, real, 10 long [default scale]
+_____________ p_05
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    ltwopi              : notype, real, 1 long
+    xx                  : angle, real, 10 long [default scale]
+_____________ p_06
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    ltwopi              : notype, real, 1 long
+    xx                  : angle, real, 10 long [default scale]
+    yy                  : angle, real, 10 long
+_____________ p_07
+                                   Anonymous
+                                   unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   xx              yy              xxs             yys             
+--------------------------------------------------------------------------------
+0   0.000000e+00    0.000000e+00    0.000000e+00    1.000000e+00    
+1   6.283190e-01    5.877856e-01    1.047198e+00    4.999993e-01    
+2   1.256638e+00    9.510568e-01    2.094397e+00    -5.00001e-01    
+3   1.884957e+00    9.510561e-01    3.141595e+00    -1.00000e+00    
+4   2.513276e+00    5.877837e-01    4.188793e+00    -4.99997e-01    
+5   3.141595e+00    -2.34641e-06    5.235992e+00    5.000034e-01    
+6   3.769914e+00    -5.87788e-01                    
+7   4.398233e+00    -9.51058e-01                    
+8   5.026552e+00    -9.51055e-01                    
+9   5.654871e+00    -5.87782e-01                    
+--------------------------------------------------------------------------
+                                Anonymous
+                    unknown Wed Sep  1 14:01:11  2010
+Legend:  + = yy               
+         * = yys              
+--------------------------------------------------------------------------
+ xx         yy      -1.00e+00                 0.00e+00                 1.00e+00 
+----------------------|------------------------|------------------------|
+ 0.000e+00  0.000e+00 .                        +                        * 
+ 6.283e-01  5.878e-01 .                        .           * +          . 
+ 1.257e+00  9.511e-01 .           *            .                      + . 
+ 1.885e+00  9.511e-01 *                        .                      + . 
+ 2.513e+00  5.878e-01 .           *            .             +          . 
+ 3.142e+00 -2.346e-06 .                       +.           *            . 
+ 3.770e+00 -5.878e-01 .         +              *                        . 
+ 4.398e+00 -9.511e-01 .+                       *                        . 
+ 5.027e+00 -9.511e-01 .+                       *                        . 
+ 5.655e+00 -5.878e-01 .         +              *                        . 
+----------------------|------------------------|------------------------|
+ xx         yy      -1.00e+00                 0.00e+00                 1.00e+00 
+_____________ p_08
+mainindex 0 0
+mainindex 1 1
+mainindex 2 2
+mainindex 3 2
+mainindex 4 3
+mainindex 5 3
+mainindex 6 4
+mainindex 7 5
+mainindex 8 5
+mainindex 9 5
+_____________ p_09
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    ltwopi              : notype, real, 1 long
+    mainindex           : notype, real, 1 long
+    shortindex          : notype, real, 1 long
+    xx                  : angle, real, 10 long [default scale]
+    xxs                 : angle, real, 6 long
+    yy                  : angle, real, 10 long
+    yys                 : angle, real, 6 long
+    yysi                : notype, real, 10 long
+                                   Anonymous
+                                   unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   xx              yy              xxs             yys             
+--------------------------------------------------------------------------------
+0   0.000000e+00    0.000000e+00    0.000000e+00    1.000000e+00    
+1   6.283190e-01    5.877856e-01    1.047198e+00    4.999993e-01    
+2   1.256638e+00    9.510568e-01    2.094397e+00    -5.00001e-01    
+3   1.884957e+00    9.510561e-01    3.141595e+00    -1.00000e+00    
+4   2.513276e+00    5.877837e-01    4.188793e+00    -4.99997e-01    
+5   3.141595e+00    -2.34641e-06    5.235992e+00    5.000034e-01    
+6   3.769914e+00    -5.87788e-01                    
+7   4.398233e+00    -9.51058e-01                    
+8   5.026552e+00    -9.51055e-01                    
+9   5.654871e+00    -5.87782e-01                    
+                                   Anonymous
+                                   unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   yysi            
+--------------------------------------------------------------------------------
+0   1.000000e+00    
+1   8.999996e-01    
+2   -1.00002e-01    
+3   -4.00002e-01    
+4   -1.30000e+00    
+5   -1.00000e+00    
+6   -8.99998e-01    
+7   -2.99997e-01    
+8   3.000033e-01    
+9   9.000037e-01    
+--------------------------------------------------------------------------
+                                Anonymous
+                    unknown Wed Sep  1 14:01:11  2010
+Legend:  + = yy               
+         * = yysi             
+--------------------------------------------------------------------------
+ xx         yy      -2.00e+00        -1.00e+00         0.00e+00         1.00e+00
+----------------------|----------------|----------------|----------------|
+ 0.000e+00  0.000e+00 .                .                +                *
+ 6.283e-01  5.878e-01 .                .                .        +     * .
+ 1.257e+00  9.511e-01 .                .              * .               +.
+ 1.885e+00  9.511e-01 .                .         *      .               +.
+ 2.513e+00  5.878e-01 .          *     .                .        +       .
+ 3.142e+00 -2.346e-06 .                *               +.                .
+ 3.770e+00 -5.878e-01 .                .*     +         .                .
+ 4.398e+00 -9.511e-01 .                +          *     .                .
+ 5.027e+00 -9.511e-01 .                +                .    *           .
+ 5.655e+00 -5.878e-01 .                .      +         .              * .
+----------------------|----------------|----------------|----------------|
+ xx         yy      -2.00e+00        -1.00e+00         0.00e+00         1.00e+00
+The file "interplot.ps" may be printed on a postscript printer.
+left-hand expression is too small (need 100)
+_____________ p_10
+    yy                  : angle, real, 10 long
+                                   Anonymous
+                                   unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   yy              
+--------------------------------------------------------------------------------
+0   0.000000e+00    
+1   5.877856e-01    
+2   9.510568e-01    
+3   9.510561e-01    
+4   5.877837e-01    
+5   -2.34641e-06    
+6   -5.87788e-01    
+7   -9.51058e-01    
+8   -9.51055e-01    
+9   -5.87782e-01    
+_____________ p_11
+...+++
+dimensions don't fit "yy" (total size = 10)
+dimensions don't fit "xx" (total size = 10)
+...+++
+...+++
+_____________ p_12
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    ltwopi              : notype, real, 1 long
+    mainindex           : notype, real, 1 long
+    shortindex          : notype, real, 1 long
+    xx                  : angle, real, 10 long, dims = [2,5] [default scale]
+    xxs                 : angle, real, 6 long
+    yy                  : angle, real, 10 long, dims = [2,5]
+    yys                 : angle, real, 6 long
+    yysi                : notype, real, 10 long
+_____________ p_13
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    ltwopi              : notype, real, 1 long
+    mainindex           : notype, real, 1 long
+    shortindex          : notype, real, 1 long
+    xx                  : angle, real, 10 long, dims = [2,5] [default scale]
+    xxs                 : angle, real, 6 long
+    yy                  : angle, real, 10 long, dims = [5,2]
+    yys                 : angle, real, 6 long
+    yysi                : notype, real, 10 long
+_____________ p_14
+Here are the vectors currently active:
+Title: Constant values
+Name: const (constants)
+Date: Sat Aug 16 10:55:15 PDT 1986
+    FALSE               : notype, real, 1 long
+    TRUE                : notype, real, 1 long
+    boltz               : notype, real, 1 long
+    c                   : notype, real, 1 long
+    e                   : notype, real, 1 long
+    echarge             : notype, real, 1 long
+    i                   : notype, complex, 1 long
+    kelvin              : notype, real, 1 long
+    no                  : notype, real, 1 long
+    pi                  : notype, real, 1 long
+    planck              : notype, real, 1 long
+    yes                 : notype, real, 1 long [default scale]
+_____________ p_15
+There are no vectors currently active.
+_____________ p_16
+c = 2.997925e+08
+There are no vectors currently active.
+c = 0.000000e+00
+_____________ p_17
+                                   Anonymous
+                                   unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   uu              ww              
+--------------------------------------------------------------------------------
+0   0.000000e+00    2.000000e+00    
+1   1.000000e+00    3.000000e+00    
+2   2.000000e+00    4.000000e+00    
+3   3.000000e+00            
+4   4.000000e+00            
+_____________ p_18
+PPerror: syntax error
+                                   Anonymous
+                                   unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   zz              
+--------------------------------------------------------------------------------
+0   1.200000e+01    
+1   1.760000e+02    
+2   2.780000e+02    
+_____________ p_19
+qq = (  2.000000e+00    3.000000e+00    4.000000e+00    1.200000e+01
+    1.760000e+02    2.780000e+02    )
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown0 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+    qq                  : notype, real, 6 long, dims = [2,3]
+    uu                  : notype, real, 5 long [default scale]
+    ww                  : notype, real, 3 long
+    zz                  : notype, real, 3 long
+...........
+Note: No ".plot", ".print", or ".fourier" lines; no simulations run
