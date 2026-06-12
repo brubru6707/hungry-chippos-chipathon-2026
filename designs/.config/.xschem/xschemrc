@@ -2,7 +2,15 @@
 source $env(PDK_ROOT)/$env(PDK)/libs.tech/xschem/xschemrc
 
 # Set the library path so that xschem doesn't have to be launched at /foss/designs
-set XSCHEM_LIBRARY_PATH ${XSCHEM_LIBRARY_PATH}:$env(DESIGNS)
+set XSCHEM_LIBRARY_PATH ${XSCHEM_LIBRARY_PATH}:$env(DESIGNS):$env(DESIGNS)/Tutorials:$env(DESIGNS)/libs
 
 set netlist_dir "/foss/designs/simulations"
 
+# Default save dialog to .sch (schematic) not .sym (symbol)
+set file_dialog_defaultextension .sch
+
+# Ensure xschem starts in schematic mode, not symbol mode
+set current_type schematic
+
+# Set keyboard layout to US (overrides default German layout from container)
+catch {exec setxkbmap us}
