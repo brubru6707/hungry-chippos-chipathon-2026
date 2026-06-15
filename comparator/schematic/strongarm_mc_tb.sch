@@ -15,7 +15,7 @@ N 1080 -830 1210 -830 {lab=OUT1}
 N 1080 -810 1170 -810 {lab=OUT2}
 C {comparator/schematic/strongarm.sym} 930 -770 0 0 {name=X1}
 C {vsource.sym} 840 -730 0 0 {name=VVIN2 value=1.2 savecurrent=false}
-C {vsource.sym} 770 -730 0 0 {name=VVIN1 value="PWL(0 1.19 2u 1.25)" savecurrent=false}
+C {vsource.sym} 770 -730 0 0 {name=VVIN1 value="PWL(0 1.23 6u 1.17)" savecurrent=false}
 C {vsource.sym} 630 -730 0 0 {name=VDD value=3 savecurrent=false}
 C {vsource.sym} 700 -730 0 0 {name=VCK value="PULSE(0 3 0 100p 100p 10n 20n)" savecurrent=false}
 C {title.sym} 180 -60 0 0 {name=l1 author="Bruno R.M."}
@@ -41,43 +41,75 @@ value="
 C {devices/code_shown.sym} -140 -1290 0 0 {name=NGSPICE only_toplevel=true
 value="
 .control
-let mc_runs = 50
+let mc_runs = 300
 let run = 0
 let offset_results = vector(mc_runs)
-set curplatenv = $curplot
+set curplotenv = $curplot
 
-let svt = 3.0e-3                 ; 1-sigma input Vth mismatch (V); = AVT/sqrt(W*L)
+* 1-sigma Vth mismatch per input device (volts).
+* Placeholder 3 mV - set from GF180 AVT / sqrt(W*L) for a real spec.
+let svt = 3.0e-3
 
 dowhile run < mc_runs
   echo ---- run $&run ----
+
+  * One random device sample per run, applied ONCE so the UP and DOWN
+  * sweeps both see the SAME mismatch (that is what makes the average valid).
   alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
   alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
 
-  tran 10p 2u
+  unset s_up
+  unset s_dn
 
-  let trip_time = -1
-  meas tran trip_time when v(out1)=1.5 fall=LAST
-  if trip_time > 0
-    meas tran v_in_at_trip find v(vin1) at=trip_time
-    let current_offset = v_in_at_trip - 1.200
-    let offset_results[run] = current_offset
-    echo   delvto10 = $&@m.x1.xm10.m0[delvto]  offset = $&current_offset
+  * ---------------- UP sweep: VIN1 1.17 -> 1.23 ----------------
+  * Rising sweep: out1 falls every cycle BELOW the trip, so the
+  * trip point is the LAST falling edge.
+  alter @vvin1[pwl] = [ 0 1.17 6e-6 1.23 ]
+  tran 10p 6u
+  let t_up = -1
+  meas tran t_up when v(out1)=1.5 fall=LAST
+  if t_up > 0
+    meas tran vin_up find v(vin1) at=t_up
+    let off_up = vin_up - 1.200
+    set s_up = $&off_up
+  end
+  destroy $curplot
+
+  * --------------- DOWN sweep: VIN1 1.23 -> 1.17 ---------------
+  * Falling sweep: out1 only starts falling once VIN1 drops BELOW the
+  * trip, so the trip point is the FIRST falling edge (not the last!).
+  alter @vvin1[pwl] = [ 0 1.23 6e-6 1.17 ]
+  tran 10p 6u
+  let t_dn = -1
+  meas tran t_dn when v(out1)=1.5 fall=1
+  if t_dn > 0
+    meas tran vin_dn find v(vin1) at=t_dn
+    let off_dn = vin_dn - 1.200
+    set s_dn = $&off_dn
+  end
+  destroy $curplot
+
+  * --------- combine: true offset = midpoint of the two sweeps ---------
+  if ( $?s_up * $?s_dn ) = 1
+    let offset_results[run] = ( ($s_up) + ($s_dn) ) / 2
+    echo   up=$s_up  dn=$s_dn
   else
     let offset_results[run] = -999
+    echo   WARN: missing trip on run $&run
   end
+
   let run = run + 1
 end
 
+setplot $curplotenv
 let mu  = mean(offset_results)
 let sig = sqrt(mean((offset_results - mu)^2))
 echo ========================================
-echo MC results (N=$&mc_runs)
-echo   mean offset = $&mu V
-echo   sigma       = $&sig V
+echo MC done (N=$&mc_runs): mean=$&mu V  sigma=$&sig V
 echo ========================================
-
-write comp_mc_offsets.raw offset_results
-print offset_results
+write  comp_mc_offsets.raw offset_results
+unset  wr_singlescale
+wrdata comp_mc_offsets.txt offset_results
 .endc
 "}
 C {lab_wire.sym} 700 -850 0 0 {name=p1 sig_type=std_logic lab=CK}
