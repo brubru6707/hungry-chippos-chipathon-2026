@@ -104,3 +104,5 @@ plot v(vin) v(vout)
 
 "}
 C {gnd.sym} -55 80 0 0 {name=l2 lab=0}
+C {vsource.sym} -410 140 0 0 {name=Vsup1 value=PAR_VDD savecurrent=false}
+C {vsource.sym} -400 140 0 0 {name=Vsup2 value=PAR_VDD savecurrent=false}
