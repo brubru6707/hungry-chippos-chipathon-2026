@@ -1,5 +1,4 @@
 v {xschem version=3.4.8RC file_version=1.3}
-** PROBLEM THAT BOOTSTRAP SOLVES
 G {}
 K {}
 V {}
