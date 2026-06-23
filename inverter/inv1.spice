@@ -1,0 +1,6 @@
+** sch_path: /foss/designs/inverter/inv1.sch
+.subckt inv1 vdd vi vo vss
+*.PININFO vi:I vo:O vdd:B vss:B
+M1 vo vi vdd vdd pfet_03v3 L=0.28u W=2u nf=1
+M2 vo vi vss vss nfet_03v3 L=0.28u W=1u nf=1
+.ends

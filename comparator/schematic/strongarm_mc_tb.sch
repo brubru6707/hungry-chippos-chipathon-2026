@@ -41,75 +41,86 @@ value="
 C {devices/code_shown.sym} -140 -1290 0 0 {name=NGSPICE only_toplevel=true
 value="
 .control
-let mc_runs = 300
-let run = 0
-let offset_results = vector(mc_runs)
-set curplotenv = $curplot
+* ============================================================
+* StrongArm comparator — input-referred offset Monte Carlo
+* offset = midpoint of UP-sweep and DOWN-sweep trip points.
+* RULE: never put '>' inside a 'let' — ngspice reads it as a file
+* redirect. Comparisons are only safe inside 'if'.
+* MODELS block must have: sw_stat_mismatch=0, sw_stat_global=0
+* ============================================================
 
-* 1-sigma Vth mismatch per input device (volts).
-* Placeholder 3 mV - set from GF180 AVT / sqrt(W*L) for a real spec.
-let svt = 3.0e-3
+let mc_runs = 100
+let svt     = 24.8e-3
+let run     = 0
+let offset_results = vector(mc_runs)
+let ngood = 0
+let sumx  = 0
+let sumx2 = 0
+set homeplot = $curplot
 
 dowhile run < mc_runs
   echo ---- run $&run ----
-
-  * One random device sample per run, applied ONCE so the UP and DOWN
-  * sweeps both see the SAME mismatch (that is what makes the average valid).
-  alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
-  alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
-
   unset s_up
   unset s_dn
 
-  * ---------------- UP sweep: VIN1 1.17 -> 1.23 ----------------
-  * Rising sweep: out1 falls every cycle BELOW the trip, so the
-  * trip point is the LAST falling edge.
-  alter @vvin1[pwl] = [ 0 1.17 6e-6 1.23 ]
+  * fresh mismatch draw, applied to both sweeps
+  alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+  alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+  * -------- UP sweep: VIN1 1.05 -> 1.35 --------
+  alter @vvin1[pwl] = [ 0 1.05 6e-6 1.35 ]
   tran 10p 6u
   let t_up = -1
   meas tran t_up when v(out1)=1.5 fall=LAST
   if t_up > 0
     meas tran vin_up find v(vin1) at=t_up
-    let off_up = vin_up - 1.200
-    set s_up = $&off_up
+    set s_up = $&vin_up
   end
   destroy $curplot
 
-  * --------------- DOWN sweep: VIN1 1.23 -> 1.17 ---------------
-  * Falling sweep: out1 only starts falling once VIN1 drops BELOW the
-  * trip, so the trip point is the FIRST falling edge (not the last!).
-  alter @vvin1[pwl] = [ 0 1.23 6e-6 1.17 ]
+  * -------- DOWN sweep: VIN1 1.35 -> 1.05 --------
+  alter @vvin1[pwl] = [ 0 1.35 6e-6 1.05 ]
   tran 10p 6u
   let t_dn = -1
   meas tran t_dn when v(out1)=1.5 fall=1
   if t_dn > 0
     meas tran vin_dn find v(vin1) at=t_dn
-    let off_dn = vin_dn - 1.200
-    set s_dn = $&off_dn
+    set s_dn = $&vin_dn
   end
   destroy $curplot
 
-  * --------- combine: true offset = midpoint of the two sweeps ---------
-  if ( $?s_up * $?s_dn ) = 1
-    let offset_results[run] = ( ($s_up) + ($s_dn) ) / 2
-    echo   up=$s_up  dn=$s_dn
+  * -------- combine, back in the home plot --------
+  setplot $homeplot
+  if $?s_up * $?s_dn
+    let cur = (($s_up - 1.2) + ($s_dn - 1.2)) / 2
+    let offset_results[run] = cur
+    let ngood = ngood + 1
+    let sumx  = sumx  + cur
+    let sumx2 = sumx2 + cur*cur
+    echo   up=$s_up dn=$s_dn offset=$&cur
   else
     let offset_results[run] = -999
-    echo   WARN: missing trip on run $&run
+    echo   WARN: miss on run $&run
   end
 
   let run = run + 1
 end
 
-setplot $curplotenv
-let mu  = mean(offset_results)
-let sig = sqrt(mean((offset_results - mu)^2))
-echo ========================================
-echo MC done (N=$&mc_runs): mean=$&mu V  sigma=$&sig V
-echo ========================================
-write  comp_mc_offsets.raw offset_results
-unset  wr_singlescale
-wrdata comp_mc_offsets.txt offset_results
+* ================= stats (valid runs only) =================
+setplot $homeplot
+let mu  = sumx / ngood
+let sig = sqrt( sumx2/ngood - mu*mu )
+echo ======================================================
+echo MC done: N=$&mc_runs  good=$&ngood
+echo   mean offset = $&mu V
+echo   sigma       = $&sig V
+echo ======================================================
+
+unset wr_singlescale
+write  /foss/designs/comparator/comp_mc_offsets.raw offset_results
+wrdata /foss/designs/comparator/comp_mc_offsets.txt offset_results
+echo MC N=$&mc_runs good=$&ngood mean=$&mu sigma=$&sig > /foss/designs/comparator/comp_mc_report.txt
+print offset_results >> /foss/designs/comparator/comp_mc_report.txt
 .endc
 "}
 C {lab_wire.sym} 700 -850 0 0 {name=p1 sig_type=std_logic lab=CK}

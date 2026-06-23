@@ -1,0 +1,289 @@
+LuighiV — 5/12/26, 12:06 AM
+Hi Prof. @Harald Pretl, @Clyde Laforge 
+I did a test here with a design that has several subhierarchies, and it is passing LVS with klayout!! thank you 🙂
+Image
+LuighiV — 5/7/26, 2:24 PM
+Yes, there are.  They had LVS issues but was DRC clean and was accepted by the foundry. The LVS issues we detected afterwards in an stage we couldn't modify the design sent. So, Mitch talk to us about an opportunity to tapeout by WS and decided to send an updated version there
+Clyde Laforge — 5/7/26, 7:41 AM
+I found why the LVS kept running in deep mode, which is due to __dir__ being messed up due to mixed execution context. I could patch it, but as I've implemented a better mechanism for saving options, I would tend to use the new approach instead.
+Concerning substrate sequestration, the proper implementation is in the process of being merged [upstream](https://github.com/fossi-foundation/globalfoundries-pdk-libs-gf180mcu_fd_pv/pull/16). 
+I will make a new patch_lvs.sh as soon as it is merged.
+LuighiV — 5/6/26, 11:08 AM
+I think it is, although, personally I prefer using Klayout. For design at least I have used Klayout. I used magic/netget just for LVS and PEX
+Clyde Laforge — 5/5/26, 1:43 PM
+Here is the new patch_lvs.sh script, which implements a workaround pending conclusion with klayoutmatthias, though it should already be 100% usable, even on pretty large designs @Harald Pretl . There will probably be another patch, as it does not seem possible to set flat lvs for some reason
+#!/bin/bash
+
+# This script patches the gf180 pdk to have the updated, hopefully out-of-the-box LVS
+#
+# Steps for running LVS are:
+# 1) export netlist from xschem, enabling Simulation->LVS->LVS netlist
+
+patch_lvs.sh
+3 KB
+Clyde Laforge — 5/2/26, 5:36 PM
+Hi, you understand correctly concerning isosub.
+It is quite weird that  it keeps running deep, it is not supposed to do that and works on upstream. I'll give it a look, likely on Tuesday.
+
+I've found a workaround for all these substrate problems. It's getting late, so no clean patch_lvs.sh, but you should have a nice envrionment with no isosub fiddling and deep lvs next week 🙂
+LuighiV — 5/2/26, 9:36 AM
+Hi @Clyde Laforge, sorry for disturbing you. Regarding this, what I understand is that the patch only exposes the ISOSUB layer right? because I run again obtaining the same results with new image. So, wen you mentioned flat lvs mode, do you mean changing the mode in the LVS options? because I tried to do that way, but it keeps running deep. Do you know how can I set that lvs mode flat? because maybe I'm missing something in the procedure
+Clyde Laforge — 4/30/26, 11:48 AM
+Essentially, it is not possible to have isosub separation (=lvs passing on the io cells), a default substrate (without isosub polygon), and deep mode at the same time due to klayout limitation.
+I've opened a [PR](https://github.com/KLayout/klayout/issues/2345)
+
+The two workaround are running in flat lvs mode (very slow for large layouts) or mandate using isosub polygons everywhere a substrate connection is made.  Exposing the isosub layer can be added with the following patch_lvs.sh
+
+What do you think @Harald Pretl ? 
+#!/bin/bash
+
+# This script patches the gf180 pdk to have the updated, hopefully out-of-the-box LVS
+#
+# Steps for running LVS are:
+# 1) export netlist from xschem, enabling Simulation->LVS->LVS netlist
+
+patch_lvs.sh
+3 KB
+GitHub
+Substrate sequestration · Issue #2345 · KLayout/klayout
+Hi Matthias, Now that my lvs overhaul of the gf180 pdk gets used in the sscs chipathon, I am realizing some of the shortcomings of my approach concerning the substrate. First of all, my goal is to ...
+Hi Matthias, Now that my lvs overhaul of the gf180 pdk gets used in the sscs chipathon, I am realizing some of the shortcomings of my approach concerning the substrate. First of all, my goal is to ...
+Mitch Bailey — 4/29/26, 10:07 PM
+The comparison of pin names was just added to klayout last year. The script may not make use of the function yet. It's the flag_missing_ports directive (not something that can be currently selected in the menu). The ihp rules have it in the sg13g2.lvs file.
+  if IGNORE_TOP_PORTS_MISMATCH
+    logger.info('Starting SG13G2 LVS Comparison')
+    success = compare
+  else
+    logger.info('Starting SG13G2 LVS Comparison in strict port mode.')
+    logger.info('flag_missing_ports enabled: missing/mislabeled top-level ports are treated as errors.')
+    success = compare && flag_missing_ports
+  end
+
+  #================================================
+  #------------- COMPARISON RESULTS ---------------
+  #================================================
+
+  if ! success
+    logger.info('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+    logger.error("ERROR : Netlists don't match")
+    logger.info('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+  else
+    logger.info('==========================================')
+    logger.info('INFO : Congratulations! Netlists match.')
+    logger.info('==========================================')
+  end
+end
+
+but the gfmcu180.lvs rules do not.
+compare
+    
+exec_end_time = Time.now
+run_time = exec_end_time - exec_start_time
+logger.info(format('LVS Total Run time %f seconds', run_time))
+
+if !compare
+  logger.info('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+  logger.error("ERROR : Netlists don't match")
+  logger.info('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+else
+  logger.info('==========================================')
+  logger.info('INFO : Congratulations! Netlists match.')
+  logger.info('==========================================')
+end
+LuighiV — 4/29/26, 4:53 PM
+Hi @Clyde Laforge  just to share something I found. I have a design that is hierarchical and hast two cells. Both cells individually passes LVS with klayout. But when I try to run in the top level. It is failing. And I noticed that what fails is the matching for all the nfets. Checking the database it is identifying more pins for the bulk of the nfets that according to it seems not to be connected to VSS, although that connection was recognized a level below. Have you faced that before?
+Attachment file type: unknown
+biasgen_v2_extracted.cir
+6.08 KB
+Attachment file type: unknown
+biasgen_v2.spice
+10.23 KB
+LuighiV — 4/29/26, 11:23 AM
+Hi @Clyde Laforge  just to confirm that the fixes you did worked great here. I just returned  to the original design that was passing with netgen and now it is passing with klayout, as well, thanks!! 🙂 
+after this I going to test with a full design we did last year, that passed LVS with netgen. Hope we will get the same result now with klayout 🤞
+Clyde Laforge — 4/29/26, 8:22 AM
+Exactly, simulation and LVS should be out-of-the-box.
+It is still possible to have klaoyut extract _dn models if you really want to (not sure why) if you use the lvs script from the command line, as more options are available
+LuighiV — 4/29/26, 8:17 AM
+On the other hand, regarding this, what I did before to this fix, was changing the model inside xschem to _dn version to make it pass LVS, so when tried to simulate it couldn't because _dn model doesn't exist in the model file. Does it mean that, after this change, I don't need to change the model anymore in the xschem?
+Clyde Laforge — 4/29/26, 8:12 AM
+Glad you like my improvements 🙂
+I'm juggling a few things with my PhD so I cannot guarantee fast responses, but I will do my best. I think proper gf180 klayout LVS is very important for the ecosystem. Please keep the reports coming!
+LuighiV — 4/29/26, 7:54 AM
+Hi @Clyde Laforge  glad to meet you, and thank you!! for all the contributions you and Prof. Harald are doing on the LVS side for klayout, it is an amazing job! 
+As I commented to Prof. Harald, we faced big challenges to make the LVS work in klayout, so we ended switching to magic/netgen. Now, I bet this will help us a lot to have LVS usable on klayout, as well, thanks! 🙌 
+PD: glad to have you here! hope you can help us when we face other issues afterwards 🙏
+Clyde Laforge — 4/29/26, 5:37 AM
+Hi @LuighiV , this is Clyde, working on the LVS issues. @Harald Pretl forwarded my your problem with the _dn device. In this case, it is because of a forgotten clause on my end when implementing the _dn workaround. A PR for the fix has been opened upstream: https://github.com/fossi-foundation/globalfoundries-pdk-libs-gf180mcu_fd_pv/pull/14
+
+@Harald Pretl , here is the new script for patching the lvs.
+#!/bin/bash
+
+# This script patches the gf180 pdk to have the updated, hopefully out-of-the-box LVS
+#
+# Steps for running LVS are:
+# 1) export netlist from xschem, enabling Simulation->LVS->LVS netlist
+
+patch_lvs.sh
+3 KB
+GitHub
+nfet_05v0_dn: support CONSIDER_DN_DW_FEATURES by Scafir · Pull Req...
+Turns out one device was missed when implementing the CONSIDER_DN_DW_FEATURES option. With this, all devices deep well should be able to be extracted as their vanilla counterpart.
+nfet_05v0_dn: support CONSIDER_DN_DW_FEATURES by Scafir · Pull Req...
+RRichmondR — 4/26/26, 8:19 PM
+The tcl script is for lvs verification
+RRichmondR — 4/26/26, 8:19 PM
+Yup, only for lvs
+LuighiV — 4/26/26, 8:18 PM
+Hi, I think this is for netgen used during LVS. For simulation I don't think you need to modify something.
+RRichmondR — 4/26/26, 7:48 PM
+The netlist had different names on schemtic vs layout, when the lvs runs it founds a mismatch (because different devices with different names) the problem was solved with an alias.
+Teddy (Ashutosh Chakravarty) — 4/26/26, 7:56 AM
+I think for now though you will get a good enough estimate but be sure to be quick to the layout because the capacitor makes some trouble in LVS as well! 
+=============================
+Mitch Bailey — 6/17/26, 7:12 PM
+It is possible to use digital blocks in analog circuits.
+If your LVS source for the digital block is gate-level verilog, be sure that the xschem symbol ports are in the same order as the verilog ports. The easiest way to do this is probably just edit the *.sym file.
+If your analog layout is done in magic, be sure to read the gds for the digital block with the readonly option set.
+You may need to use cif *hier write disable or cif *array write disable to prevent magic from adding layers to the digital blocks.
+Kelvin Olonade [TT],  — 6/15/26, 12:38 PM
+I think I became a whole lot smarter trying to understand this, thank you for the response, will look into it with the team, then we probably have to formalize a strong verification pipeline inorder to attempt this.
+
+Our PFD and Divider blocks are purely RTL,  what's the cleanest way to integrate this manual shift without upsetting the checks for Lvs and routing tools? And also the hold time violations between the Flip flops.
+Giovanni Ong (he/him/his) — 6/15/26, 11:17 AM
+Mr. @rahul ,
+If you are in Track D, what I said still stands and is important.
+
+If you use my solution, you should at least cite it in the reference section, and in the source code. Likewise for other solutions. It respects typical guidance regarding academic/research integrity rules and regulations. Good research universities can punish students, even for plagiarizing on open-source IC design projects.
+
+A Harvard law student got reprimanded with a plagiarism blackmark on her academic transcript for plagiarizing an article she submitted for a law journal (analogous to open-source projects) run by Harvard Law students. Even if it is not for a course/class, the university can still punish students.
+
+As for Track B, Track C, or even Track A, learning how to do manual IC layout design trains you to know how to debug AI-generated IC layout design. Else, you can get buggy AI-generated IC layout designs that fail LVS and DRC that you do not know how to fix.
+
+Assuming that you use (semi-)supervised machine learning, instead of reinforcement learning or evolutionary algorithms or SMT solvers (for satisfiability modulo theories and optimization modulo theories, OMT), you will need to use your own or existing hardware generators to generate clean IC layout designs that pass DRC and LVS steps in physical verification to obtain IC layout designs to train your machine learning model.
+
+Also, remember that Prof. Mehdi Saligane and his students (past and present) painstakingly gave us quick tutorials of how to use GLayout, so that we can use it to help train machine learning models. There are good reasons for teaching us these, so that we don't have to keep doing manual IC layout design graphically. Even Magic (or perhaps KLayout, too) support Tcl-based IC layout design (a professor from India highlighted this), which is using declarative programming to specify the IC layout design.
+rahul — 6/14/26, 6:01 AM
+I agree that ALIGN does not generate drc, lvs clean layout and needs manual intervention to resolve final gds. We used ALIGN for quick layouts from analog schematics in the openFASOC flow with SKY130PDK, with some layout quality issues. If Magical is able to produce better layouts, will definitely give it a try. Can you share examples for the GF180 MCU with MAGICAL?
+Giovanni Ong (he/him/his) — 6/13/26, 6:17 PM
+Mr. @rahul ,
+At the time of publication and online presentation, via a Webinar of IEEE CEDA, IEEE SSCS, or IEEE CASS (Circuits and Systems Society), or the IEEE CASS chapter in Porto Alegre, Rio Grande do Sul, Brazil, MAGICAL from Prof. David Pan's lab at The University of Texas at Austin (UT Austin) is way better.
+
+MAGICAL takes seconds/minutes to complete physical design of analog/RF and mixed-signal ICs, and also passes DRC and LVS.
+
+ALIGN is slower (minutes at best, if not longer), and buggy (final IC layout design do not pass DRC and LVS).
+
+You may also want to look at the work of Prof. Kaushik Sengupta at Princeton. His recent IEEE SSCS Webinar showed the awesomeness of his AI-automated RFIC design tool.
+
+https://sscs.ieee.org/event/ai-enabled-rfic-design-beyond-human-intuition/
+...
+https://www.youtube.com/watch?v=qBQFvjvMY9k
+
+P/S: Even though I am from Texas A&M University, which is a small contributor to ALIGN, and UT Austin is deemed to be a rival by others on campus, the experimental results justify the use of MAGICAL.
+IEEE Solid-State Circuits Society
+David Tadros
+AI-Enabled RFIC Design Beyond Human Intuition | SSCS Webinars for Y...
+Abstract: Traditionally, chip-scale RF system design has been in the domain of the expert, dominated by thumb rules and trial-and-error techniques. Designing these ICs, which form the bedrock of wireless […]
+AI-Enabled RFIC Design Beyond Human Intuition | SSCS Webinars for Y...
+YouTube
+IEEE Solid-State Circuits Society (SSCS)
+AI-Enabled RFIC Design Beyond Human Intuition - Kaushik Sengupta | ...
+Image
+Clyde Laforge — 6/12/26, 2:55 AM
+Hi, I'm only here to help with DRC and LVS. S parameter extraction is out of my league. What I'm quite sure about though, is that at these frequencies, the actual layout matters, so ngspice is probably not going to give you something representative of reality. This is why tools like openEMS or palace exist. Additional, I've often seen RF ASICs skip ESD protection pads entirely, like e.g. https://github.com/iic-jku/SG13CMOS_SPARX
+Clyde Laforge — 6/4/26, 8:54 AM
+There is nothing fundamentally preventing adding an extra patch on top of the current image. However, the idea of the container is to provide a stable image.
+There has been a fair amount of modifications upstream, including more DRC rules, a few LVS fixes to issues you've likely not seen, ... At one point, either one should restrict itself and use the known, stable point, or go to bleeding edge and live with the risks 😉
+Mitch Bailey — 6/3/26, 10:32 PM
+Yes, I think we want to add the flag_missing_ports check to the LVS rule file.
+Mitch Bailey — 6/3/26, 10:24 PM
+@LuighiV the problem I see is if someone designs a cell in klayout and even if the terminals are switched it will pass LVS. They use magic to create a lef file with the terminals in the wrong place. openlane connects the the terminals as defined in the lef file and does abstract lvs with magic/netgen. I don't think this will be detected as an error.
+
+It's the combination of klayout cells with mismatched ports and magic/netgen abstract LVS in  openlane that can incorrect pass LVS (I think).
+Mitch Bailey — 6/3/26, 8:27 PM
+Wait, I thought openlane only used magic/netgen for LVS. Is there a klayout LVS option also?
+Mitch Bailey — 6/3/26, 6:40 PM
+I believe that it is only relevant on the top level for device level LVS. Subcells will be matched by topology irregardless of port names. Any mismatch of port names with corresponding connections will cause an error at a higher level. However, for abstract LVS that openlane uses, there is no subcell topology. Mismatched port names with corresponding upper level connections may not be detected. 😮
+LuighiV — 6/3/26, 5:34 PM
+Interesting, however, would it be the same for internal hierarchies? I mean internally could they be swapped and the LVS return as valid anyway?
+Mitch Bailey — 6/3/26, 5:19 PM
+IIRC, the default klayout LVS does not match pin names between the layout and netlist. You can swap Vin and Vout text and still get a clean LVS result showing Vin port in the layout matching Vout in the schematic.
+
+Changing 
+result = compare
+
+to
+result = compare && flag_missing_ports
+
+will print an unmatch message but will only show the port matches in the info tab of the LVS report (I think).
+LuighiV — 6/3/26, 5:11 PM
+Hi @hdrohithd  regarding LVS we had a long discussion with @Clyde Laforge and Prof. @Harald Pretl  in this thread ⁠lvs Maybe you can have a look on it. I think if you place pins wrong topologically is different, so it shouldn't return green. Perhaps, good to point it out there. I've tested with a circuit that I knew it was clean and it passed, however, didn't test with other that are expected not to pass
+hdrohithd — 6/3/26, 4:34 PM
+Just a small question,
+Suppose if i place the labels  in wrong position, example: in an inverter if i place vin and vout labels interchange ,  do I have to manually check in lvs? Because it shows green even in that case. In large layouts, how to make sure all the labels are proper, and layout is electrically correct before extraction? 
+
+I searched pin name is discord, i read some previous discission regarding custom script.  But currently thats the only way? Or something better solution? 
+Dat Dinh Trong [TT],  — 6/1/26, 11:48 AM
+Hi everyone,
+
+I'm developing an instance-based standard-cell layout library to help Track A participants reduce the time needed to redraw transistors, bulk connections, vias, and other common layout structures while still meeting DRC requirements.
+
+I'm also planning to make a full tutorial covering Xschem schematic design, logic optimization (DeMorgan, K-map), CharLib characterization, Euler-path-based layout methodology, LVS/PEX, and the complete standard-cell design flow.
+
+Would anyone be interested in this? Also, is sharing such a library/tutorial permitted under the Chipathon rules? dear @Marcus Mellor 
+
+Thanks!
+Image
+LuighiV
+ started a thread: Hi Everyone! I'm trying to do LVS to FVF. See all threads. — 5/28/26, 10:43 PM
+Katia — 5/28/26, 9:15 PM
+Hi Everyone! I'm trying to do LVS to FVF example but when I run the cell appear an error: Netgen not found in the system. With "Docker exect -it bash" I entry to container and I verify that netgen appears with "whereis netgen". Is it possible that the "mappedpdk.py" file is wrong?
+Image
+Image
+Sayyad Arif — 5/25/26, 12:19 PM
+https://www.youtube.com/watch?v=vamfMryYPS4
+I tried to follow this tutorial for layout design using klayout. I am  using chipathon26 docker version (klayout ver 0.30.8). I can't see the PDK metal layers or any other layers.
+Image
+YouTube
+IIC-OSIC-TOOLS
+Tutorial using KLayout with gf180mcu (part 4)
+Image
+Clyde Laforge — 5/19/26, 7:58 AM
+Hi, indeed, I've successfully  matched a padring in the past (with only vdd vss and analog/custom pads).
+The process I had was:
+1) Design the padring in xschem, using the provided symbols and including the correct spice file for their internal netlist
+2) if using a variable name for the location of the spice file, run export MYVAR=/my/path prior to running klayout via the klayout command
+3) run LVS as per usual.
+
+Be on the lookout for any error message printed in the console.
+
+My design files are here : https://github.com/Scafir/gf180mcu-project-trident-gf180-teststructure
+But its a bit more complicated, as I used pads with different sizes and another custom library 
+GitHub
+GitHub - Scafir/gf180mcu-project-trident-gf180-teststructure: Proje...
+Project template for wafer.space MPW runs using the gf180mcu PDK - Scafir/gf180mcu-project-trident-gf180-teststructure
+Project template for wafer.space MPW runs using the gf180mcu PDK - Scafir/gf180mcu-project-trident-gf180-teststructure
+Clyde Laforge — 5/19/26, 3:27 AM
+Hi @LuighiV . An official release for the gf180 pdk will soon be made. Did you find any more errors surrounding the LVS or things that ought to be fixed asap?
+Anuj — 5/18/26, 11:12 PM
+Hello everyone,
+
+I’m Anuj Sharma, currently pursuing MSc Tech in Engineering Physics at NIT Warangal, and I’m working in the Physical Design domain with strong interest in ASIC implementation and backend VLSI flow.
+ I have been working on complete RTL-to-GDSII implementation using OpenLane/OpenROAD and SKY130 PDK. My experience includes:
+• PicoRV32 RISC-V core physical design and signoff flow
+• SRAM macro integration and hierarchical macro-based design
+• USB PHY physical design flow using Synopsys tools
+• Floorplanning, placement, CTS, routing, STA, DRC/LVS debugging
+• IR drop, fanout, congestion, and timing analysis
+• Verilog-based digital design and FPGA implementation
+
+I’m eager to learn, contribute, and collaborate with teams throughout the Chipathon journey. Looking forward to connecting with everyone here!
+
+Thank you.
+ [TT], 
+LuighiV — 5/15/26, 12:53 PM
+It is like an addition to the PDK, but it means also, create models, add extraction rules to the LVS deck. Not sure if any additional consideration in the DRC
+James Patrick [TT],  — 5/15/26, 12:50 PM
+From what I know the MOM cap layers is fully supported by the PDK since its only composed of metal stacks and vias. I am kinda worried on the LVS and post-layout sim since the PDK doesnt have native MOM cap pcell maybe there are workarounds on this
+LuighiV — 5/12/26, 10:44 PM
+Hi Prof. @Harald Pretl  this is not related to LVS, but was an issue also reported in the klayout channel, and it is because when we use a fresh container and try to instantiate a pfet the first time it appears with empty geometry value, no being able to visualize the cell until we change the size of the device or switch to another cell and return back to pfet. Have you faced this previously?
