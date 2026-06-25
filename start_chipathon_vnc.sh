@@ -31,8 +31,10 @@
 # - Added: -e flag to bash to stop on error
 # ========================================================================
 
-# Set the DESIGNS environment variable to the 'designs' subdirectory of the current directory
-export DESIGNS="$(pwd)/designs"
+# DESIGNS = host path that gets mounted to /foss/designs inside the container.
+# Honor a pre-existing value (shell export or .env), default to the repo root
+# so /foss/designs maps to the root of this repo rather than the designs/ subdir.
+export DESIGNS="${DESIGNS:-$(pwd)}"
 ENVFILE=".env"
 
 if [ -f "${ENVFILE}" ]; then

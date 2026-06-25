@@ -1,10 +1,11 @@
 # Source the PDK xschemrc file
 source $env(PDK_ROOT)/$env(PDK)/libs.tech/xschem/xschemrc
 
-# Set the library path so that xschem doesn't have to be launched at /foss/designs
-set XSCHEM_LIBRARY_PATH ${XSCHEM_LIBRARY_PATH}:$env(DESIGNS):$env(DESIGNS)/Tutorials:$env(DESIGNS)/libs
+# /foss/designs is now mounted to the repo root, so xschem assets live under
+# $env(DESIGNS)/designs/... instead of $env(DESIGNS)/... directly.
+set XSCHEM_LIBRARY_PATH ${XSCHEM_LIBRARY_PATH}:$env(DESIGNS)/designs:$env(DESIGNS)/designs/Tutorials:$env(DESIGNS)/designs/libs
 
-set netlist_dir "/foss/designs/simulations"
+set netlist_dir "/foss/designs/designs/simulations"
 
 # Default save dialog to .sch (schematic) not .sym (symbol)
 set file_dialog_defaultextension .sch
