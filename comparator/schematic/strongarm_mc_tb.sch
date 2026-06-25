@@ -15,7 +15,7 @@ N 1080 -830 1210 -830 {lab=OUT1}
 N 1080 -810 1170 -810 {lab=OUT2}
 C {comparator/schematic/strongarm.sym} 930 -770 0 0 {name=X1}
 C {vsource.sym} 840 -730 0 0 {name=VVIN2 value=1.2 savecurrent=false}
-C {vsource.sym} 770 -730 0 0 {name=VVIN1 value="PWL(0 1.19 2u 1.25)" savecurrent=false}
+C {vsource.sym} 770 -730 0 0 {name=VVIN1 value="PWL(0 1.23 6u 1.17)" savecurrent=false}
 C {vsource.sym} 630 -730 0 0 {name=VDD value=3 savecurrent=false}
 C {vsource.sym} 700 -730 0 0 {name=VCK value="PULSE(0 3 0 100p 100p 10n 20n)" savecurrent=false}
 C {title.sym} 180 -60 0 0 {name=l1 author="Bruno R.M."}
@@ -41,43 +41,86 @@ value="
 C {devices/code_shown.sym} -140 -1290 0 0 {name=NGSPICE only_toplevel=true
 value="
 .control
-let mc_runs = 50
-let run = 0
-let offset_results = vector(mc_runs)
-set curplatenv = $curplot
+* ============================================================
+* StrongArm comparator — input-referred offset Monte Carlo
+* offset = midpoint of UP-sweep and DOWN-sweep trip points.
+* RULE: never put '>' inside a 'let' — ngspice reads it as a file
+* redirect. Comparisons are only safe inside 'if'.
+* MODELS block must have: sw_stat_mismatch=0, sw_stat_global=0
+* ============================================================
 
-let svt = 3.0e-3                 ; 1-sigma input Vth mismatch (V); = AVT/sqrt(W*L)
+let mc_runs = 100
+let svt     = 24.8e-3
+let run     = 0
+let offset_results = vector(mc_runs)
+let ngood = 0
+let sumx  = 0
+let sumx2 = 0
+set homeplot = $curplot
 
 dowhile run < mc_runs
   echo ---- run $&run ----
+  unset s_up
+  unset s_dn
+
+  * fresh mismatch draw, applied to both sweeps
   alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
   alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
 
-  tran 10p 2u
+  * -------- UP sweep: VIN1 1.05 -> 1.35 --------
+  alter @vvin1[pwl] = [ 0 1.05 6e-6 1.35 ]
+  tran 10p 6u
+  let t_up = -1
+  meas tran t_up when v(out1)=1.5 fall=LAST
+  if t_up > 0
+    meas tran vin_up find v(vin1) at=t_up
+    set s_up = $&vin_up
+  end
+  destroy $curplot
 
-  let trip_time = -1
-  meas tran trip_time when v(out1)=1.5 fall=LAST
-  if trip_time > 0
-    meas tran v_in_at_trip find v(vin1) at=trip_time
-    let current_offset = v_in_at_trip - 1.200
-    let offset_results[run] = current_offset
-    echo   delvto10 = $&@m.x1.xm10.m0[delvto]  offset = $&current_offset
+  * -------- DOWN sweep: VIN1 1.35 -> 1.05 --------
+  alter @vvin1[pwl] = [ 0 1.35 6e-6 1.05 ]
+  tran 10p 6u
+  let t_dn = -1
+  meas tran t_dn when v(out1)=1.5 fall=1
+  if t_dn > 0
+    meas tran vin_dn find v(vin1) at=t_dn
+    set s_dn = $&vin_dn
+  end
+  destroy $curplot
+
+  * -------- combine, back in the home plot --------
+  setplot $homeplot
+  if $?s_up * $?s_dn
+    let cur = (($s_up - 1.2) + ($s_dn - 1.2)) / 2
+    let offset_results[run] = cur
+    let ngood = ngood + 1
+    let sumx  = sumx  + cur
+    let sumx2 = sumx2 + cur*cur
+    echo   up=$s_up dn=$s_dn offset=$&cur
   else
     let offset_results[run] = -999
+    echo   WARN: miss on run $&run
   end
+
   let run = run + 1
 end
 
-let mu  = mean(offset_results)
-let sig = sqrt(mean((offset_results - mu)^2))
-echo ========================================
-echo MC results (N=$&mc_runs)
+* ================= stats (valid runs only) =================
+setplot $homeplot
+let mu  = sumx / ngood
+let sig = sqrt( sumx2/ngood - mu*mu )
+echo ======================================================
+echo MC done: N=$&mc_runs  good=$&ngood
 echo   mean offset = $&mu V
 echo   sigma       = $&sig V
-echo ========================================
+echo ======================================================
 
-write comp_mc_offsets.raw offset_results
-print offset_results
+unset wr_singlescale
+write  /foss/designs/comparator/comp_mc_offsets.raw offset_results
+wrdata /foss/designs/comparator/comp_mc_offsets.txt offset_results
+echo MC N=$&mc_runs good=$&ngood mean=$&mu sigma=$&sig > /foss/designs/comparator/comp_mc_report.txt
+print offset_results >> /foss/designs/comparator/comp_mc_report.txt
 .endc
 "}
 C {lab_wire.sym} 700 -850 0 0 {name=p1 sig_type=std_logic lab=CK}

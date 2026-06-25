@@ -1,0 +1,3051 @@
+
+/
+StrongArm Comparator Monte Carlo Offset — ngspice cadf1ea02eef4b4a992747daa9286149
+.md
+The script ran successfully. Here's what the 300-run Monte Carlo shows:StatValueMean+15.12 mVStd (σ)4.46 mV−3σ+1.74 mV+3σ+28.50 mVMin / Max+5.0 / +30.2 mV
+The mean being ~15 mV suggests a large systematic offset — all runs are positive, meaning there's likely a device mismatch or layout asymmetry baked in. The σ of ~4.5 mV represents the random variation on top of that.
+================
+                                Constant values
+constants  Thu Apr 16 19:52:50 UTC 2026
+--------------------------------------------------------------------------------
+Index   offset_results
+--------------------------------------------------------------------------------
+0	8.609000e-03	
+1	2.000900e-02	
+2	1.760900e-02	
+3	1.820900e-02	
+4	1.640900e-02	
+5	1.940900e-02	
+6	1.880900e-02	
+7	1.161000e-02	
+8	1.820900e-02	
+9	1.160900e-02	
+10	8.609000e-03	
+11	1.161000e-02	
+12	1.280900e-02	
+13	6.209000e-03	
+14	1.880900e-02	
+15	1.101000e-02	
+16	2.000900e-02	
+17	1.160900e-02	
+18	2.180900e-02	
+19	8.609000e-03	
+20	1.760900e-02	
+21	2.361000e-02	
+22	1.400900e-02	
+23	2.840900e-02	
+24	9.209000e-03	
+25	1.520900e-02	
+26	1.760900e-02	
+27	1.581000e-02	
+28	1.581000e-02	
+29	1.820900e-02	
+30	2.120900e-02	
+31	1.401000e-02	
+32	1.520900e-02	
+33	1.581000e-02	
+34	1.040900e-02	
+35	2.300900e-02	
+36	2.060900e-02	
+37	6.810000e-03	
+38	1.880900e-02	
+39	1.340900e-02	
+40	1.280900e-02	
+41	2.300900e-02	
+42	1.160900e-02	
+43	1.100900e-02	
+44	1.280900e-02	
+45	8.609000e-03	
+46	1.880900e-02	
+47	3.020900e-02	
+48	1.101000e-02	
+49	1.220900e-02	
+50	1.220900e-02	
+51	1.040900e-02	
+52	2.300900e-02	
+53	2.000900e-02	
+54	1.640900e-02	
+
+Index   offset_results
+--------------------------------------------------------------------------------
+55	1.700900e-02	
+56	1.641000e-02	
+57	1.461000e-02	
+58	1.100900e-02	
+59	1.400900e-02	
+60	1.341000e-02	
+61	2.180900e-02	
+62	1.220900e-02	
+63	9.809000e-03	
+64	1.580900e-02	
+65	1.340900e-02	
+66	1.700900e-02	
+67	1.520900e-02	
+68	1.940900e-02	
+69	1.460900e-02	
+70	1.880900e-02	
+71	1.400900e-02	
+72	1.581000e-02	
+73	1.280900e-02	
+74	1.521000e-02	
+75	5.009000e-03	
+76	1.760900e-02	
+77	1.760900e-02	
+78	1.580900e-02	
+79	1.880900e-02	
+80	1.220900e-02	
+81	2.000900e-02	
+82	1.940900e-02	
+83	2.061000e-02	
+84	7.409000e-03	
+85	1.220900e-02	
+86	1.941000e-02	
+87	1.460900e-02	
+88	1.281000e-02	
+89	1.220900e-02	
+90	2.060900e-02	
+91	1.460900e-02	
+92	1.880900e-02	
+93	1.460900e-02	
+94	1.760900e-02	
+95	1.520900e-02	
+96	1.340900e-02	
+97	1.640900e-02	
+98	1.160900e-02	
+99	2.060900e-02	
+100	1.160900e-02	
+101	1.401000e-02	
+102	2.000900e-02	
+103	1.220900e-02	
+104	1.700900e-02	
+105	1.520900e-02	
+106	8.009000e-03	
+107	1.341000e-02	
+108	1.520900e-02	
+109	1.461000e-02	
+110	2.240900e-02	
+111	9.809000e-03	
+112	1.101000e-02	
+
+Index   offset_results
+--------------------------------------------------------------------------------
+113	1.460900e-02	
+114	1.460900e-02	
+115	1.640900e-02	
+116	1.640900e-02	
+117	8.009000e-03	
+118	2.000900e-02	
+119	1.460900e-02	
+120	2.960900e-02	
+121	1.640900e-02	
+122	2.000900e-02	
+123	1.220900e-02	
+124	1.041000e-02	
+125	1.401000e-02	
+126	1.280900e-02	
+127	6.209000e-03	
+128	1.101000e-02	
+129	1.340900e-02	
+130	1.880900e-02	
+131	1.460900e-02	
+132	1.040900e-02	
+133	1.340900e-02	
+134	8.609000e-03	
+135	1.460900e-02	
+136	2.000900e-02	
+137	2.000900e-02	
+138	1.520900e-02	
+139	9.809000e-03	
+140	1.340900e-02	
+141	1.880900e-02	
+142	1.400900e-02	
+143	1.940900e-02	
+144	1.941000e-02	
+145	1.700900e-02	
+146	1.641000e-02	
+147	2.600900e-02	
+148	1.760900e-02	
+149	2.060900e-02	
+150	1.280900e-02	
+151	1.580900e-02	
+152	1.461000e-02	
+153	1.821000e-02	
+154	1.820900e-02	
+155	1.100900e-02	
+156	1.160900e-02	
+157	1.281000e-02	
+158	1.220900e-02	
+159	2.120900e-02	
+160	2.180900e-02	
+161	1.340900e-02	
+162	1.760900e-02	
+163	1.340900e-02	
+164	2.180900e-02	
+165	1.700900e-02	
+166	1.400900e-02	
+167	2.300900e-02	
+168	1.040900e-02	
+169	1.760900e-02	
+170	1.340900e-02	
+
+Index   offset_results
+--------------------------------------------------------------------------------
+171	2.421000e-02	
+172	8.609000e-03	
+173	1.760900e-02	
+174	1.880900e-02	
+175	1.101000e-02	
+176	1.401000e-02	
+177	1.640900e-02	
+178	2.120900e-02	
+179	2.000900e-02	
+180	8.010000e-03	
+181	8.009000e-03	
+182	6.809000e-03	
+183	1.760900e-02	
+184	1.700900e-02	
+185	7.409000e-03	
+186	2.120900e-02	
+187	1.280900e-02	
+188	1.220900e-02	
+189	1.880900e-02	
+190	1.340900e-02	
+191	9.209000e-03	
+192	1.701000e-02	
+193	1.821000e-02	
+194	1.700900e-02	
+195	1.340900e-02	
+196	1.520900e-02	
+197	1.221000e-02	
+198	2.420900e-02	
+199	1.820900e-02	
+200	1.700900e-02	
+201	1.400900e-02	
+202	1.460900e-02	
+203	1.880900e-02	
+204	6.809000e-03	
+205	2.060900e-02	
+206	1.220900e-02	
+207	1.580900e-02	
+208	1.161000e-02	
+209	1.160900e-02	
+210	1.400900e-02	
+211	2.480900e-02	
+212	1.520900e-02	
+213	1.220900e-02	
+214	9.809000e-03	
+215	2.180900e-02	
+216	8.009000e-03	
+217	1.580900e-02	
+218	1.580900e-02	
+219	1.700900e-02	
+220	1.700900e-02	
+221	1.340900e-02	
+222	8.609000e-03	
+223	1.460900e-02	
+224	1.280900e-02	
+225	1.940900e-02	
+226	1.220900e-02	
+227	1.940900e-02	
+228	1.160900e-02	
+
+Index   offset_results
+--------------------------------------------------------------------------------
+229	1.880900e-02	
+230	1.760900e-02	
+231	1.281000e-02	
+232	1.220900e-02	
+233	1.640900e-02	
+234	1.220900e-02	
+235	1.940900e-02	
+236	2.001000e-02	
+237	1.340900e-02	
+238	9.209000e-03	
+239	1.580900e-02	
+240	2.120900e-02	
+241	1.100900e-02	
+242	1.460900e-02	
+243	1.040900e-02	
+244	2.000900e-02	
+245	1.340900e-02	
+246	1.221000e-02	
+247	1.700900e-02	
+248	8.009000e-03	
+249	1.461000e-02	
+250	9.810000e-03	
+251	1.100900e-02	
+252	1.880900e-02	
+253	5.009000e-03	
+254	1.220900e-02	
+255	5.009000e-03	
+256	1.640900e-02	
+257	6.810000e-03	
+258	6.209000e-03	
+259	2.540900e-02	
+260	1.760900e-02	
+261	2.300900e-02	
+262	1.820900e-02	
+263	1.760900e-02	
+264	1.580900e-02	
+265	1.220900e-02	
+266	1.520900e-02	
+267	1.580900e-02	
+268	2.061000e-02	
+269	2.060900e-02	
+270	1.220900e-02	
+271	8.009000e-03	
+272	9.209000e-03	
+273	1.940900e-02	
+274	1.520900e-02	
+275	1.821000e-02	
+276	9.809000e-03	
+277	1.400900e-02	
+278	1.460900e-02	
+279	1.580900e-02	
+280	2.120900e-02	
+281	1.460900e-02	
+282	9.809000e-03	
+283	1.340900e-02	
+284	1.520900e-02	
+285	9.810000e-03	
+286	1.400900e-02	
+
+Index   offset_results
+--------------------------------------------------------------------------------
+287	1.460900e-02	
+288	1.400900e-02	
+289	1.340900e-02	
+290	1.820900e-02	
+291	1.400900e-02	
+292	2.121000e-02	
+293	1.280900e-02	
+294	7.409000e-03	
+295	1.221000e-02	
+296	1.220900e-02	
+297	1.701000e-02	
+298	1.160900e-02	
+299	1.460900e-02	
+=================
+Hi all,
+
+Well, I had some trouble learning how to work with variables and vectors and ngspice - so here is a commented script, which performs some purely mathematical operations (there is no circuit defined whatsoever) - and demonstrates some basic usage of vectors and variables referencing, as well as linear interpolation between vectors.
+
+Note that the the script first goes to demonstrate the linear interpolation, then resets the plot, and then shows additional basic examples. You could in principle also execute it command by command in interactive mode in ngspice - however the output of the script is also posted below for reference. (Its kinda big, but I think it demonstrates a lot of things n00bs with ngspice could find strange at first).
+
+The linear interpolation part deals with the problem of how do you plot, if you have two vectors that cover the same x-range, however, are different in size? In the script, the smaller vector is "resampled" into a new version of the same size as the larger vector, with the values being linearly interpolated. The linear interpolation is as simple as it gets, and it looks kinda crappy for the default large vector size of 10 elements, and small size of 6 elements … however, the looks improve with increased number of elements, say large = 100 and small = 20 elements:
+
+
+
+Well, I hope some may find this useful (though, I've noticed, Google at least doesn't seem to crawl keywords in SourceForge forums, which is rather unfortunate…)
+
+Cheers!
+
+Here is the script 'vec_manip.net':
+
+* Schematics Netlist *
+.control
+echo ...........
+* set color for postscript output
+set hcopypscolor=1
+* create new plot (collection of vectors)
+set curplot = new
+* some variables: larger num. of elements/samples (default 10), and smaller (default 6)
+set NUML=10
+set NUMS=6
+* show what is in new plot
+echo _____________ P_01
+display
+echo
+* create x axis (vector xx) - 10 points
+* we do it here just to allocate it first:
+* http://iecon02.us.es/ASIGN/DCSE_1IE/WinSpice_tutorial.pdf:
+* "Note how the first vector brought in becomes the default scale. This is an important point to remember because all the other vectors are plotted in reference to the scale. However, even if this were not set properly, NUTMEG allows plots to specify the scale explicitly as shown below: 'asciiplot all vs input' ... "
+* let xx = vector(10); 'vector' gives elements as 1,2,3,... - 'unitvec' gives 1,1,1,...
+let xx = vector({$NUML})
+* show what is in the plot
+* note the first plot automatically becomes [default scale]
+echo _____________ P_02
+display
+echo
+* define twopi via set (stwopi) - it gets defined as string!
+* so must add enclosing (), to force algebraic interpretation!
+* but that works only with 'let' - 'compose' cannot use stwopi!
+* set sets values to variables
+set stwopi=(2pi)
+* let sets values to vectors
+* however, if this is first, it will become [default scale] !!
+let ltwopi=2pi
+* ....
+* only sltwopi - which demands a 'let' vector - will work in a compose command!!
+* "$&..." syntax from ngspice/ng-spice-rework/examples/control_structs/MonteCarlo.sp
+set sltwopi="$&ltwopi"
+echo _____________ P_03
+print $stwopi ltwopi $sltwopi
+* in the echo for ltwopi, we must have & as we refer to a vector
+echo $stwopi $&ltwopi $sltwopi
+echo
+* create x axis (vector xx) - going from 0 to 2pi, 10 points
+* we could also use let as in:
+~ let xx = vector(10)($stwopi/10)
+* but, here let's use compose for that
+compose xx start = 0 stop = {$sltwopi} lin = {$NUML}
+* show what is in the plot
+echo _____________ P_04
+display
+echo
+* define a type of vector called 'angle' in units 'rad' .. and assign it to xx
+* http://newton.ex.ac.uk/teaching/CDHW/Electronics2/userguide/sec5.html
+deftype v angle rad
+settype angle xx
+* show what is in the plot
+* note the change of type from 'notype'
+echo _____________ P_05
+display
+echo
+* create the output (y-axis) vector; lets say sine
+* note yy becomes of type 'angle' here too!
+let yy = sin(xx)
+* show what is in the plot
+echo _____________ P_06
+display
+echo
+* now let's create 'shorter' versions of xx and yy
+compose xxs start = 0 stop = {$sltwopi} lin = {$NUMS}
+settype angle xxs
+* lets use cosine here
+let yys = cos(xxs)
+echo _____________ P_07
+* printout all vectors so far:
+print xx yy xxs yys
+* notice even if xx and xxs have the same range,
+* they have different number of elements;
+* and so a command like
+asciiplot yy yys
+echo
+* will not 'stretch' yys across the plot;
+* instead, both yy and yys will refer to
+* 'Index' as x-axis parameter!
+* so, we basically have to 'resample' yys
+* from current 6 samples to 10, in order to chart it
+* together with yy!
+* there is a function for that, interpolate; however
+~ let yysi = interpolate(yys)
+* will result here with 'Error: lengths don't match'
+* 'linearize' will also fail: 'Error: can't get transient parameters from circuit'
+echo _____________ P_08
+* so we resample manually..
+* syntax: ngspice/ng-spice-rework/examples/control_structs/repeat3.sp
+let yysi = vector(length(xx))0
+let mainindex = 0
+while mainindex < length(xx)
+let shortindex = 0
+while shortindex < length(xxs)
+if xxs[shortindex] >= xx[mainindex]
+break
+end
+let shortindex = shortindex + 1
+end
+if shortindex >= length(xxs)
+let shortindex = length(xxs)-1
+end
+echo mainindex "$&mainindex" "$&shortindex"
+*  here we should have shortindex, copy to interpolated array
+*   direct resample - just
+*  let yysi[mainindex] = yys[shortindex]
+*
+*   crude linear interpolation
+if shortindex = length(xxs)-1
+let yysi[mainindex] = (xx[mainindex] - xxs[shortindex-1])( (yys[shortindex]-yys[shortindex-1])/(xxs[shortindex]-xxs[shortindex-1]) ) + yys[shortindex-1]
+else
+let yysi[mainindex] = (xx[mainindex] - xxs[shortindex])( (yys[shortindex+1]-yys[shortindex])/(xxs[shortindex+1]-xxs[shortindex]) ) + yys[shortindex]
+end
+let mainindex = mainindex + 1
+end
+echo _____________ P_09
+* show what is in the plot
+* notice, for some reason, 'mainindex < length(xx)' is a vector now??
+display
+echo
+* printout all vectors so far:
+print xx yy xxs yys yysi
+* plot the interpolated now:
+asciiplot yy yysi
+echo
+* well, it is stretched, but quite ugly due to
+* really low number of points, and no interpolation..
+* with interpolation looks a bit better.. and also with a larger number of samples
+* plot the diagram
+hardcopy interplot.ps yy yysi
+* some final notes;
+* note that you cannot downsize a vector once
+* its has been defined, and its size specified:
+* yy was originally 10 ( NUML ) elements long
+* try replacing it with 6 (NUMS) elements one:
+* "left-hand expression is too small (need 100)"
+let yy = vector({$NUMS})
+* check it back - still NUML elements, which haven't been replaced
+echo _____________ P_10
+display yy
+print yy
+echo
+* note about redimensioning with 'reshape'..
+* yy/xx are currently NUML = 10 long, i.e. 1 column 10 rows
+* reshape can redim only where newwidthnewheight = NUML
+* so NUMLxNUML being bigger than NUML, will clearly fail
+* 'dimensions don't fit "yy" (total size = 10)'
+echo _____________ P_11
+echo ...+++
+reshape yy xx [{$NUML},{$NUML}]
+echo ...+++
+* however, for 10; 10,1 / 1,10 / 2,5 / 5,2 will work
+reshape yy xx [10,1]
+reshape yy xx [1,10]
+reshape yy xx [5,2]
+reshape yy xx [2,5]
+echo ...+++
+* show what is in the plot
+* note the "dims = [2,5] " appearing for xx,yy
+echo _____________ P_12
+display
+echo
+* the extra dimensions will be interpreted as parameters,
+* which can be seen by repeating the plot
+* note since yysi was not redim'd, it will still be graphed as before.
+* however yy will be shown in several parts..
+~ hardcopy interplot.ps yy yysi
+* now that we have extra dimensions, we could use transpose, say:
+echo _____________ P_13
+transpose yy
+* note after traspose "dims = [5,2] " for yy
+display
+echo
+* Finally, note there is no way to delete a vector;
+* we can only delete a whole plot !
+* as we created this plot with new, it is probably called 'unknown1'
+destroy unknown1
+* check it - show what is in the plot
+echo _____________ P_14
+display
+echo
+* we are in the "Constants" plot;
+* so we should again create a new one:
+* create new plot (collection of vectors)
+set curplot = new
+* check it - show what is in the plot
+echo _____________ P_15
+display
+echo
+* just to show some final points:
+* variable names which are already defined as 'Constants'
+* cannot be used !
+echo _____________ P_16
+* print the old const value for c:
+print c
+* try to make 'c' a new vector
+let c=vector(10)
+* check it - show what is in the plot
+display
+* dimension hasn't changed - but variable 'c' got reset to 0 !!
+print c
+echo
+* also quite easy to extract subranges of vectors:
+echo _____________ P_17
+let uu=vector(5)
+let ww=uu[2,4]
+print uu ww
+echo
+* direct assignment :
+echo _____________ P_18
+* this gives a syntax error
+let zz = [12,176,278]
+* compose with 'values' statement works though
+compose zz values 12 176 278
+print zz
+echo
+* concatenation; probably through redim?
+echo _____________ P_19
+let qq = vector(6)0
+reshape qq [2,3]
+let qq[0] = ww
+let qq[1] = zz
+* print line show vector in a row..
+print line qq
+* show what is in the current plot
+display
+echo
+echo ...........
+echo
+.endc
+And its output is:
+
+$ ngspice -b vec_manip.net
+Circuit: * schematics netlist *
+...........
+_____________ p_01
+There are no vectors currently active.
+_____________ p_02
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+xx                  : notype, real, 10 long [default scale]
+_____________ p_03
+(2pi) = 6.283185e+00
+ltwopi = 6.283185e+00
+6.28319 = 6.283190e+00
+(2pi) 6.28319 6.28319
+_____________ p_04
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+ltwopi              : notype, real, 1 long
+xx                  : notype, real, 10 long [default scale]
+_____________ p_05
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+ltwopi              : notype, real, 1 long
+xx                  : angle, real, 10 long [default scale]
+_____________ p_06
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+ltwopi              : notype, real, 1 long
+xx                  : angle, real, 10 long [default scale]
+yy                  : angle, real, 10 long
+_____________ p_07
+Anonymous
+unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   xx              yy              xxs             yys
+--------------------------------------------------------------------------------
+0   0.000000e+00    0.000000e+00    0.000000e+00    1.000000e+00
+1   6.283190e-01    5.877856e-01    1.047198e+00    4.999993e-01
+2   1.256638e+00    9.510568e-01    2.094397e+00    -5.00001e-01
+3   1.884957e+00    9.510561e-01    3.141595e+00    -1.00000e+00
+4   2.513276e+00    5.877837e-01    4.188793e+00    -4.99997e-01
+5   3.141595e+00    -2.34641e-06    5.235992e+00    5.000034e-01
+6   3.769914e+00    -5.87788e-01
+7   4.398233e+00    -9.51058e-01
+8   5.026552e+00    -9.51055e-01
+9   5.654871e+00    -5.87782e-01
+--------------------------------------------------------------------------
+Anonymous
+unknown Wed Sep  1 14:01:11  2010
+Legend:  + = yy
+* = yys
+--------------------------------------------------------------------------
+xx         yy      -1.00e+00                 0.00e+00                 1.00e+00
+----------------------|------------------------|------------------------|
+0.000e+00  0.000e+00 .                        +                        *
+6.283e-01  5.878e-01 .                        .           * +          .
+1.257e+00  9.511e-01 .           *            .                      + .
+1.885e+00  9.511e-01 *                        .                      + .
+2.513e+00  5.878e-01 .           *            .             +          .
+3.142e+00 -2.346e-06 .                       +.           *            .
+3.770e+00 -5.878e-01 .         +              *                        .
+4.398e+00 -9.511e-01 .+                       *                        .
+5.027e+00 -9.511e-01 .+                       *                        .
+5.655e+00 -5.878e-01 .         +              *                        .
+----------------------|------------------------|------------------------|
+xx         yy      -1.00e+00                 0.00e+00                 1.00e+00
+_____________ p_08
+mainindex 0 0
+mainindex 1 1
+mainindex 2 2
+mainindex 3 2
+mainindex 4 3
+mainindex 5 3
+mainindex 6 4
+mainindex 7 5
+mainindex 8 5
+mainindex 9 5
+_____________ p_09
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+ltwopi              : notype, real, 1 long
+mainindex           : notype, real, 1 long
+shortindex          : notype, real, 1 long
+xx                  : angle, real, 10 long [default scale]
+xxs                 : angle, real, 6 long
+yy                  : angle, real, 10 long
+yys                 : angle, real, 6 long
+yysi                : notype, real, 10 long
+Anonymous
+unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   xx              yy              xxs             yys
+--------------------------------------------------------------------------------
+0   0.000000e+00    0.000000e+00    0.000000e+00    1.000000e+00
+1   6.283190e-01    5.877856e-01    1.047198e+00    4.999993e-01
+2   1.256638e+00    9.510568e-01    2.094397e+00    -5.00001e-01
+3   1.884957e+00    9.510561e-01    3.141595e+00    -1.00000e+00
+4   2.513276e+00    5.877837e-01    4.188793e+00    -4.99997e-01
+5   3.141595e+00    -2.34641e-06    5.235992e+00    5.000034e-01
+6   3.769914e+00    -5.87788e-01
+7   4.398233e+00    -9.51058e-01
+8   5.026552e+00    -9.51055e-01
+9   5.654871e+00    -5.87782e-01
+Anonymous
+unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   yysi
+--------------------------------------------------------------------------------
+0   1.000000e+00
+1   8.999996e-01
+2   -1.00002e-01
+3   -4.00002e-01
+4   -1.30000e+00
+5   -1.00000e+00
+6   -8.99998e-01
+7   -2.99997e-01
+8   3.000033e-01
+9   9.000037e-01
+--------------------------------------------------------------------------
+Anonymous
+unknown Wed Sep  1 14:01:11  2010
+Legend:  + = yy
+* = yysi
+--------------------------------------------------------------------------
+xx         yy      -2.00e+00        -1.00e+00         0.00e+00         1.00e+00
+----------------------|----------------|----------------|----------------|
+0.000e+00  0.000e+00 .                .                +                *
+6.283e-01  5.878e-01 .                .                .        +     * .
+1.257e+00  9.511e-01 .                .              * .               +.
+1.885e+00  9.511e-01 .                .         *      .               +.
+2.513e+00  5.878e-01 .          *     .                .        +       .
+3.142e+00 -2.346e-06 .                *               +.                .
+3.770e+00 -5.878e-01 .                .     +         .                .
+4.398e+00 -9.511e-01 .                +          *     .                .
+5.027e+00 -9.511e-01 .                +                .    *           .
+5.655e+00 -5.878e-01 .                .      +         .              * .
+----------------------|----------------|----------------|----------------|
+xx         yy      -2.00e+00        -1.00e+00         0.00e+00         1.00e+00
+The file "interplot.ps" may be printed on a postscript printer.
+left-hand expression is too small (need 100)
+_____________ p_10
+yy                  : angle, real, 10 long
+Anonymous
+unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   yy
+--------------------------------------------------------------------------------
+0   0.000000e+00
+1   5.877856e-01
+2   9.510568e-01
+3   9.510561e-01
+4   5.877837e-01
+5   -2.34641e-06
+6   -5.87788e-01
+7   -9.51058e-01
+8   -9.51055e-01
+9   -5.87782e-01
+_____________ p_11
+...+++
+dimensions don't fit "yy" (total size = 10)
+dimensions don't fit "xx" (total size = 10)
+...+++
+...+++
+_____________ p_12
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+ltwopi              : notype, real, 1 long
+mainindex           : notype, real, 1 long
+shortindex          : notype, real, 1 long
+xx                  : angle, real, 10 long, dims = [2,5] [default scale]
+xxs                 : angle, real, 6 long
+yy                  : angle, real, 10 long, dims = [2,5]
+yys                 : angle, real, 6 long
+yysi                : notype, real, 10 long
+_____________ p_13
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown1 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+ltwopi              : notype, real, 1 long
+mainindex           : notype, real, 1 long
+shortindex          : notype, real, 1 long
+xx                  : angle, real, 10 long, dims = [2,5] [default scale]
+xxs                 : angle, real, 6 long
+yy                  : angle, real, 10 long, dims = [5,2]
+yys                 : angle, real, 6 long
+yysi                : notype, real, 10 long
+_____________ p_14
+Here are the vectors currently active:
+Title: Constant values
+Name: const (constants)
+Date: Sat Aug 16 10:55:15 PDT 1986
+FALSE               : notype, real, 1 long
+TRUE                : notype, real, 1 long
+boltz               : notype, real, 1 long
+c                   : notype, real, 1 long
+e                   : notype, real, 1 long
+echarge             : notype, real, 1 long
+i                   : notype, complex, 1 long
+kelvin              : notype, real, 1 long
+no                  : notype, real, 1 long
+pi                  : notype, real, 1 long
+planck              : notype, real, 1 long
+yes                 : notype, real, 1 long [default scale]
+_____________ p_15
+There are no vectors currently active.
+_____________ p_16
+c = 2.997925e+08
+There are no vectors currently active.
+c = 0.000000e+00
+_____________ p_17
+Anonymous
+unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   uu              ww
+--------------------------------------------------------------------------------
+0   0.000000e+00    2.000000e+00
+1   1.000000e+00    3.000000e+00
+2   2.000000e+00    4.000000e+00
+3   3.000000e+00
+4   4.000000e+00
+_____________ p_18
+PPerror: syntax error
+Anonymous
+unknown  Wed Sep  1 14:01:11  2010
+--------------------------------------------------------------------------------
+Index   zz
+--------------------------------------------------------------------------------
+0   1.200000e+01
+1   1.760000e+02
+2   2.780000e+02
+_____________ p_19
+qq = (  2.000000e+00    3.000000e+00    4.000000e+00    1.200000e+01
+1.760000e+02    2.780000e+02    )
+Here are the vectors currently active:
+Title: Anonymous
+Name: unknown0 (unknown)
+Date: Wed Sep  1 14:01:11  2010
+qq                  : notype, real, 6 long, dims = [2,3]
+uu                  : notype, real, 5 long [default scale]
+ww                  : notype, real, 3 long
+zz                  : notype, real, 3 long
+...........
+Note: No ".plot", ".print", or ".fourier" lines; no simulations run
+Jun 7
+I'll verify the statistics against the raw data. Let me pull the actual values and compute them directly.
+The regex got mangled in the shell. Let me write a proper script file instead.
+The attached file is the project handoff doc — the 300 values live only in your message. Let me load them directly and analyze.
+Wrote file
+Your summary stats are arithmetically correct — I recomputed them from all 300 values and got the same thing (mean 15.12 mV, σ 4.47 mV, −3σ 1.72 mV, +3σ 28.52 mV, min/max 5.0/30.2 mV). But before you write down "+15 mV systematic offset," look at what the raw numbers are actually telling you, because there are two red flags that point to a measurement artifact, not silicon.
+1. The results are quantized to a ~0.6 mV grid.
+There are only 59 distinct values across 300 runs, and they sit on a regular grid spaced 600 µV apart (5.009, 6.209, 6.809, 7.409, 8.009, 8.609, 9.209 … 30.209 mV — the stray 1 µV jumps like 6.809 vs 6.810 are just floating-point noise on the same grid point). That spacing is your Vin DC sweep step, not the comparator's true resolution. So every "offset" is really "the first sweep point at which the comparator flipped," rounded up to a 0.6 mV grid. Your offset resolution is currently ±0.6 mV at best.
+2. Every single run is positive, and the distribution bottoms out at a hard floor of +5.0 mV.
+0 of 300 runs are negative, and none fall below +5 mV. A genuine input-referred offset driven by random device mismatch should be roughly zero-mean and symmetric — you'd expect a comparable number of negative results. A one-sided distribution with a fixed positive floor is the classic signature of a sweep that starts at a positive Vin and steps upward: it physically cannot report a negative offset or anything below the sweep's start value. That alone can manufacture most of your "+15 mV systematic offset."
+What I'd check / change before trusting the mean:
+Center the sweep on zero and let it go negative, e.g. dc Vin -30m 30m 0.1m (or whatever source drives the differential input). If the mean suddenly drops toward ~0 and you start seeing negative results, the +15 mV was a setup artifact.
+Shrink the step (e.g. 50–100 µV) or, better, replace the linear sweep with a bisection/binary search on Vin for the flip point — far more accurate and much faster than a fine linear sweep.
+Separate systematic from random: with a centered, fine sweep, the mean is your systematic offset and σ is the mismatch contribution. Right now the two are entangled with the sweep bias.
+The σ ≈ 4.5 mV is plausible for a StrongArm comparator on GF180, so the random-mismatch part may be fine — it's the mean that I wouldn't report yet. Want me to draft a corrected offset-extraction .control block (centered sweep or bisection) you can drop into the testbench?
+yes. also, please clarify (in baby terms) what the issue might be, what your solution is, what other solutions are, what the code does
+Jun 11
+Thought
+Let me pull the exact testbench details from your handoff doc so the corrected script matches your actual node and device names.
+Got it — here's the corrected script plus a plain-English walkthrough of all four things you asked about.
+The big picture (plain terms)
+Imagine weighing a feather on a kitchen scale that has two problems: (1) it's stuck reading +15 g too heavy no matter what you put on it, and (2) it only shows whole grams, so you can't see fine detail. Your offset numbers have the electrical version of both problems. The good news: the "+15 mV" almost certainly isn't your comparator — it's a measurement artifact.
+1. What the issue might be
+Problem A — the fake "+15 mV systematic" (the important one).
+The leading suspect is in your MODELS block: the PDK's own random-mismatch switch (sw_stat_mismatch) is probably still = 1. Here's the trap you already documented in §8/§9: ngspice draws those PDK random device-to-device differences once at parse time and freezes them. So 9 of your 11 transistors get the same baked-in random imbalance in every single run — a constant electrical "lean." That frozen lean shows up as the same ~+15 mV added to every result.
+Meanwhile, your real per-run randomness (the sgauss injection) only touches the 2 input transistors, so it just sprinkles the ±wiggle (your σ ≈ 4.5 mV) on top of that frozen lean. That perfectly explains what we saw: every run positive, nothing below +5 mV. It's a stuck zero, not silicon.
+The alternative: if you turn that switch off and the mean still sits near +15 mV, then it's a genuine setup asymmetry (clock feedthrough, the crossed VOUT pins, or the lopsided sweep window) — also worth knowing, and the test below tells you which.
+Problem B — the coarse ruler + lopsided window.
+Your offsets land on a 0.6 mV grid (the resolution limit, exactly as your §5 formula predicts), and your sweep window 1.19→1.25 is lopsided: it only looks −10 mV on the negative side but +50 mV on the positive side. So even an honest measurement is being read with a coarse, off-center ruler.
+2. My solution (do this first — it's the simplest)
+Three small edits. The first one is the real fix; the other two are cleanup.
+Edit 1 — MODELS block: turn off the frozen PDK mismatch so the only variation is your clean, zero-mean injected mismatch:
+* ONLY our injected delvto should vary run-to-run:
+.param sw_stat_global   = 0
+.param sw_stat_mismatch = 0
+.include $::180MCU_MODELS/design.ngspice
+.lib    $::180MCU_MODELS/sm141064.ngspice typical
+​
+Edit 2 — the input source: center the window on 1.2 V and slow it down (symmetric ±30 mV, and 6 µs instead of 2 µs so each clock step moves VIN1 only ~0.2 mV instead of 0.6 mV):
+VVIN2 vin2 0 DC 1.2
+VVIN1 vin1 0 PWL(0 1.17 6u 1.23)
+​
+Edit 3 — the .control loop (same structure as your working one; the tran stop time now matches the 6 µs ramp):
+.control
+let mc_runs = 300
+let run = 0
+let offset_results = vector(mc_runs)
+set curplotenv = $curplot
+
+* 1-sigma Vth mismatch per input device (volts).
+* Placeholder 3 mV — set from GF180 AVT / sqrt(W*L) for a real spec.
+let svt = 3.0e-3
+
+dowhile run < mc_runs
+  echo ---- run $&run ----
+
+  * fresh, independent, ZERO-MEAN kick on each input transistor's Vth
+  alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+  alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+  * one transient = one full VIN1 sweep (must match the 6u PWL above)
+  tran 10p 6u
+
+  * the LAST time the output falls through mid-rail = the flip point
+  let trip_time = -1
+  meas tran trip_time when v(out1)=1.5 fall=LAST
+  if trip_time > 0
+    meas tran v_in_at_trip find v(vin1) at=trip_time
+    let offset_results[run] = v_in_at_trip - 1.200
+  else
+    let offset_results[run] = -999
+    echo   WARN: no trip on run $&run
+  end
+
+  destroy $curplot          ; free this run's waveform (keeps RAM flat)
+  let run = run + 1
+end
+
+setplot $curplotenv
+let mu  = mean(offset_results)
+let sig = sqrt(mean((offset_results - mu)^2))
+echo ========================================
+echo MC done (N=$&mc_runs): mean=$&mu V  sigma=$&sig V
+echo ========================================
+write  comp_mc_offsets.raw offset_results
+unset  wr_singlescale
+wrdata comp_mc_offsets.txt offset_results
+.endc
+​
+The decisive test: run it once with sw_stat_mismatch = 0.
+If the mean collapses toward ~0 mV (and you finally see negative offsets) → the +15 mV was frozen PDK junk. Your headline spec is then just σ, which is what you actually care about.
+If the mean stays near +15 mV → it's a real setup systematic, and you go hunt the crossed-output/clock-feedthrough explanation. Either way, you've learned the truth.
+3. Other solutions
+Bisection search (most accurate, my recommended next step if you need precision). Instead of one slow ramp, you "play 20 questions" with the trip voltage: hold VIN1 at a fixed value, give one clock pulse, see which way the output resolves, then halve your search window. ~12 trials gets you to ~25 µV resolution (vs 0.6 mV), and it's faster than a long ramp. Skeleton for inside the loop:
+let vlo = 1.15
+let vhi = 1.25
+let k = 0
+dowhile k < 12
+  let vmid = (vlo + vhi)/2
+  alter VVIN1 = vmid           ; hold input at a fixed DC level
+  tran 10p 40n                 ; one clock period = one decision
+  meas tran vo find v(out1) at=35n
+  if vo > 1.5
+    let vhi = vmid             ; resolved high -> trip is below vmid
+  else
+    let vlo = vmid             ; resolved low  -> trip is above vmid
+  end
+  destroy $curplot
+  let k = k + 1
+end
+let offset_results[run] = (vlo + vhi)/2 - 1.200
+​
+Caveats (it's the more advanced route): VVIN1 must become a DC source you can alter (drop the PWL), you must sample out1 at the right instant in the clock cycle, and you may need to flip the high/low logic to match your crossed VOUT pins.
+Re-source method (foundry-calibrated stats). The one from your §9: keep the PDK's real mismatch on all 11 devices, but force a fresh random draw each run by reloading the netlist (source → tran → meas → store → remcirc). More plumbing, but it uses GlobalFoundries' calibrated numbers instead of your hand-picked svt. Best for a final sign-off.
+Just go finer/longer. If you only need a ballpark, keep the ramp method but narrow the range or lengthen the sweep for resolution, and bump the run count (your uncertainty on σ is ≈ σ/√(2N)).
+4. What the code does (line by line, baby terms)
+let offset_results = vector(mc_runs) — make an empty box with 300 slots to hold one offset number per run.
+let svt = 3.0e-3 — "how mismatched are two 'identical' transistors?" expressed as a 1-sigma voltage (3 mV placeholder).
+dowhile run < mc_runs — repeat everything inside 300 times.
+alter @m.x1.xm10.m0[delvto] = svt * sgauss(0) — sgauss(0) rolls a fresh random number from a bell curve (avg 0); multiplying by svt scales it to a realistic Vth nudge, and alter pokes that nudge into input transistor XM10. The next line does the same, independently, for XM8. Doing both independently is what creates a realistic random difference between the pair = the offset. (We use alter, not reset, because reset won't re-roll randomness — that was your big bug #3.)
+tran 10p 6u — run the circuit for 6 µs while VIN1 slowly ramps past VIN2; this is the actual experiment for that run.
+meas tran trip_time when v(out1)=1.5 fall=LAST — find the moment the output last flips through mid-rail (1.5 V) — i.e., the instant the comparator changed its mind.
+meas tran v_in_at_trip find v(vin1) at=trip_time — read what VIN1 was at that exact instant.
+let offset_results[run] = v_in_at_trip - 1.200 — offset = (voltage where it flipped) − 1.2 V reference. Store it in this run's slot.
+the else ... -999 — if the comparator never flipped, mark the run as bad so you can spot it.
+destroy $curplot — throw away this run's big waveform so 300 runs don't eat ~7 GB of RAM (your bug #6 fix).
+After the loop: mean(...) and the sqrt(mean((x-mu)^2)) line compute the average offset (systematic) and the spread (σ, your real mismatch spec), then write/wrdata save the raw numbers to disk.
+Want me to also write the full bisection version as a drop-in .control block (with the DC-source and clock-sampling details worked out for your specific clock timing)?
+just for testing, how many mc_runs should i do before i can sort of know that we have moved on from the 15mv?
+Jun 12
+Thought
+Short answer: 20 runs is plenty for a "did it move?" gut check — and even 10 will probably make it obvious.
+Here's the logic. The thing that tells you how trustworthy a mean is from N runs is the standard error = σ/√N, with your σ ≈ 4.5 mV:
+Runs (N)
+Std error of the mean
+Rough 95% window on the mean
+10
+~1.4 mV
+±2.8 mV
+20
+~1.0 mV
+±2.0 mV
+30
+~0.8 mV
+±1.6 mV
+50
+~0.6 mV
+±1.3 mV
+You're trying to tell apart two very different outcomes: mean ~0 mV (frozen junk was the cause) vs mean ~15 mV (real systematic). Those are ~15 mV apart, which is more than 3 standard deviations even for a single run — so the average of just a handful lands you firmly in one camp or the other. At N=20 your new mean is good to about ±1 mV, which cleanly separates "near zero" from "still 15."
+Practical recipe:
+Quick test (do this): 20 runs. If the mean comes back in the low single digits (say < 3–4 mV) with some negative values mixed in, the 15 mV is gone. If it's still parked around 15 mV, it's a real setup systematic to chase.
+Confident read of the new mean: 30–50 runs.
+Final σ spec: keep your 300 (σ's own uncertainty is ≈ σ/√(2N), so big N only matters once you trust the mean).
+One caveat: this assumes the runs are actually re-rolling now (fresh sgauss via alter, no reset) — if they're not, you'll get the same number every run regardless of N, which is its own useful signal.
+these were the results
+Jun 12
+x1.net2                0.722019
+vin1                        1.19
+vck#branch                    0
+vdd#branch         -1.85003e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99664e-06
+No. of Data Rows : 603605
+trip_time          = 7.20315e-07
+v_in_at_trip        = 1.21161e+00
+========================================
+MC done (N=10): mean=0.0160491 V sigma=0.00375839 V
+========================================
+binary raw file "comp_mc_offsets.raw"
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+Jun 12
+Thought
+Quick read on those numbers: N=10, mean = 16.05 mV, σ = 3.76 mV.
+The mean did not move. With 10 runs your mean is good to about ±1.2 mV (σ/√10), so 16.0 ± 1.2 mV is nowhere near zero — and with that mean/σ all 10 runs are still positive. So we can already rule out "it was just coarse noise that averages out." The +15 mV is a stable, repeatable systematic.
+But there's a fork, and which branch you're on depends on one thing: did this run actually have sw_stat_mismatch = 0 in the MODELS block?
+If yes → verdict is clear: the +15 mV is a genuine measurement-setup systematic (not frozen PDK junk). Next suspects are the crossed VOUT pins, clock feedthrough/charge injection, or the lopsided sweep window — not random mismatch. Your real headline spec is σ ≈ 3.8 mV (consistent with the √2 × 3 mV ≈ 4.2 mV you'd expect from the injected svt).
+If no / still = 1 → the test is inconclusive: a frozen PDK mismatch sample on the other 9 devices is still the prime suspect for the +15 mV, and we haven't actually run the experiment yet.
+Two side notes from your log (both harmless, but telling):
+The top shows vin1  1.19 and No. of Data Rows : 603605. That looks like you bumped tran to 6 µs but left the source as the old PWL(0 1.19 2u 1.25). If so, VIN1 finishes ramping at 2 µs and just sits at 1.25 V for the last 4 µs — so you didn't gain resolution (still the 0.6 mV grid), you just spent 3× the runtime. Centering + slowing the source (PWL(0 1.17 6u 1.23)) is what actually sharpens it.
+The trailing Warning: No job ... run simulation not started is benign — it's just ngspice reaching the end of the netlist with no analysis line outside .control. Ignore it.
+To tell you which branch you're on:
+For this N=10 run, was sw_stat_mismatch set to 0 in the MODELS block?
+Yes — both sw_stat_mismatch and sw_stat_global = 0
+Thought
+That settles it. With both sw_stat_mismatch and sw_stat_global at 0, and your injected mismatch being zero-mean, the circuit is symmetric on average — so a perfectly behaving measurement should give a mean offset near 0. Instead you got +16.0 ± 1.2 mV again. 
+Verdict: the +16 mV is NOT random mismatch and NOT frozen PDK junk. It's a fixed systematic — and because the averaged circuit is symmetric, it's almost certainly coming from the measurement method, not the silicon. Your real spec, σ ≈ 3.8 mV, is the trustworthy number here.
+The prime suspect is a sweep-direction (dynamic) bias. You're finding the flip by slowly ramping VIN1 upward and catching the last time out1 falls through 1.5 V. A regenerative latch doesn't flip instantly at the exact balance point — it takes a clock cycle or two to resolve near the boundary, so a rising ramp always reports the trip a bit late (higher VIN1), and a falling ramp reports it late the other way. That one-sided lag becomes a fixed positive offset. The true offset is the midpoint of the up-sweep and down-sweep trip points.
+The decisive test (cheap, ~30 sec)
+Run the exact same thing but ramp VIN1 downward, and use a direction-agnostic edge detector so the script doesn't care which way it crosses.
+Source edit — reverse the ramp:
+VVIN1 vin1 0 PWL(0 1.23 6u 1.17)
+​
+.control edit — change fall=LAST to cross=LAST (catches a crossing in either direction):
+meas tran trip_time when v(out1)=1.5 cross=LAST
+​
+Now compare to your up-sweep result (+16 mV):
+If down-sweep gives ≈ −16 mV → pure sweep-direction bias. The true offset ≈ (up + down) / 2 ≈ ~0 mV, exactly what symmetry predicts. Mystery solved; report the average.
+If down-sweep gives ≈ +16 mV again → it's a genuine polarity/circuit systematic (e.g., the crossed VOUT2→OUT1 wiring, or measuring out1 instead of out2). Next check: measure on out2 and see if the sign flips.
+The clean long-term fix
+Either average the up- and down-sweep offsets per run (kills the directional bias and roughly doubles your effective resolution), or switch to the bisection method I sketched earlier — it samples the comparator's decision directly with no ramp, so it has no sweep direction and no 0.6 mV grid. Bisection is the "right" answer once you've confirmed the cause.
+Want me to write the full up-sweep + down-sweep version (runs both per iteration, stores the average as the offset) so your next N=10 directly spits out the bias-corrected mean?
+x1.net2                0.728711
+vin1                        1.23
+vck#branch                    0
+vdd#branch         -2.38958e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99097e-06
+No. of Data Rows : 603605
+trip_time          = 5.99019e-06
+v_in_at_trip        = 1.17010e+00
+---- run 8 ----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                 2.99838
+vdd                           3
+ck                            0
+x1.net3                 2.99719
+x1.net4                       3
+vin2                        1.2
+x1.net2                0.729506
+vin1                        1.23
+vck#branch                    0
+vdd#branch         -2.46338e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99495e-06
+No. of Data Rows : 603605
+trip_time          = 5.99019e-06
+v_in_at_trip        = 1.17010e+00
+---- run 9 ----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                  2.9985
+vdd                           3
+ck                            0
+x1.net3                  2.997
+x1.net4                       3
+vin2                        1.2
+x1.net2                0.729852
+vin1                        1.23
+vck#branch                    0
+vdd#branch         -2.49619e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.98508e-06
+No. of Data Rows : 603605
+trip_time          = 5.99019e-06
+v_in_at_trip        = 1.17010e+00
+========================================
+MC done (N=10): mean=-0.029902 V sigma=0 V
+========================================
+binary raw file "comp_mc_offsets.raw"
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+Jun 12
+Thought
+Don't read that −30 mV as a result — it's the same measurement bug as before, just showing up the other way. The giveaway is σ = 0: every one of the 10 runs returned exactly v_in_at_trip = 1.17010 (the very end of the ramp, at t ≈ 5.99 µs). A real offset measurement can't be identical across 10 randomized runs. The script stopped measuring the flip and started reporting the ramp's endpoint.
+Why it broke
+Your out1 is a clocked output — it precharges high and resolves every clock cycle (~300 times over 6 µs). So out1 crosses 1.5 V hundreds of times, not once. The =LAST qualifier grabs the final crossing, which sits at the end of the sweep.
+On the up-sweep, that accidentally worked: out1 keeps falling each cycle while VIN1 is below the trip, then stops once VIN1 passes it — so the last fall ≈ the trip. ✓
+On the down-sweep, it's mirrored: out1 doesn't fall until VIN1 drops below the trip, then it falls every cycle to the end. So the last fall = the ramp's endpoint (1.170), and the first fall is the real trip. My cross=LAST suggestion was wrong for this direction — sorry about that.
+One-line fix
+For the down-sweep, grab the first crossing instead of the last:
+meas tran trip_time when v(out1)=1.5 fall=1
+​
+(fall=1 = first falling edge. If a startup glitch in the very first clock cycle trips it early, bump to fall=2 and check.)
+What to expect after the fix
+A valid down-sweep should land around −16 mV — a mirror image of your +16 mV up-sweep. If it does, that's the proof: it's pure sweep-direction lag, and your true offset is the midpoint:
+offset
+true
+≈
+(
++
+16
+)
++
+(
+−
+16
+)
+2
+≈
+0
+ mV
+offset 
+true
+​
+ ≈ 
+2
+(+16)+(−16)
+​
+ ≈0 mV​
+i.e. the comparator is essentially offset-free on average (exactly what symmetry predicts), and your only real spec is σ ≈ 3.8 mV. If instead the corrected down-sweep also comes back positive, then it's a genuine polarity/circuit systematic and we go look at out1 vs out2.
+Want me to write the combined version that does both an up-sweep and a down-sweep per run (reusing the same random mismatch draw for both, with the correct edge for each direction) and stores the midpoint as the offset? That gives you the bias-corrected mean directly — and honestly, switching to bisection would sidestep this whole "which edge / which direction" headache entirely. I'd lean toward bisection as the real fix; happy to write either.
+yes, do a combined version. here is what i have right now:
+v {xschem version=3.4.8RC file_version=1.3}
+G {}
+K {}
+V {}
+S {}
+F {}
+E {}
+N 770 -830 770 -760 {lab=VIN1}
+N 770 -830 940 -830 {lab=VIN1}
+N 840 -810 840 -760 {lab=VIN2}
+N 840 -810 940 -810 {lab=VIN2}
+N 700 -850 700 -760 {lab=CK}
+N 700 -850 940 -850 {lab=CK}
+N 1080 -830 1210 -830 {lab=OUT1}
+N 1080 -810 1170 -810 {lab=OUT2}
+C {comparator/schematic/strongarm.sym} 930 -770 0 0 {name=X1}
+C {vsource.sym} 840 -730 0 0 {name=VVIN2 value=1.2 savecurrent=false}
+C {vsource.sym} 770 -730 0 0 {name=VVIN1 value="PWL(0 1.23 6u 1.17)" savecurrent=false}
+C {vsource.sym} 630 -730 0 0 {name=VDD value=3 savecurrent=false}
+C {vsource.sym} 700 -730 0 0 {name=VCK value="PULSE(0 3 0 100p 100p 10n 20n)" savecurrent=false}
+C {title.sym} 180 -60 0 0 {name=l1 author="Bruno R.M."}
+C {gnd.sym} 700 -700 0 0 {name=l2 lab=0}
+C {gnd.sym} 630 -700 0 0 {name=l3 lab=0}
+C {gnd.sym} 770 -700 0 0 {name=l4 lab=0}
+C {gnd.sym} 840 -700 0 0 {name=l5 lab=0}
+C {vdd.sym} 1080 -850 1 0 {name=l6 lab=VDD}
+C {vdd.sym} 630 -760 0 0 {name=l7 lab=VDD}
+C {gnd.sym} 1080 -790 3 0 {name=l8 lab=0}
+C {noconn.sym} 1170 -810 0 1 {name=l9}
+C {noconn.sym} 1210 -830 0 1 {name=l10}
+C {lab_wire.sym} 1190 -830 0 0 {name=p2 sig_type=std_logic lab=OUT1}
+C {lab_wire.sym} 1120 -810 2 0 {name=p5 sig_type=std_logic lab=OUT2}
+C {devices/code_shown.sym} 690 -1010 0 0 {name=MODELS only_toplevel=true
+format="tcleval( @value )"
+value="
+.param sw_stat_global   = 0
+.param sw_stat_mismatch = 0
+.include $::180MCU_MODELS/design.ngspice
+.lib $::180MCU_MODELS/sm141064.ngspice typical
+"}
+C {devices/code_shown.sym} -140 -1290 0 0 {name=NGSPICE only_toplevel=true
+value="
+.control
+let mc_runs = 300
+let run = 0
+let offset_results = vector(mc_runs)
+set curplotenv = $curplot
+
+* 1-sigma Vth mismatch per input device (volts).
+* Placeholder 3 mV — set from GF180 AVT / sqrt(W*L) for a real spec.
+let svt = 3.0e-3
+
+dowhile run < mc_runs
+echo ---- run $&run ----
+
+* fresh, independent, ZERO-MEAN kick on each input transistor's Vth
+alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+* one transient = one full VIN1 sweep (must match the 6u PWL above)
+tran 10p 6u
+
+* the LAST time the output falls through mid-rail = the flip point
+let trip_time = -1
+meas tran trip_time when v(out1)=1.5 cross=LAST
+if trip_time > 0
+meas tran v_in_at_trip find v(vin1) at=trip_time
+let offset_results[run] = v_in_at_trip - 1.200
+else
+let offset_results[run] = -999
+echo   WARN: no trip on run $&run
+end
+
+destroy $curplot          ; free this run's waveform (keeps RAM flat)
+let run = run + 1
+end
+
+setplot $curplotenv
+let mu  = mean(offset_results)
+let sig = sqrt(mean((offset_results - mu)^2))
+echo ========================================
+echo MC done (N=$&mc_runs): mean=$&mu V  sigma=$&sig V
+echo ========================================
+write  comp_mc_offsets.raw offset_results
+unset  wr_singlescale
+wrdata comp_mc_offsets.txt offset_results
+.endc
+"}
+C {lab_wire.sym} 700 -850 0 0 {name=p1 sig_type=std_logic lab=CK}
+C {lab_wire.sym} 770 -800 0 0 {name=p3 sig_type=std_logic lab=VIN1}
+C {lab_wire.sym} 840 -770 0 0 {name=p4 sig_type=std_logic lab=VIN2}
+Jun 12
+Thought
+Here's the combined version. It runs both an up-sweep and a down-sweep per run, reuses the same random mismatch sample for both, picks the correct edge for each direction, and stores the midpoint as the offset — which cancels the sweep-direction lag.
+Two things changed from your current block: (1) the loop now drives the sweep direction itself via alter @vvin1[pwl], so the source's own PWL value no longer matters; (2) the down-sweep uses fall=1 (first edge), the up-sweep keeps fall=LAST.
+Paste this into your NGSPICE code_shown symbol (replacing the .control … .endc block):
+.control
+let mc_runs = 300
+let run = 0
+let offset_results = vector(mc_runs)
+set curplotenv = $curplot
+
+* 1-sigma Vth mismatch per input device (volts).
+* Placeholder 3 mV - set from GF180 AVT / sqrt(W*L) for a real spec.
+let svt = 3.0e-3
+
+dowhile run < mc_runs
+  echo ---- run $&run ----
+
+  * One random device sample per run, applied ONCE so the UP and DOWN
+  * sweeps both see the SAME mismatch (that is what makes the average valid).
+  alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+  alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+  unset s_up
+  unset s_dn
+
+  * ---------------- UP sweep: VIN1 1.17 -> 1.23 ----------------
+  * Rising sweep: out1 falls every cycle BELOW the trip, so the
+  * trip point is the LAST falling edge.
+  alter @vvin1[pwl] = [ 0 1.17 6e-6 1.23 ]
+  tran 10p 6u
+  let t_up = -1
+  meas tran t_up when v(out1)=1.5 fall=LAST
+  if t_up > 0
+    meas tran vin_up find v(vin1) at=t_up
+    let off_up = vin_up - 1.200
+    set s_up = $&off_up
+  end
+  destroy $curplot
+
+  * --------------- DOWN sweep: VIN1 1.23 -> 1.17 ---------------
+  * Falling sweep: out1 only starts falling once VIN1 drops BELOW the
+  * trip, so the trip point is the FIRST falling edge (not the last!).
+  alter @vvin1[pwl] = [ 0 1.23 6e-6 1.17 ]
+  tran 10p 6u
+  let t_dn = -1
+  meas tran t_dn when v(out1)=1.5 fall=1
+  if t_dn > 0
+    meas tran vin_dn find v(vin1) at=t_dn
+    let off_dn = vin_dn - 1.200
+    set s_dn = $&off_dn
+  end
+  destroy $curplot
+
+  * --------- combine: true offset = midpoint of the two sweeps ---------
+  if ( $?s_up * $?s_dn ) = 1
+    let offset_results[run] = ( ($s_up) + ($s_dn) ) / 2
+    echo   up=$s_up  dn=$s_dn
+  else
+    let offset_results[run] = -999
+    echo   WARN: missing trip on run $&run
+  end
+
+  let run = run + 1
+end
+
+setplot $curplotenv
+let mu  = mean(offset_results)
+let sig = sqrt(mean((offset_results - mu)^2))
+echo ========================================
+echo MC done (N=$&mc_runs): mean=$&mu V  sigma=$&sig V
+echo ========================================
+write  comp_mc_offsets.raw offset_results
+unset  wr_singlescale
+wrdata comp_mc_offsets.txt offset_results
+.endc
+​
+How it works (plain terms):
+Each run rolls the random mismatch once and pokes it into both input devices. That single sample stays put for both sweeps (so we're comparing apples to apples).
+It runs VIN1 up (1.17→1.23) and finds the flip as the last fall of out1, then runs VIN1 down (1.23→1.17) and finds the flip as the first fall. Each gives an offset that's biased one way by the comparator's decision lag.
+The stored result is their average, which cancels the lag. $?s_up / $?s_dn just check that both sweeps actually found a flip before averaging; otherwise the run is flagged −999.
+Memory stays flat (each sweep's waveform is destroyed right after it's measured), and resolution is now ~0.2 mV (0.06 V × 20 ns / 6 µs).
+Before you launch: set let mc_runs = 300 to 10 for a quick sanity pass first.
+What to expect: the up= / dn= echoes should be near-mirrors (e.g. up≈+0.016 dn≈−0.016), and the final mean should land near ~0 with σ ≈ 4 mV. If it does, you've nailed it: the +16 mV was pure measurement lag, and σ is your real headline spec.
+Two version-dependent gotchas to watch in the log:
+If alter @vvin1[pwl] = [...] throws a syntax error, your ngspice build wants the alternate form alter vvin1 pwl = [ 0 1.17 6e-6 1.23 ].
+If a down-sweep value comes back near 1.23 (the start), a power-up glitch tripped fall=1 — bump it to fall=2.
+Want me to also fold this final working script (and the "+16 mV was measurement lag, real spec is σ" conclusion) into your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc so the next session starts from the corrected method?
+vin1                        1.23
+vck#branch                    0
+vdd#branch         -2.46338e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99730e-06
+No. of Data Rows : 603605
+t_dn               = 1.32032e-06
+vin_dn             = 1.21680e+00
+up=0.018803 dn=0.016797
+---- run 9 ----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                2.9981
+vdd                           3
+ck                            0
+x1.net3                2.99893
+x1.net4                       3
+vin2                        1.2
+x1.net2                0.719018
+vin1                        1.17
+vck#branch                    0
+vdd#branch         -1.64943e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99636e-06
+No. of Data Rows : 603605
+t_up               = 4.18032e-06
+vin_up             = 1.21180e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                2.9985
+vdd                           3
+ck                            0
+x1.net3                2.997
+x1.net4                       3
+vin2                        1.2
+x1.net2                0.729852
+vin1                        1.23
+vck#branch                    0
+vdd#branch         -2.49619e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99206e-06
+No. of Data Rows : 603605
+t_dn               = 2.02032e-06
+vin_dn             = 1.20980e+00
+up=0.011803 dn=0.009797
+========================================
+MC done (N=10): mean=0.01542 V sigma=0.00376478 V
+========================================
+binary raw file "comp_mc_offsets.raw"
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+Jun 12
+Thought
+Big result — and it flips the conclusion in a good way. Look at the two up=/dn= pairs:
+up=0.018803  dn=0.016797 → gap +2.0 mV
+up=0.011803  dn=0.009797 → gap +2.0 mV
+The up- and down-sweeps agree (both positive, both ~+15–16 mV), with a constant ~2 mV gap between them. That's the opposite of what a sweep-direction artifact would look like — if the +15 mV were pure direction lag, up and down would be mirror images with opposite signs (e.g. +16 vs −16). Instead they land almost on top of each other.
+So here's the corrected verdict:
+The +15 mV is a genuine systematic offset, not a measurement artifact. The only thing that was a directional artifact is that constant ~2 mV gap — i.e. ~1 mV of decision lag on each side — and your combined script now correctly averages it away. Method validated. ✅
+Your real result is therefore:
+Systematic offset ≈ +15.4 mV (mean)
+Random (mismatch) offset σ ≈ 3.8 mV — this is your headline spec, and it's stable across every run/version we've tried.
+Why this is interesting: you ran this with mismatch off (sw_stat_mismatch=0) and zero-mean injection, so the averaged circuit is symmetric — and a perfectly symmetric StrongArm should give ~0 systematic. Getting a solid +15 mV means there's a real asymmetry baked into the design as drawn, not a quirk of how you're measuring (the decision boundary here is well-defined: "out1 stops falling" is the same VIN1 as "out2 starts falling," so there's no single-node threshold bias to blame). That's worth understanding, but it's a true property of the comparator.
+Cheap tests to pin down where the 15 mV lives:
+Common-mode sweep — rerun with VVIN2 = 1.0 and 1.4 V. If the systematic moves a lot with VCM, it's coming from the input pair's operating point; if it barely budges, it's more likely latch/clock asymmetry (charge injection from the clock devices).
+Zero-input metastability check — set VIN1 = VIN2 = 1.2 V (matched, no sweep) and watch which of out1/out2 wins each clock. A clean comparator is ~50/50; a consistent winner directly confirms the sign and rough size of the structural bias.
+Inspect the cell — your handoff doc already flagged the crossed output pins (VOUT2→OUT1, VOUT1→OUT2). That, plus any device-size or net asymmetry between the two halves of strongarm.sym, is the first place I'd look.
+Two ways I can help next — want me to:
+write the common-mode sweep wrapper (loops VIN2 over 1.0/1.2/1.4 and reports systematic + σ at each), and/or
+update your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc with the final combined script and the corrected conclusion (+15 mV is a real systematic, σ≈3.8 mV is the spec, open question = source of the systematic)?
+wait, so something is wrong with my design?
+Jun 12
+Thought
+Don't panic — "wrong" is too strong. Nothing has crashed or mis-simulated. What the data is telling you is just this: as currently drawn, your comparator leans about 15 mV to one side. That's a real characteristic of the design, and finding it is exactly what an offset simulation is for. Better to see it now than after tapeout.
+Let me put it in plain terms:
+Random offset (σ ≈ 3.8 mV) = the part that's different every chip, caused by tiny unavoidable transistor mismatches. Yours looks normal and healthy for near-minimum-size devices.
+Systematic offset (≈ +15 mV) = a fixed lean that would show up the same way on every chip, even with perfectly identical transistors. This is the part worth a second look.
+Here's the key idea: in your run, transistor mismatch was turned off and your injected mismatch averages to zero — so on paper the circuit is perfectly balanced. A perfectly balanced StrongArm should land at ~0 mV systematic. Getting a steady +15 mV instead means there's some asymmetry built into the schematic or the testbench — one side of the comparator isn't a mirror image of the other. That's not a "broken transistor," it's a layout/wiring imbalance, and those are usually findable and fixable.
+Most likely culprits (in order of how often they bite people):
+Unequal loading on the two outputs — e.g. OUT1 and OUT2 don't see the same capacitance/connections in the testbench. Your doc already flagged that the output pins are crossed (VOUT2→OUT1, VOUT1→OUT2), and there are some VDD/GND taps near the output nets — worth double-checking they're symmetric.
+The comparator cell itself drawn slightly asymmetrically (input pair or latch halves not matched).
+A genuine (but smaller) design effect like clock charge-injection that doesn't perfectly cancel.
+So: it's probably not "your design is broken," but more like "there's a small imbalance to track down." And whether +15 mV even matters depends on your target spec — for some applications it's fine, for others you'd trim it out.
+The fastest way to learn whether it's real circuit behavior vs. a testbench wiring imbalance is the common-mode test: rerun with VVIN2 = 1.0 V and 1.4 V. If the 15 mV stays rock-steady regardless of common mode, it's almost certainly a structural/wiring asymmetry; if it swings around, it's tied to how the input pair operates.
+Want me to write that common-mode sweep so you can see the systematic at 1.0 / 1.2 / 1.4 V side by side? That'll tell us where the 15 mV is coming from.
+yeah, write the code
+4:44 PM
+Thought
+Here's the common-mode sweep. It wraps the validated up/down combined method in an outer loop over VVIN2 = 1.0 / 1.2 / 1.4 V, re-centers the VIN1 sweep on each common mode, and reports the systematic (mean) and σ at each point so you can see how the 15 mV behaves across VCM.
+Paste this in place of your .control … .endc block:
+.control
+let mc_runs = 10
+set curplotenv = $curplot
+unset wr_singlescale
+
+* 1-sigma Vth mismatch per input device (volts).
+let svt = 3.0e-3
+
+* common-mode points to test
+compose vcm_list values 1.0 1.2 1.4
+
+let ci = 0
+dowhile ci < length(vcm_list)
+  let vcm = vcm_list[ci]
+  set svcm = $&vcm
+  let vlo = vcm - 0.05
+  let vhi = vcm + 0.05
+  set svlo = $&vlo
+  set svhi = $&vhi
+
+  * set the reference input to this common mode
+  alter vvin2 = $svcm
+
+  let offset_results = vector(mc_runs)
+  let run = 0
+  echo ########## VCM = $svcm V ##########
+
+  dowhile run < mc_runs
+    echo ---- VCM $svcm  run $&run ----
+
+    * one random sample per run, reused for BOTH sweep directions
+    alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+    alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+    unset s_up
+    unset s_dn
+
+    * ---- UP sweep: (vcm-50mV) -> (vcm+50mV) ; trip = LAST fall ----
+    alter @vvin1[pwl] = [ 0 $svlo 6e-6 $svhi ]
+    tran 10p 6u
+    let t_up = -1
+    meas tran t_up when v(out1)=1.5 fall=LAST
+    if t_up > 0
+      meas tran vin_up find v(vin1) at=t_up
+      let off_up = vin_up - $svcm
+      set s_up = $&off_up
+    end
+    destroy $curplot
+
+    * ---- DOWN sweep: (vcm+50mV) -> (vcm-50mV) ; trip = FIRST fall ----
+    alter @vvin1[pwl] = [ 0 $svhi 6e-6 $svlo ]
+    tran 10p 6u
+    let t_dn = -1
+    meas tran t_dn when v(out1)=1.5 fall=1
+    if t_dn > 0
+      meas tran vin_dn find v(vin1) at=t_dn
+      let off_dn = vin_dn - $svcm
+      set s_dn = $&off_dn
+    end
+    destroy $curplot
+
+    * ---- combine: true offset = midpoint of the two sweeps ----
+    if ( $?s_up * $?s_dn ) = 1
+      let offset_results[run] = ( ($s_up) + ($s_dn) ) / 2
+      echo   up=$s_up  dn=$s_dn
+    else
+      let offset_results[run] = -999
+      echo   WARN: missing trip at VCM $svcm run $&run
+    end
+
+    let run = run + 1
+  end
+
+  * ---- stats for this common mode ----
+  setplot $curplotenv
+  let mu  = mean(offset_results)
+  let sig = sqrt(mean((offset_results - mu)^2))
+  echo ====================================================
+  echo VCM = $svcm V :  systematic = $&mu V   sigma = $&sig V
+  echo ====================================================
+
+  let ci = ci + 1
+end
+.endc
+​
+How to read the output: you'll get three summary lines, one per common mode:
+VCM = 1 V   : systematic = ...  sigma = ...
+VCM = 1.2 V : systematic = ...  sigma = ...
+VCM = 1.4 V : systematic = ...  sigma = ...
+​
+If the systematic swings a lot across VCM (e.g. 1.0 → 1.2 → 1.4 gives noticeably different means) → the offset is tied to the input pair's operating point — a real circuit effect that depends on how the differential pair biases.
+If the systematic stays ~flat at +15 mV across all three → it's a fixed structural/wiring asymmetry (the crossed output pins or unequal output loading in your testbench are the prime suspects), independent of bias point.
+Either way, σ should stay ~constant (it's set by svt), which is a good consistency check that the loop is behaving.
+A few notes:
+It's set to mc_runs = 10 for a quick pass — bump it back up once you're happy.
+I widened the window to ±50 mV around VCM so a larger offset at the VCM extremes doesn't get clipped. If you ever see results piling up exactly at vcm±0.05, widen it further; if everything lands well inside, you can narrow it for finer resolution.
+If alter vvin2 = $svcm errors on your build, use the explicit form alter @vvin2[dc] = $svcm.
+Once you've got the three numbers, send them over and I'll help you read what they say about where the 15 mV lives. And whenever you're ready, I can still fold the final method + conclusions into your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc so the next session picks up cleanly.
+here are two sample outputs (it outputted so much that i can’t go all the way up):
+
+vvin1#branch                        0
+vvin2#branch                        0
+
+Reference value : 5.99404e-06
+No. of Data Rows : 603605
+t_dn             = 1.80032e-06
+vin_dn           = 1.21999e+00
+up=0.022005 dn=0.019995
+----- VCM 1.2 run 9 -----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.99799
+vdd                           3
+ck                            0
+x1.net3                   2.99923
+x1.net4                       3
+vin2                        1.2
+x1.net2                  0.717361
+vin1                         1.15
+vck#branch                    0
+vdd#branch               -1.54818e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99693e-06
+No. of Data Rows : 603605
+t_up             = 3.52030e-06
+vin_up           = 1.20867e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.99865
+vdd                           3
+ck                            0
+x1.net3                   2.99576
+x1.net4                       3
+vin2                        1.2
+x1.net2                  0.735546
+vin1                         1.25
+vck#branch                    0
+vdd#branch               -3.10362e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.8762e-06
+No. of Data Rows : 603605
+t_dn             = 2.58033e-06
+vin_dn           = 1.20699e+00
+up=0.008672 dn=0.006994
+===========================================
+VCM = 1.2 V : systematic = 0.01235 V sigma = 0.00504679 V
+===========================================
+########## VCM = 1.4 V ##########
+----- VCM 1.4 run 0 -----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+==================
+
+x1.net2                      0.792163
+vin1                             1.45
+vck#branch                          0
+vdd#branch               -2.70713e-06
+vvin1#branch                        0
+vvin2#branch                        0
+
+Reference value : 5.98622e-06
+No. of Data Rows : 603605
+t_dn             = 1.74022e-06
+vin_dn           = 1.42100e+00
+up=0.02467 dn=0.020996
+----- VCM 1.4 run 9 -----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.97974
+vdd                           3
+ck                            0
+x1.net3                   2.99029
+x1.net4                       3
+vin2                        1.4
+x1.net2                  0.779343
+vin1                         1.35
+vck#branch                    0
+vdd#branch               -1.65783e-06
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99386e-06
+No. of Data Rows : 603605
+t_up             = 4.62022e-06
+vin_up           = 1.42700e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.9827
+vdd                           3
+ck                            0
+x1.net3                   2.96979
+x1.net4                       3
+vin2                        1.4
+x1.net2                  0.791321
+vin1                         1.45
+vck#branch                    0
+vdd#branch               -2.62132e-06
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.98342e-06
+No. of Data Rows : 603605
+t_dn             = 1.58022e-06
+vin_dn           = 1.42366e+00
+up=0.027004 dn=0.023663
+===========================================
+VCM = 1.4 V : systematic = 0.0247499 V sigma = 0.0049884 V
+===========================================
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+5:04 PM
+Thought
+Good news first: the loop worked, and the answer is clear. Here are the two summary lines you could see:
+VCM
+Systematic offset
+σ
+1.2 V
++12.4 mV
+5.0 mV
+1.4 V
++24.7 mV
+5.0 mV
+The systematic offset is not flat — it nearly doubled when you raised the common mode by 0.2 V. That's the decisive clue.
+What this means: Remember the two possibilities I laid out — a fixed wiring asymmetry would give the same offset at every common mode, while an input-pair effect would move with common mode. You got the second one, and strongly: the offset climbs about 62 mV per volt of common-mode (12.4 mV → 24.7 mV over 0.2 V). σ stayed put at ~5 mV, exactly as it should (that's set by your injected svt), which confirms the loop is behaving.
+So the 15-ish mV is a real, common-mode-dependent systematic that lives in (or right around) the input differential pair — not a constant offset from the crossed output pins or output loading. As the common mode rises, the input devices run at higher overdrive/current, and whatever imbalance exists between the two input branches gets amplified into a bigger input-referred offset.
+Here's the striking part: extrapolate that line back and it crosses ~0 mV near VCM ≈ 1.0 V:
+offset
+≈
+62
+ 
+mV
+V
+×
+(
+V
+C
+M
+−
+1.0
+ 
+V
+)
+offset≈62  
+V
+mV
+​
+ ×(V 
+CM
+​
+ −1.0V)​
+In plain terms: your comparator is essentially offset-free around a ~1.0 V common mode, and develops offset as you push the inputs higher. If your real application sits at VCM ≈ 1.2–1.4 V, that's exactly where the 12–25 mV is coming from.
+One thing I'm missing: the VCM = 1.0 V summary line scrolled off the top. Can you grab it? It should read close to ~0 mV if the trend holds — that would nail the story. Two easy ways to capture it:
+Run batch mode and dump everything to a file: ngspice -b strongarm_mc_tb.sch > mc.log, then grep "VCM =" mc.log.
+Or temporarily silence the per-run spam by commenting out the echo ---- ... and echo   up=... lines inside the loop, leaving just the three summary lines.
+Where this points for a fix: since it's input-pair-related, the thing to inspect in strongarm.sym is the symmetry of the two input branches — specifically how XM10's and XM8's drains connect into the cross-coupled latch, and whether the two sides see identical loading/routing. An imbalance there is the usual cause of a common-mode-dependent offset like this.
+Send me the VCM = 1.0 V number and I'll confirm the slope. And whenever you want, I can still capture this whole investigation — the corrected method plus the finding that the offset is common-mode-dependent (~0 at 1.0 V, ~62 mV/V slope), with σ ≈ 5 mV as the real mismatch spec — into your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc.
+ngspice 1 -> ngspice -b strongarm_mc-tb_.sch > mc.log
+ngspice: no such command available in ngspice
+ngspice 2 →
+5:09 PM
+Thought
+Ah, that's an easy mix-up — -b is a flag for launching ngspice from your normal terminal (bash) shell, not a command you type at the ngspice -> prompt. At the ngspice prompt there's no ngspice command, hence the error. (To use batch mode you'd first quit out to the shell, then run ngspice -b <netlist> -o mc.log — but note that takes the generated netlist, not the .sch, so let's not go down that path right now.)
+The cleaner fix: make the script print all three results together at the very end, so they land at the bottom of the screen and nothing scrolls away. I added two small things — result vectors that get filled each loop, and a summary block after the loop. Here's the updated .control:
+.control
+let mc_runs = 10
+set curplotenv = $curplot
+unset wr_singlescale
+
+* 1-sigma Vth mismatch per input device (volts).
+let svt = 3.0e-3
+
+* common-mode points to test
+compose vcm_list values 1.0 1.2 1.4
+
+* storage for the per-VCM results (printed all together at the end)
+let mu_list  = vector(length(vcm_list))
+let sig_list = vector(length(vcm_list))
+
+let ci = 0
+dowhile ci < length(vcm_list)
+  let vcm = vcm_list[ci]
+  set svcm = $&vcm
+  let vlo = vcm - 0.05
+  let vhi = vcm + 0.05
+  set svlo = $&vlo
+  set svhi = $&vhi
+
+  alter vvin2 = $svcm
+
+  let offset_results = vector(mc_runs)
+  let run = 0
+  echo ########## VCM = $svcm V ##########
+
+  dowhile run < mc_runs
+    alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+    alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+    unset s_up
+    unset s_dn
+
+    * ---- UP sweep ; trip = LAST fall ----
+    alter @vvin1[pwl] = [ 0 $svlo 6e-6 $svhi ]
+    tran 10p 6u
+    let t_up = -1
+    meas tran t_up when v(out1)=1.5 fall=LAST
+    if t_up > 0
+      meas tran vin_up find v(vin1) at=t_up
+      let off_up = vin_up - $svcm
+      set s_up = $&off_up
+    end
+    destroy $curplot
+
+    * ---- DOWN sweep ; trip = FIRST fall ----
+    alter @vvin1[pwl] = [ 0 $svhi 6e-6 $svlo ]
+    tran 10p 6u
+    let t_dn = -1
+    meas tran t_dn when v(out1)=1.5 fall=1
+    if t_dn > 0
+      meas tran vin_dn find v(vin1) at=t_dn
+      let off_dn = vin_dn - $svcm
+      set s_dn = $&off_dn
+    end
+    destroy $curplot
+
+    if ( $?s_up * $?s_dn ) = 1
+      let offset_results[run] = ( ($s_up) + ($s_dn) ) / 2
+    else
+      let offset_results[run] = -999
+    end
+
+    let run = run + 1
+  end
+
+  * ---- stats for this common mode ----
+  setplot $curplotenv
+  let mu  = mean(offset_results)
+  let sig = sqrt(mean((offset_results - mu)^2))
+  let mu_list[ci]  = mu
+  let sig_list[ci] = sig
+  let ci = ci + 1
+end
+
+* ===== final summary: all VCM points together, at the very bottom =====
+setplot $curplotenv
+echo
+echo ========== COMMON-MODE SWEEP SUMMARY ==========
+let k = 0
+dowhile k < length(vcm_list)
+  let onev   = vcm_list[k]
+  let onemu  = mu_list[k]
+  let onesig = sig_list[k]
+  echo VCM= $&onev V   systematic= $&onemu V   sigma= $&onesig V
+  let k = k + 1
+end
+echo ===============================================
+.endc
+​
+What changed and why:
+Removed the chatty per-run echo lines (less flood), and stored each VCM's mu/sig into mu_list/sig_list.
+After the loop, it prints one clean 3-line summary block as the last thing on screen — so VCM = 1.0 V won't scroll off.
+One detail I was careful about: in the summary I copy each element into a length-1 scalar first (let onev = vcm_list[k]) and then print $&onev. That's deliberate — $&vcm_list[k] with a variable index is the form that breaks in ngspice, but copying-then-dereferencing is safe.
+Run it again and you'll get all three lines stacked at the bottom. Send them over (especially that VCM = 1.0 V value) and we'll confirm whether the offset really crosses ~0 near 1.0 V.
+vvin1#branch                        0
+vvin2#branch                        0
+
+Reference value : 5.99810e-06
+No. of Data Rows : 603605
+t_dn             = 1.58022e-06
+vin_dn           = 1.42366e+00
+
+========= COMMON-MODE SWEEP SUMMARY =========
+VCM= 1 V systematic= 0.0106837 V sigma= 0.00370353 V
+VCM= 1.2 V systematic= 0.01235 V sigma= 0.00504679 V
+VCM= 1.4 V systematic= 0.0247499 V sigma= 0.0049884 V
+=============================================
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+5:23 PM
+Thought
+All three points are in now — and the third one actually revises the story I told you earlier, so let me correct that honestly.
+VCM
+Systematic offset
+σ
+1.0 V
++10.7 mV
+3.7 mV
+1.2 V
++12.4 mV
+5.0 mV
+1.4 V
++24.7 mV
+5.0 mV
+Correction to what I predicted: I'd extrapolated that the offset would hit ~0 near 1.0 V. It doesn't — it's still +10.7 mV at 1.0 V. So the straight-line-through-zero idea was wrong. The real shape is more interesting:
+From 1.0 → 1.2 V, the offset is nearly flat: 10.7 → 12.4 mV (a gentle ~8 mV/V).
+From 1.2 → 1.4 V, it shoots up: 12.4 → 24.7 mV (a steep ~62 mV/V).
+That two-slope shape tells me your offset is actually two effects stacked on top of each other:
+A fixed baseline of ~11 mV that's there regardless of common mode (visible as the flat floor at 1.0–1.2 V). This is the "structural" piece — a constant asymmetry like the crossed output pins, unequal output loading, or clock charge-injection that doesn't care about bias point.
+A common-mode-dependent piece that piles on at high VCM (the steep climb toward 1.4 V). This is the "input-pair operating-point" piece — as you push the common mode up, the input devices run at higher overdrive/current (their tail node x1.net2 rose from ~0.72 V to ~0.79 V between 1.2 and 1.4 V), and any imbalance between the two input branches gets amplified into a bigger input-referred offset.
+So it's not purely one or the other — it's a fixed ~11 mV floor plus an input-pair term that blows up near the top of the input range.
+On σ: 3.7 / 5.0 / 5.0 mV. With only N=10 the σ estimate itself is fuzzy (roughly ±20%), so treat these as "σ ≈ 4–5 mV, basically constant" — which is the right behavior, since σ is set by your injected svt, not by VCM. That's your real random-mismatch headline.
+What this means practically:
+Your comparator's sweet spot is the lower common-mode range (~1.0–1.2 V), where systematic sits around 11–12 mV and is stable. Running near 1.4 V roughly doubles it — avoid that operating region if you can.
+To attack the ~11 mV floor: chase fixed asymmetries — the crossed VOUT pins, symmetric output load, and clock routing to both sides.
+To attack the high-VCM blow-up: look at the input-pair branches in strongarm.sym — specifically whether XM10's and XM8's drains connect into the cross-coupled latch identically.
+Want me to capture all of this — the corrected method, the three-point table, and the two-component conclusion — into your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc so the next session starts from the right picture?
+Isn’t this just an issue with the actual schmeatic is what you’re saying?
+5:31 PM
+Thought
+Yes — that's exactly the right way to read it. The offset is coming from your circuit as drawn, not from a simulation glitch or a broken device. Here's the reasoning chain that gets us there:
+You have mismatch turned off (sw_stat_mismatch=0) and you're injecting zero-mean Vth variation. A perfectly symmetric comparator under those conditions should read ~0 mV systematic.
+It reads +11 to +25 mV instead. The only place that can come from is an asymmetry in the schematic — something where the two halves of the circuit aren't mirror images of each other.
+So "yes, it's the schematic" — with one useful refinement: "the schematic" is really two layers, and they're fixable in different ways:
+Your testbench wiring — the crossed VOUT pins, whether both outputs see identical load, how the clock reaches each side. This is the easy layer to fix, and it likely explains a good chunk of the flat ~11 mV floor.
+The comparator cell itself (strongarm.sym) — whether the two input branches and their connections into the cross-coupled latch are truly symmetric. This is the layer that explains the steep rise at high common mode.
+Two important caveats so you don't over-correct:
+This is systematic offset, which is a symmetry/design issue — a different animal from the σ ≈ 4–5 mV random mismatch. The systematic you fix by making the drawing symmetric. The σ you'd only shrink by making the input devices bigger (more area averages out random Vth). Don't conflate them.
+A little common-mode dependence is normal even for a flawlessly drawn StrongArm. But a fixed ~11 mV floor with mismatch off is bigger than a clean symmetric design should show — so there genuinely is an asymmetry to find, not just unavoidable physics.
+Bottom line: nothing is "broken" — no dead transistor, no wrong model. Your comparator is functioning; it's just not balanced, and balance is a schematic/layout property you can chase down. The crossed output pins in your testbench are the first thing I'd verify.
+Want me to record this conclusion in your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff doc so it's captured for next time?
+Tell me how you came to the conclusion that it is asymetric
+5:35 PM
+Thought
+Fair question — let me show you the actual logic, because the conclusion rests on a specific setup, not a hunch. It's essentially a controlled experiment with a null hypothesis.
+Step 1 — I deliberately created a "must read zero" condition.
+We turned off both variation switches (sw_stat_global=0, sw_stat_mismatch=0), so the PDK adds no process or mismatch variation. The only thing varying is the Vth I inject by hand onto the two input devices, and that injection is svt * sgauss(0) — a zero-mean Gaussian applied identically to both XM10 and XM8. So, averaged over many runs, the two input transistors are statistically identical.
+Step 2 — Why a symmetric circuit must read ~0 under that condition.
+"Input-referred offset" is defined as: the differential input voltage you have to apply to exactly cancel whatever internal imbalance exists at the moment the comparator decides. If the two halves of the circuit are mirror images and the two devices are identical on average, there's no internal imbalance to cancel → the decision boundary sits at zero differential input → mean offset = 0. That's the prediction if the schematic is symmetric.
+Step 3 — What we actually measured.
+The mean offset is consistently positive — +10.7 to +24.7 mV — and, in your original 300-run set, every single run was positive (zero runs negative). That's the critical detail.
+Step 4 — The conclusion follows by elimination.
+A zero-mean random source (like real mismatch) would scatter the offset around 0, with roughly half the runs negative. It cannot produce a mean that sits firmly on one side. So a consistent, one-sided, nonzero mean — under conditions where a balanced circuit must give zero — can only come from a deterministic imbalance built into the circuit. "Deterministic imbalance between the two sides" is precisely what asymmetry means. That's the whole argument.
+What I explicitly ruled out:
+Random device mismatch — it's switched off, and it's zero-mean anyway (would give both signs).
+Global process shift — also off, and it moves both devices together (common-mode), so it can't create a differential imbalance.
+Sweep-direction / timing artifact — we ran up and down sweeps; they agreed (both positive) and we average them, so the offset isn't an artifact of which way we ramp. The only direction effect was the small ~2 mV up–down gap, which the averaging removes.
+Numerical noise — the offsets are ~11–25 mV, far above the ~0.2 mV sweep resolution and the µV-scale float grid.
+The common-mode sweep then reinforced it. A random or numerical fluke wouldn't track the operating point in a structured way. The offset changing smoothly and repeatably with VCM (flat ~11 mV, then climbing to 25 mV) is the signature of something physically wired into the circuit whose effect is modulated by bias — again, a real asymmetry, not noise.
+One honesty caveat about how far the conclusion goes: the data proves an asymmetry exists (by its electrical fingerprint), and the VCM trend tells me roughly what kind — a fixed structural piece plus an input-pair piece. But I have not opened strongarm.sym and put my finger on the specific offending net or device. So "it's asymmetric" is well-supported; "it's this exact element" is still to be localized — and the crossed VOUT pins in your testbench are where I'd look first.
+FOR THE SECOND IMAGE THAT IS THE SCHMEATIC THAT I MADE BASED OFF OF THE THIRD IMAGE. CAN YOU TELL ME IF THEY ARE THE SAME OR NOT:
+GIVE ME A DESCRIPTION OF WHAT YOU SEE:
+
+
+In the file image_73f167.png, I see an electronic circuit schematic captured from a SPICE simulation tool against a black background. The schematic shows a subcircuit block being driven by several independent voltage sources.
+
+
+Here is a breakdown of the components and connections visible in the image:
+
+
+Main Component Block (X1)
+On the right side of the image, there is a green rectangular component block labeled X1 with seven pin connections:
+
+
+Inputs (Left side):
+
+
+CK (Clock input)
+
+
+VIN1 (Voltage input 1)
+
+
+VIN2 (Voltage input 2)
+
+
+Power & Outputs (Right side):
+
+
+VDD (Connected directly to a VDD power rail symbol)
+
+
+VOUT2 (Connected to a net labeled OUT1, which terminates at an open NC / No Connect marker)
+
+
+VOUT1 (Connected to a net labeled OUT2, which terminates at an open NC / No Connect marker)
+
+
+VSS (Connected directly to the analog ground reference 0)
+
+
+Sources & Stimuli
+On the left and center of the schematic, there are four independent voltage sources providing power and signals to the X1 block:
+
+
+VDD Source:
+
+
+Labeled VDD with a DC value of 3 (presumably 3V).
+
+
+Connected between a VDD net label and ground (0).
+
+
+Clock Source (VCK):
+
+
+Labeled VCK and defined by a pulse function: PULSE(0 3 0 100p 100p 10n 20n).
+
+
+The output net is labeled CK and routes directly to the CK pin of block X1.
+
+
+VIN1 Source (VVIN1):
+
+
+Labeled VVIN1 and defined by a piecewise linear function: PWL(0 1.23 6u 1.17).
+
+
+The output net is labeled VIN1 and connects to the VIN1 pin of block X1.
+
+
+VIN2 Source (VVIN2):
+
+
+Labeled VVIN2 with a constant DC value of 1.2 (presumably 1.2V).
+
+
+The output net is labeled VIN2 and routes straight up into the VIN2 pin of block X1.
+
+
+The connection lines (nets) are highlighted in a bright cyan color, while the component symbols and text descriptions use green, white, and red accent squares for pin nodes.
+
+
+GIVE ME AN INDEPTH DESCRIPTION OF WHAT YOU SEE:
+
+
+This schematic shows the internal transistor-level circuit design of the previous subcircuit block (X1). It is a classic clocked dynamic voltage comparator (often referred to as a StrongArm Latch architecture) implemented using standard 3.3V CMOS technology (pfet_03v3 and nfet_03v3).
+
+
+The circuit is designed to sample the differential input voltages (VIN1 and VIN2) when triggered by a clock edge (CK) and regenerate the difference into strong, full-rail digital outputs (VOUT1 and VOUT2).
+
+
+Here is an in-depth breakdown of the architecture, component sizing, and operational phases:
+
+
+1. Transistor Breakdown by Functional Groups
+All transistors in this design share identical device sizing parameters: a single finger (nf=1) with a width of 0.22 µm and a channel length of 0.28 µm (1×0.22μm/0.28μm).
+
+
+A. The Bottom Tail / Evaluation Foot
+XM11 (nfet_03v3): This is the tail current source or gating transistor. Its gate is tied directly to the global clock (CK). Its drain connects to the common-source node of the input pair, and its source connects to the negative supply rail (VSS/Ground). It controls when the entire comparator evaluates.
+
+
+B. The Differential Input Pair
+XM10 and XM8 (nfet_03v3): These are the input driver transistors.
+
+
+The gate of XM10 is driven by VIN1.
+
+
+The gate of XM8 is driven by VIN2.
+
+
+Their sources are tied together at the drain of the tail transistor XM11. Their drains connect to the source nodes of the regeneration latch.
+
+
+C. The Cross-Coupled Regenerative Latch
+This forms the core bistable element that forces the outputs to full digital logic rails. It consists of an NMOS pair and a PMOS pair:
+
+
+NMOS Latch (XM9 & XM1): Cross-coupled NFETs. The gate of XM9 is connected to VOUT2, and its drain is connected to VOUT1. Conversely, the gate of XM1 is connected to VOUT1, and its drain is connected to VOUT2.
+
+
+PMOS Latch (XM2 & XM7): Cross-coupled PFETs. Their sources are tied to VDD. The gate of XM2 is tied to VOUT2 (drain at VOUT1), and the gate of XM7 is tied to VOUT1 (drain at VOUT2).
+
+
+D. The Clocked Precharge/Reset Network
+There are four PMOS transistors controlled by the clock signal CK used to reset internal nodes during the off-phase:
+
+
+XM3 & XM6: Precharge the output nodes (VOUT1 and VOUT2 respectively) directly to VDD when CK is low.
+
+
+XM4 & XM5: Precharge the intermediate internal nodes (the drains of the input pair XM10/XM8) up to VDD when CK is low, ensuring the circuit starts from a perfectly symmetrical state every cycle.
+
+
+2. Circuit Operation Phases
+The circuit operates in two distinct phases based on the state of the CK line:
+
+
+Phase 1: Precharge / Reset Phase (CK=Low)
+Tail Cutoff: XM11 is turned off, completely blocking any current path to VSS.
+
+
+Node Reset: The precharge transistors (XM3, XM4, XM5, XM6) turn on. This forces both output nodes (VOUT1, VOUT2) and the internal intermediate nodes quickly up to the VDD rail voltage.
+
+
+Because both outputs are at VDD, the cross-coupled latch is momentarily held in an inactive state, ready for the next cycle.
+
+
+Phase 2: Evaluation / Regeneration Phase (CK=High)
+Activation: XM11 turns on, pulling the common-source node of the input pair down toward VSS. At the same time, the four PMOS precharge switches turn off.
+
+
+Sampling: Current begins to discharge from the precharged internal nodes through XM10 and XM8. If VIN1>VIN2, XM10 conducts more current than XM8, discharging the intermediate node on the left side faster.
+
+
+Regeneration: This slight differential discharge creates a voltage imbalance at the sources of the cross-coupled pair (XM9/XM1). As the nodes drop low enough to turn on the latch, the positive feedback loop kicks in. The side discharging faster pulls its corresponding output down, which shuts off the opposite side's NFET and turns on its PFET.
+
+
+Final State: The latch rapidly locks into a stable digital state where one output is at VDD and the other is at VSS (e.g., if VIN1>VIN2, VOUT1 will latch to logic 0 and VOUT2 will latch to logic 1).
+
+
+GIVE ME AN INDEPTH DESCRIPTION OF WHAT YOU SEE:
+
+
+This image displays a classic textbook or research paper schematic of a classic StrongArm latch-based dynamic voltage comparator (labeled "(b)"). The diagram uses clean, black line art on a light greenish-gray background to map out the standard architecture of the topology.
+
+
+Here is an in-depth breakdown mapping this specific diagram's notation and structural configuration:
+
+
+1. Transistor Mapping & Component Classification
+The circuit is composed of 11 MOSFETs in total, divided cleanly by function into NMOS and PMOS devices:
+
+
+A. The Foot / Tail Current Switch
+M
+7
+
+(NMOS): Positioned at the very bottom, its gate is driven by the clock signal (CK), its source is tied to ground, and its drain is connected to the common-source node of the input differential pair. It acts as the evaluation gate for the entire circuit.
+
+
+B. The Input Differential Pair
+M
+1
+
+and M
+2
+
+(NMOS): Located just above the tail switch.
+
+
+The gate of M
+1
+
+receives the first input voltage, V
+in1
+
+. Its drain is connected to intermediate node P.
+
+
+The gate of M
+2
+
+receives the second input voltage, V
+in2
+
+. Its drain is connected to intermediate node Q.
+
+
+C. The Cross-Coupled Regenerative Latch
+The core of the comparator consists of two cross-coupled inverters forming a bistable multivibrator loop:
+
+
+NMOS Latch (M
+3
+
+& M
+4
+
+): * The source of M
+3
+
+connects to intermediate node P; its drain connects to output node X. Its gate is cross-coupled to output node Y.
+
+
+The source of M
+4
+
+connects to intermediate node Q; its drain connects to output node Y. Its gate is cross-coupled to output node X.
+
+
+PMOS Latch (M
+5
+
+& M
+6
+
+): * The sources of both M
+5
+
+and M
+6
+
+are tied directly to the positive supply rail, V
+DD
+
+.
+
+
+The drain of M
+5
+
+connects to output node X, and its gate is cross-coupled to output node Y.
+
+
+The drain of M
+6
+
+connects to output node Y, and its gate is cross-coupled to output node X.
+
+
+D. The Precharge and Reset Network
+Four PMOS switches, all driven by the clock signal CK at their gates, ensure the circuit starts from a known, balanced state:
+
+
+S
+3
+
+and S
+4
+
+: Connect the output nodes X and Y directly to V
+DD
+
+during reset.
+
+
+S
+1
+
+and S
+2
+
+: Connect the intermediate internal nodes P and Q directly to V
+DD
+
+during reset.
+
+
+2. Node and Output Labels
+P and Q: The intermediate internal nodes separating the input pair from the NMOS latch.
+
+
+X and Y: The full-swing regenerative output nodes.
+
+
+V
+out
+
+: Indicated by two open terminals branching across from nodes X and Y, representing the differential output voltage (V
+out
+
+=V
+X
+
+−V
+Y
+
+or vice versa).
+
+
+3. Comparison to Your Previous Cadence Schematic
+This textbook layout maps directly to the practical implementation seen in your previous schematic, following a nearly 1:1 functional correspondence:
+
+
+Textbook Label (This Image) Cadence Tool Name (Previous Image) Functional Role
+M
+7
+
+XM11 Clocked Tail Switch
+M
+1
+
+/ M
+2
+
+XM10 / XM8 NMOS Differential Input Pair (V
+in1
+
+,V
+in2
+
+)
+M
+3
+
+/ M
+4
+
+XM9 / XM1 Cross-coupled NMOS Latch
+M
+5
+
+/ M
+6
+
+XM2 / XM7 Cross-coupled PMOS Latch
+S
+3
+
+/ S
+4
+
+XM3 / XM6 Output Precharge Switches (to V
+DD
+
+)
+S
+1
+
+/ S
+2
+
+XM4 / XM5 Internal Node Precharge Switches (to V
+DD
+
+)
+X / Y VOUT1 / VOUT2 Differential Output Nodes 
+
+
+Based on the detailed descriptions you provided for Image 2 (your SPICE simulation schematic) and Image 3 (the textbook reference schematic), yes, they are functionally identical. Your schematic is a highly accurate, 1:1 hardware translation of the textbook StrongArm latch architecture.
+Here is a breakdown confirming why they are the same, followed by a minor layout difference to keep in mind.
+Why They Are Identical (The Similarities)
+Every single one of the 11 transistors in your schematic perfectly mirrors the connectivity, gating, and functionality of the textbook circuit:
+• The Evaluation Path: In both, the clock (CK) drives a single NMOS tail transistor at the very bottom (M7 / XM11), which controls the path to ground (VSS). This tail is connected to the sources of the differential input pair (M1,M2 / XM10,XM8).
+• The Latch Core: The cross-coupled PMOS (M5,M6 / XM2,XM7) and NMOS (M3,M4 / XM9,XM1) form the exact same regenerative loop to snap the outputs to full digital rails.
+• The Reset Mechanism: Both designs use a total of 4 PMOS precharge switches (S1,S2,S3,S4 / XM4,XM5,XM3,XM6) controlled by CK to pull both the main output nodes and the intermediate internal nodes (P,Q) up to VDD during the reset phase.
+The Only Structural Difference: Latch vs. Precharge Placement
+While the electrical net connections are identical, there is a minor aesthetic or layout placement difference in how the precharge switches and latch transistors are drawn relative to one another:
+• In the Textbook (Image 3): The internal precharge switches (S1,S2) are typically drawn physically flanking or sitting parallel to the NMOS latch transistors (M3,M4) to neatly target nodes P and Q.
+• In Your SPICE Schematic (Image 2): To fit the CAD grid structure, you have likely stacked or grouped your PMOS precharge switches (XM4,XM5) alongside the output precharge switches (XM3,XM6) near the top VDD rail, running longer vertical nets down to connect to the intermediate nodes between the input pair and the latch.
+Conclusion
+Don't let the visual layout of the lines fool you: Electrically, your schematic is an exact match to the textbook. Your simulation will accurately mimic the exact phase behavior (Precharge vs. Evaluation) of the classic StrongArm comparator.
+5:47 PM
+Thought
+A few important things here — let me start with an honest caveat, then give you a real answer.
+First, what I'm actually working from. I can only see the text descriptions you pasted, not the images themselves. So my comparison is only as good as those write-ups — and AI-generated image descriptions are notoriously unreliable at exactly the thing that matters here: net-level connectivity (which gate ties to which node, cross-coupling direction, body/bulk terminals). Keep that in mind, because it feeds directly into the offset hunt.
+Are they the same? Per those descriptions — yes, electrically 1:1. The mapping is clean and correct:
+Textbook
+Yours
+Role
+M7
+XM11
+Clocked tail switch
+M1 / M2
+XM10 / XM8
+Input pair (VIN1/VIN2)
+M3 / M4
+XM9 / XM1
+Cross-coupled NMOS latch
+M5 / M6
+XM2 / XM7
+Cross-coupled PMOS latch
+S3 / S4
+XM3 / XM6
+Output precharge to VDD
+S1 / S2
+XM4 / XM5
+Internal-node precharge to VDD
+The cross-coupling (each latch gate tied to the opposite output), the 4-PMOS precharge network, and the tail all match. As described, your cell is a topologically symmetric, faithful implementation of the textbook StrongArm. The only difference is cosmetic (where the precharge devices are drawn), not electrical.
+But here's the catch — and it forces me to walk back two things I told you earlier. If the cell really is this symmetric and the devices are matched, a balanced circuit should give ~0 mV systematic. We measured 11–25 mV. Those two facts are in tension, so let me correct myself honestly:
+The crossed VOUT→OUT nets are probably not the cause of the 11 mV. Your description says both OUT1/OUT2 terminate at NC (no-connect) markers — i.e., the outputs are unloaded. Equal (zero) loading on both sides means the crossing only flips the sign/polarity of what we measure (our "out1" is physically the VOUT2 pin), not the magnitude of the offset. So my earlier "crossed pins are suspect #1 for the 11 mV" was wrong — downgrade it.
+"There's definitely a structural asymmetry in the cell" was overstated. Given the cell matches the textbook, the 11 mV is now equally likely to be either (a) something the description can't show, or (b) a bias in my extraction method itself.
+The decisive test to settle it — the metastability check. Instead of sweeping and thresholding, set the inputs exactly equal (VIN1 = VIN2 = VCM), keep mismatch off, and look at the two outputs at the end of each evaluation:
+If out1 and out2 come out exactly equal (to numerical precision) and never resolve → the netlist is genuinely symmetric, which means the 11 mV was a measurement/extraction artifact, not your circuit.
+If one output consistently wins with identical inputs → that proves a real built-in asymmetry (only an imbalance can break a perfect tie), and the margin tells us how big.
+This is clean because identical inputs remove the ramp, the threshold, and the sweep direction entirely. There's also a related fix worth trying: our current extraction thresholds a single output (out1) at 1.5 V, whereas the true decision is which output wins (out1 vs out2). Switching the measurement to the differential crossing (out1 = out2) removes any single-ended threshold bias, which can itself drift with common mode.
+What a text description simply can't verify (so check these by hand in xschem):
+Body/bulk ties on each transistor — a very common hidden asymmetry, and never shown in these write-ups.
+The exact cross-couple nets and the NMOS-latch source connections to the correct input-pair drains — the single most error-prone thing for AI vision to read correctly.
+That all 11 devices truly have identical parameters (W/L/nf, and same model).
+Want me to write the metastability test (VIN1 = VIN2 at 1.0 / 1.2 / 1.4 V, reporting out1−out2 at end of evaluation)? That's the cleanest way to find out whether your 11 mV is a real circuit asymmetry or an artifact of how we've been measuring it — and it'll tell us before you go hunting through the schematic by hand.
+before you write the test, I want you to read the actual code inside of the strongarm.sch. tell me if you spot anything weird:
+v {xschem version=3.4.8RC file_version=1.3}
+G {}
+K {}
+V {}
+S {}
+F {}
+E {}
+N -130 -150 -130 -100 {lab=VDD}
+N 130 -150 130 -100 {lab=VDD}
+N 360 -150 360 -100 {lab=VDD}
+N 520 -150 520 -100 {lab=VDD}
+N 130 -40 130 80 {lab=VOUT2}
+N 130 140 130 180 {lab=#net1}
+N 170 250 220 250 {lab=VIN2}
+N 130 280 130 310 {lab=#net2}
+N 0 310 130 310 {lab=#net2}
+N -130 -40 -130 80 {lab=VOUT1}
+N -130 140 -130 180 {lab=#net3}
+N -220 250 -170 250 {lab=VIN1}
+N -130 280 -130 310 {lab=#net2}
+N -130 310 0 310 {lab=#net2}
+N 60 40 130 40 {lab=VOUT2}
+N -130 40 -60 40 {lab=VOUT1}
+N -90 110 60 40 {lab=VOUT2}
+N -60 40 90 110 {lab=VOUT1}
+N -510 -40 -510 180 {lab=#net3}
+N -130 180 -130 220 {lab=#net3}
+N 130 180 130 220 {lab=#net1}
+N -130 -20 90 -70 {lab=VOUT1}
+N -90 -70 130 -20 {lab=VOUT2}
+N -580 -70 -550 -70 {lab=#net4}
+N 0 310 0 360 {lab=#net2}
+N -240 110 -130 110 {lab=#net3}
+N -240 110 -240 140 {lab=#net3}
+N -240 140 -130 140 {lab=#net3}
+N -130 280 -20 280 {lab=#net2}
+N -20 250 -20 280 {lab=#net2}
+N -130 250 -20 250 {lab=#net2}
+N 20 250 130 250 {lab=#net2}
+N 20 250 20 280 {lab=#net2}
+N 20 280 130 280 {lab=#net2}
+N 130 140 240 140 {lab=#net1}
+N 240 110 240 140 {lab=#net1}
+N 130 110 240 110 {lab=#net1}
+N -200 -70 -130 -70 {lab=VDD}
+N -200 -100 -200 -70 {lab=VDD}
+N -200 -100 -130 -100 {lab=VDD}
+N -510 -70 -440 -70 {lab=VDD}
+N -440 -100 -440 -70 {lab=VDD}
+N -510 -100 -440 -100 {lab=VDD}
+N 130 -70 200 -70 {lab=VDD}
+N 200 -100 200 -70 {lab=VDD}
+N 130 -100 200 -100 {lab=VDD}
+N 290 -70 360 -70 {lab=#net5}
+N 290 -100 360 -100 {lab=VDD}
+N 450 -70 520 -70 {lab=VDD}
+N 450 -100 450 -70 {lab=VDD}
+N 450 -100 520 -100 {lab=VDD}
+N 0 390 70 390 {lab=#net2}
+N 70 360 70 390 {lab=#net2}
+N 0 360 70 360 {lab=#net2}
+N -510 -150 550 -150 {lab=VDD}
+N -360 -100 -290 -100 {lab=VDD}
+N -290 -100 -290 -70 {lab=VDD}
+N -360 -70 -290 -70 {lab=VDD}
+N -360 -20 -130 -20 {lab=VOUT1}
+N -360 -40 -360 -20 {lab=VOUT1}
+N -360 -150 -360 -100 {lab=VDD}
+N -510 -150 -510 -100 {lab=VDD}
+N -510 180 -130 180 {lab=#net3}
+N 130 -20 360 -20 {lab=VOUT2}
+N 360 -40 360 -20 {lab=VOUT2}
+N 130 180 520 180 {lab=#net1}
+N 520 -40 520 180 {lab=#net1}
+N 400 -70 400 -0 {lab=#net4}
+N 400 -0 560 0 {lab=#net4}
+N 560 -70 560 0 {lab=#net4}
+N -550 -70 -550 0 {lab=#net4}
+N -550 0 -400 -0 {lab=#net4}
+N -400 -70 -400 -0 {lab=#net4}
+N 80 0 130 0 {lab=VOUT2}
+N -130 0 -90 -0 {lab=VOUT1}
+N -580 390 -40 390 {lab=#net4}
+N -580 -70 -580 390 {lab=#net4}
+N 560 -70 660 -70 {lab=#net4}
+N 660 -200 660 -70 {lab=#net4}
+N -580 -200 660 -200 {lab=#net4}
+N -580 -200 -580 -70 {lab=#net4}
+C {symbols/nfet_03v3.sym} 110 110 0 0 {name=M1
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=nfet_03v3
+spiceprefix=X
+}
+C {symbols/pfet_03v3.sym} -110 -70 0 1 {name=M2
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=pfet_03v3
+spiceprefix=X
+}
+C {symbols/pfet_03v3.sym} -380 -70 0 0 {name=M3
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=pfet_03v3
+spiceprefix=X
+}
+C {symbols/pfet_03v3.sym} -530 -70 0 0 {name=M4
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=pfet_03v3
+spiceprefix=X
+}
+C {symbols/pfet_03v3.sym} 540 -70 0 1 {name=M5
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=pfet_03v3
+spiceprefix=X
+}
+C {symbols/pfet_03v3.sym} 380 -70 0 1 {name=M6
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=pfet_03v3
+spiceprefix=X
+}
+C {symbols/pfet_03v3.sym} 110 -70 0 0 {name=M7
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=pfet_03v3
+spiceprefix=X
+}
+C {symbols/nfet_03v3.sym} 150 250 0 1 {name=M8
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=nfet_03v3
+spiceprefix=X
+}
+C {symbols/nfet_03v3.sym} -110 110 0 1 {name=M9
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=nfet_03v3
+spiceprefix=X
+}
+C {symbols/nfet_03v3.sym} -150 250 0 0 {name=M10
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=nfet_03v3
+spiceprefix=X
+}
+C {symbols/nfet_03v3.sym} -20 390 0 0 {name=M11
+L=0.28u
+W=0.22u
+nf=1
+m=1
+ad="'int((nf+1)/2) * W/nf * 0.18u'"
+pd="'2int((nf+1)/2) * (W/nf + 0.18u)'"
+as="'int((nf+2)/2) * W/nf * 0.18u'"
+ps="'2int((nf+2)/2) * (W/nf + 0.18u)'"
+nrd="'0.18u / W'" nrs="'0.18u / W'"
+sa=0 sb=0 sd=0
+model=nfet_03v3
+spiceprefix=X
+}
+C {opin.sym} -90 0 0 0 {name=p8 lab=VOUT1}
+C {opin.sym} 80 0 0 1 {name=p3 lab=VOUT2}
+C {ipin.sym} -220 250 0 0 {name=p2 lab=VIN1}
+C {ipin.sym} 220 250 0 1 {name=p9 lab=VIN2}
+C {ipin.sym} -580 -70 0 0 {name=CK lab=CK}
+C {iopin.sym} 550 -150 0 0 {name=p1 lab=VDD}
+C {iopin.sym} 0 420 1 0 {name=p6 lab=VSS}
+5:54 PM
+Thought
+Yes — I found something, and it's concrete. There's a floating net called #net5, and it's a real asymmetry, not a measurement artifact. Let me walk you through exactly how I spotted it.
+The tell: one net label appears exactly once.
+Scanning every net label in the file, every internal node shows up on multiple wire segments — except one:
+N 290 -70 360 -70 {lab=#net5}
+​
+#net5 appears once, on a single short wire, and nowhere else in the entire file. A legitimate internal node always touches at least two terminals. A net that appears once is either dangling or a mislabel. That's the thread I pulled.
+What it's attached to: M6's supply terminal.
+#net5 sits at y=-70, x=290→360, right at the left/source side of M6 (the PMOS at 380,-70). M6 is one of your four precharge switches — specifically the one that's supposed to precharge VOUT2 to VDD during reset (the mirror of M3, which precharges VOUT1).
+The proof is in the left/right comparison. Look at M3 (the VOUT1 precharge) versus M6 (the VOUT2 precharge):
+Left side (M3 — correct):
+N -360 -70 -290 -70 {lab=VDD}     <- source rail tied to VDD
+N -290 -100 -290 -70 {lab=VDD}    <- vertical jog UP to the VDD rail
+N -360 -40 -360 -20 {lab=VOUT1}   <- drain to VOUT1
+​
+Right side (M6 — broken):
+N 290 -70 360 -70 {lab=#net5}     <- SAME position, but labeled #net5 (not VDD!)
+                                   <- NO vertical jog up to the VDD rail
+N 360 -40 360 -20 {lab=VOUT2}     <- drain to VOUT2 (this part is fine)
+​
+The wire that is VDD on M3's side is #net5 on M6's side, and the little vertical segment that ties it up to the VDD rail (N -290 -100 -290 -70 VDD on the left) is simply missing on the right. So M6's source isn't connected to VDD — it's stranded on a floating #net5.
+What this does to your circuit:
+During every reset phase, VOUT1 gets pulled cleanly to VDD by M3, but VOUT2 does not — M6 can't conduct because its source is floating.
+So the two output nodes start every decision from different voltages. That's a built-in head start for one side.
+This is a deterministic, structural imbalance → produces a consistent, one-signed systematic offset, it survives mismatch being turned off, and its severity shifts with common mode (because how much the missing precharge matters depends on timing/bias). That's a dead-on match for every symptom we measured: the +11–25 mV, always positive, CM-dependent, σ unaffected.
+This vindicates the original conclusion and explains why the image descriptions missed it. Those AI write-ups assumed M6 was wired symmetrically (it "should" be), and a net label like #net5 is invisible to that kind of eyeballing. The actual netlist tells the truth: it's not symmetric.
+The fix (in xschem):
+Select that #net5 wire on M6 and relabel it VDD.
+Add the missing vertical connection up to the VDD rail, mirroring the left side — i.e., the right-side equivalent of N -290 -100 -290 -70 VDD (a segment from the -100 VDD rail down to the -70 source wire).
+Re-run — confirm M6's top/source terminal now lands on VDD.
+One honesty note: I inferred the pin positions from the coordinates rather than the symbol geometry, so once you relabel, just eyeball in xschem that M6's source actually lands on the VDD rail (it should, given it's the exact mirror of M3). But the floating singleton #net5 in the mirror position of a VDD wire is about as clear a smoking gun as you get.
+After you fix it, the metastability test becomes a great confirmation step: with this corrected, the systematic should collapse toward ~0 and leave just your σ ≈ 4 mV random mismatch. Want me to capture this root-cause finding — the floating #net5 on M6 and the fix — in your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc?
+fixed it. is there a simple test that i can do to test it?
+10:28 PM
+Thought
+Yes — there's a dead-simple one that directly checks the exact thing you fixed. Since M6's whole job was to precharge VOUT2 to VDD during reset, just confirm both outputs now charge to the rail with equal inputs. No Monte Carlo, no sweep, no stats.
+Drop this in as your .control block:
+.control
+* --- symmetric sanity test: equal inputs, no offset injected ---
+alter vvin2 = 1.2
+alter @vvin1[pwl] = [ 0 1.2 6e-6 1.2 ]      * hold VIN1 = VIN2 = 1.2 (flat)
+alter @m.x1.xm10.m0[delvto] = 0             * no injected mismatch
+alter @m.x1.xm8.m0[delvto]  = 0
+
+tran 10p 200n
+
+* read both outputs in the middle of a reset (CK low) window
+meas tran o1_pre find v(out1) at=35n
+meas tran o2_pre find v(out2) at=35n
+print o1_pre o2_pre
+
+plot v(out1) v(out2) v(ck)
+.endc
+​
+What you're looking for:
+The precharge check (the direct fix test). o1_pre and o2_pre are sampled at 35 ns, which falls in a reset phase (CK is low from 10–20 ns, 30–40 ns, …). After your fix, both should read ≈ 3 V. Before the fix, the VOUT2-side output couldn't reach 3 V because M6's source was floating — so if both now sit at the rail, the precharge path is repaired.
+The balance check. On the plot, during each evaluate phase (CK high) with truly equal inputs and mismatch off, the two outputs should behave symmetrically — neither one should consistently win by a clear margin. Before, VOUT2 starting from a lower level gave one side a permanent head start; now they should look like mirror images (or sit metastable together).
+If both of those look right, the structural asymmetry is gone.
+Then, for the quantitative confirmation: just re-run the common-mode sweep script you already have. If the fix worked, the systematic should collapse from the old +11–25 mV down to roughly 0 (within ±σ/√N noise), leaving only your σ ≈ 4 mV random mismatch as the headline. That's the apples-to-apples "before vs after" proof.
+Run the sanity test first (it's 10 seconds), and if the precharge values come back ~3 V on both, send them over — that alone basically confirms it.
+Your test didn’t seem to work because both the wrong sch and the correct sch output to 3v for the output. the only difference that i saw was that the out1 and out2 were flipped
+10:52 PM
+Thought
+Ah, that makes sense — and it tells me my precharge test was the wrong probe. Let me explain why, then give you the test that will discriminate.
+Why both versions showed 3 V (my test's blind spot): VOUT2 has a second path to VDD that I didn't account for. During reset, M5 precharges the internal node #net1 to VDD, and the NMOS latch device M1 (gate = VOUT1, which is high during reset; source = #net1; drain = VOUT2) turns on and pulls VOUT2 up through that path. So even with M6's direct pull-up broken, VOUT2 still creeps up to ~3 V given enough settling time. My at=35n sample was way too late/static to see the difference — by then the backup path has finished the job. The real asymmetry was never "VOUT2 can't reach 3 V"; it was "VOUT2 reaches it more weakly and more slowly than VOUT1," and that only bites during fast clocked operation, where it shows up as offset. My bad on the proxy.
+The out1/out2 flip is actually encouraging. If fixing M6 changed which output wins the tie, that means the fix genuinely altered the comparator's built-in bias — exactly what you'd expect from removing an asymmetry. But a flip alone isn't proof; the offset magnitude is the real verdict.
+The test that actually answers it — a deterministic offset measurement. Here's the key simplification: with mismatch off and no injected offset, the circuit is fully deterministic, so you don't need Monte Carlo at all. One up-sweep + one down-sweep gives you the systematic offset as a single clean number. And I made it robust to the out1/out2 flip (it auto-picks the real trip rather than relying on a fixed edge):
+.control
+* ---- systematic-offset test: mismatch OFF, no injected offset, deterministic ----
+alter vvin2 = 1.2
+alter @m.x1.xm10.m0[delvto] = 0
+alter @m.x1.xm8.m0[delvto]  = 0
+
+* ===== UP sweep: VIN1 1.15 -> 1.25 =====
+alter @vvin1[pwl] = [ 0 1.15 6e-6 1.25 ]
+tran 10p 6u
+meas tran ta when v(out1)=1.5 fall=1
+meas tran tb when v(out1)=1.5 fall=LAST
+meas tran va find v(vin1) at=ta
+meas tran vb find v(vin1) at=tb
+* keep whichever crossing is the real trip (nearest mid-scale, not a ramp end)
+if abs(va-1.2) < abs(vb-1.2)
+  let vup = va
+else
+  let vup = vb
+end
+destroy $curplot
+
+* ===== DOWN sweep: VIN1 1.25 -> 1.15 =====
+alter @vvin1[pwl] = [ 0 1.25 6e-6 1.15 ]
+tran 10p 6u
+meas tran tc when v(out1)=1.5 fall=1
+meas tran td when v(out1)=1.5 fall=LAST
+meas tran vc find v(vin1) at=tc
+meas tran vd find v(vin1) at=td
+if abs(vc-1.2) < abs(vd-1.2)
+  let vdn = vc
+else
+  let vdn = vd
+end
+destroy $curplot
+
+let systematic = ((vup-1.2) + (vdn-1.2))/2
+print vup vdn systematic
+.endc
+​
+How to read it:
+systematic ≈ 0 (a few tenths of a mV — just the sweep resolution floor) → the asymmetry is fixed. 🎉
+systematic ≈ +0.015 (still ~15 mV) → the fix didn't remove it, and we keep digging.
+Because there's no randomness here, that one number is the whole answer — no averaging, no stats. The if abs(...) < abs(...) lines are what make it shrug off the out1/out2 flip: whichever sweep edge lands near a ramp end (1.15 or 1.25) gets discarded, and the true mid-scale trip is kept.
+If you'd rather see it, this one-liner gives a visual: alter @vvin1[pwl]=[0 1.15 6e-6 1.25] then tran 10p 6u then plot v(out1) v(out2) v(vin1) — and look at the VIN1 value where the two outputs swap which one wins. Crossover at ~1.200 V = fixed; at ~1.215 V = still 15 mV.
+Run the script and send me vup, vdn, and systematic — that'll settle it cleanly.
+image.png
+here are teh two prompts (one is working and the other one is not working)
+strongarm_offset_measure_tb.spice" -a || sh
+
+Note: No compatibility mode selected!
+
+Circuit: ** sch_path: /foss/designs/comparator/schematic/strongarm_offset_measur
+e_tb.sch
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.99793
+vdd                           3
+ck                            0
+x1.net3                   2.99932
+vin2                        1.2
+x1.net2                  0.717051
+vin1                         1.15
+vck#branch                    0
+vdd#branch               -1.5299e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99695e-06
+No. of Data Rows : 603605
+ta               = 2.34290e-10
+tb               = 3.00035e-06
+va               = 1.15000e+00
+vb               = 1.20001e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.99859
+vdd                           3
+ck                            0
+x1.net3                   2.99608
+vin2                        1.2
+x1.net2                  0.734325
+vin1                         1.25
+vck#branch                    0
+vdd#branch               -2.96203e-07
+vvin1#branch                  0
+vvin2#branch                  0
+
+Reference value : 5.99972e-06
+No. of Data Rows : 603605
+tc               = 3.00035e-06
+td               = 5.98023e-06
+vc               = 1.19999e+00
+vd               = 1.15033e+00
+Warning from checkvalid: vector vup is not available or has zero length.
+Error: RHS "((vup-1.2) + (vdn-1.2))/2" invalid
+Warning from checkvalid: vector vup is not available or has zero length.
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+1:22 AM
+Thought
+It worked. 🎉 Your own numbers already prove it — the script only crashed on the very last arithmetic line, but everything it needed to print came out before the crash. And since you ran both schematics, you've got a clean before/after:
+Broken sch (left column)
+Fixed sch (right column)
+Up-sweep trip
+1.21534 V → +15.3 mV
+1.20001 V → +0.01 mV
+Down-sweep trip
+1.21333 V → +13.3 mV
+1.19999 V → −0.01 mV
+Systematic offset
+≈ +14.3 mV
+≈ 0.00 mV
+That's the whole case closed. The broken version reproduces the ~+15 mV we'd been chasing all along, and the fixed version collapses it to essentially zero — the up and down sweeps land at +0.01 and −0.01 mV, straddling zero right at the sweep's resolution floor. The floating #net5 on M6 was unambiguously the culprit. With it repaired, the comparator is balanced, and the only thing left is your σ ≈ 4 mV random mismatch, which is the real, legitimate spec.
+Why it errored at the end (and the one-line cause): my script did let vup = ... and then destroy $curplot. Because vup was created inside the transient plot, destroy deleted it immediately — so by the final let systematic = ... line, vup was gone ("vector vup is not available"). The fix is to stash the values as shell variables (with set), which survive destroy. Here's the corrected tail end — same logic, just set ... = $&... instead of let:
+.control
+set curplotenv = $curplot
+alter vvin2 = 1.2
+alter @m.x1.xm10.m0[delvto] = 0
+alter @m.x1.xm8.m0[delvto]  = 0
+
+* ===== UP sweep: 1.15 -> 1.25 =====
+alter @vvin1[pwl] = [ 0 1.15 6e-6 1.25 ]
+tran 10p 6u
+meas tran ta when v(out1)=1.5 fall=1
+meas tran tb when v(out1)=1.5 fall=LAST
+meas tran va find v(vin1) at=ta
+meas tran vb find v(vin1) at=tb
+if abs(va-1.2) < abs(vb-1.2)
+  set vup = $&va
+else
+  set vup = $&vb
+end
+destroy $curplot
+
+* ===== DOWN sweep: 1.25 -> 1.15 =====
+alter @vvin1[pwl] = [ 0 1.25 6e-6 1.15 ]
+tran 10p 6u
+meas tran tc when v(out1)=1.5 fall=1
+meas tran td when v(out1)=1.5 fall=LAST
+meas tran vc find v(vin1) at=tc
+meas tran vd find v(vin1) at=td
+if abs(vc-1.2) < abs(vd-1.2)
+  set vdn = $&vc
+else
+  set vdn = $&vd
+end
+destroy $curplot
+
+setplot $curplotenv
+let systematic = (($vup - 1.2) + ($vdn - 1.2)) / 2
+print systematic
+echo vup = $vup    vdn = $vdn
+.endc
+​
+The only change is set vup = $&va / set vdn = $&vc (shell vars persist past destroy), and the final line reads them back with $vup / $vdn. On your fixed schematic this will now cleanly print systematic ≈ 0.
+One nice detail: the robust "pick the crossing nearest 1.2" logic worked exactly as intended on both schematics — it correctly grabbed the interior trip (1.215 / 1.213 on the broken one, 1.200 / 1.200 on the fixed one) and ignored the ramp-end crossings, so you didn't have to worry about the out1/out2 flip at all.
+So: design validated. Systematic offset went from +14 mV → ~0, leaving σ ≈ 4 mV as your headline input-referred offset. If you want the final clean σ number, re-run your full Monte Carlo (mismatch back on, svt set, ~100–300 runs) on the fixed schematic — the mean should now sit near 0 with σ as the spec.
+Want me to record the resolution — root cause (floating #net5 starving M6's VOUT2 precharge), the before/after (+14 mV → ~0), and the corrected test script — in your ⚡StrongArm Comparator Monte Carlo Offset — ngspice/xschem Handoff handoff doc so it's all captured?
+once the monte carlo loop is done, do you think that i can move past gate 1 and onto the phyiscial layout?
+11:54 AM
+Short version: finishing the loop clears the offset portion of pre-layout sign-off, but I wouldn't call Gate 1 "done" until you close two things in your own TODO list — and offset is only one of the specs a comparator usually has to clear before layout. Here's my honest read.
+The one real blocker: your σ is still built on a placeholder.
+Right now svt = 3.0e-3 is a hand-picked 3 mV guess (§6/§9), and your headline σ ≈ 5.3 mV is essentially √2 × svt. That means the number isn't a silicon spec yet — it's a number you typed in. Before you sign off offset and commit to layout, swap that placeholder for the real GF180 mismatch figure: svt = AVT / √(W·L) using the AVT coefficient from the PDK mismatch docs (§9.4). For your near-minimum 0.22µm × 0.28µm devices that's very likely larger than 3 mV, so your real σ could be meaningfully worse than what you're seeing. This is the thing I'd least want to discover after you've drawn polygons.
+The quick must-confirm: lock down sw_stat_mismatch = 0 (§9). With your hand-injection method, a frozen PDK mismatch sample on the other 9 devices would quietly pollute the mean. You've already proven the systematic is ~0 with the deterministic test, so this should now come out clean — just confirm it.
+The bigger picture: offset ≠ Gate 1. Offset is one box. A StrongArm comparator going into layout normally wants at least a sanity pass on:
+Corners/PVT — everything so far is typical, 27 °C, VDD = 3 V. At minimum spot-check SS and FF, hot/cold, and ±10% VDD. Layout parasitics only add to whatever margin you have here.
+Common-mode range — remember your CM sweep: offset climbed steeply above ~1.2 V. Know the input range where the comparator is well-behaved.
+Speed / regeneration — clk-to-valid decision time and metastability behavior at your 50 MHz clock.
+Noise & kickback — input-referred noise (often comparable to offset) and how much the comparator kicks back onto whatever drives its inputs.
+Power — average current per decision.
+None of these need to be polished — but a "does it fall over anywhere obvious" pass is what keeps you from finding a corner failure after layout, which is a far more expensive place to fix it.
+My recommendation: finish the loop, then (1) plug in the real svt, (2) confirm the mismatch switch, (3) do a fast typical-vs-SS-vs-FF spot check. If offset + σ still look acceptable across those, then I'd happily call Gate 1 cleared and start layout. The work you've done is genuinely solid — I just don't want a placeholder sigma to be the thing that defines your spec.
+That said — I don't actually know how your Gate 1 is formally defined. If it's narrowly scoped to "characterize offset," you're nearly there (just the real svt). If it's a general pre-layout review, the checklist above applies.
+Want me to add a "Gate 1 readiness checklist" section to your handoff doc so this is captured alongside the rest?
+is this the correct / final MC loop code:
+.control
+let mc_runs = 300
+let run = 0
+let offset_results = vector(mc_runs)
+set curplotenv = $curplot
+
+* 1-sigma Vth mismatch per input device (volts).
+* Placeholder 3 mV - set from GF180 AVT / sqrt(W*L) for a real spec.
+let svt = 3.0e-3
+
+dowhile run < mc_runs
+echo ---- run $&run ----
+
+* One random device sample per run, applied ONCE so the UP and DOWN
+* sweeps both see the SAME mismatch (that is what makes the average valid).
+alter @m.x1.xm10.m0[delvto] = svt * sgauss(0)
+alter @m.x1.xm8.m0[delvto]  = svt * sgauss(0)
+
+unset s_up
+unset s_dn
+
+* ---------------- UP sweep: VIN1 1.17 -> 1.23 ----------------
+* Rising sweep: out1 falls every cycle BELOW the trip, so the
+* trip point is the LAST falling edge.
+alter @vvin1[pwl] = [ 0 1.17 6e-6 1.23 ]
+tran 10p 6u
+let t_up = -1
+meas tran t_up when v(out1)=1.5 fall=LAST
+if t_up > 0
+meas tran vin_up find v(vin1) at=t_up
+let off_up = vin_up - 1.200
+set s_up = $&off_up
+end
+destroy $curplot
+
+* --------------- DOWN sweep: VIN1 1.23 -> 1.17 ---------------
+* Falling sweep: out1 only starts falling once VIN1 drops BELOW the
+* trip, so the trip point is the FIRST falling edge (not the last!).
+alter @vvin1[pwl] = [ 0 1.23 6e-6 1.17 ]
+tran 10p 6u
+let t_dn = -1
+meas tran t_dn when v(out1)=1.5 fall=1
+if t_dn > 0
+meas tran vin_dn find v(vin1) at=t_dn
+let off_dn = vin_dn - 1.200
+set s_dn = $&off_dn
+end
+destroy $curplot
+
+* --------- combine: true offset = midpoint of the two sweeps ---------
+if ( $?s_up * $?s_dn ) = 1
+let offset_results[run] = ( ($s_up) + ($s_dn) ) / 2
+echo   up=$s_up  dn=$s_dn
+else
+let offset_results[run] = -999
+echo   WARN: missing trip on run $&run
+end
+
+let run = run + 1
+end
+
+setplot $curplotenv
+let mu  = mean(offset_results)
+let sig = sqrt(mean((offset_results - mu)^2))
+echo ========================================
+echo MC done (N=$&mc_runs): mean=$&mu V  sigma=$&sig V
+echo ========================================
+write  comp_mc_offsets.raw offset_results
+unset  wr_singlescale
+wrdata comp_mc_offsets.txt offset_results
+.endc
+12:30 PM
+Thought
+Mechanically, this is correct and essentially final — the loop logic, edge selection, and bookkeeping are all right, and it matches what we validated with the deterministic test. A few things to confirm/tighten before you trust the final number, though. Let me walk through it.
+What's correct ✅
+One mismatch draw per run, applied before both sweeps — right. That's what makes the up/down midpoint a valid cancellation of ramp lag.
+Edge selection matches the fixed schematic. Up-sweep = fall=LAST, down-sweep = fall=1. This is exactly what the deterministic test confirmed (up interior trip was the last fall at 1.20001; down interior trip was the first fall at 1.19999). So your comments are accurate and the polarity is correct.
+Shell-var combine with $?s_up * $?s_dn — correct. $? works here because s_up/s_dn are set shell vars (not meas vectors), and the unset at the top of each iteration makes the test meaningful per-run.
+let offset_results[run] = ... with bare run — correct (avoids the &idx / variable-index bugs from §8).
+pre-init t_up/t_dn = -1 then if t > 0, destroy $curplot each sweep, write → unset wr_singlescale → wrdata — all correct, all the §8 lessons applied. You also fixed the old curplatenv typo.
+Resolution is now 0.06 V × 20 ns / 6 µs ≈ 0.2 mV — nice and fine.
+The one real flaw: a single missed trip silently destroys your stats ⚠️
+This is the thing I'd fix before running. Right now a missed run stores -999, and then mean/sigma are computed over the whole vector. One -999 in 300 runs drags the mean by ~3.3 volts — it doesn't just add noise, it nukes the result. The echo WARN helps, but it's one line buried in 300.
+Either confirm zero WARN lines in the log before trusting the numbers, or (better) compute the stats over valid runs only. Drop-in replacement for your final block:
+setplot $curplotenv
+let mask  = (offset_results > -900)           ; 1 = valid, 0 = missed trip
+let ngood = mean(mask) * length(mask)         ; count of valid runs
+let mu    = mean(offset_results * mask) * length(mask) / ngood
+let sig   = sqrt( mean(((offset_results - mu)^2) * mask) * length(mask) / ngood )
+echo ========================================
+echo MC done: valid=$&ngood of $&mc_runs   mean=$&mu V   sigma=$&sig V
+echo ========================================
+write  comp_mc_offsets.raw offset_results
+unset  wr_singlescale
+wrdata comp_mc_offsets.txt offset_results
+​
+(The *mask trick zeroes out the misses so they don't enter either the mean or the variance.) If valid comes back < 300, widen the sweep window (e.g. 1.12 … 1.28) and rerun — see the next point.
+Two things to verify outside this script
+MODELS block: sw_stat_mismatch = 0 and sw_stat_global = 0. This script injects mismatch by hand on the input pair via delvto. If the PDK statistical switch is still on, you get a frozen extra mismatch on the other 9 devices polluting every run (your §9 open item). The .control looks right; just make sure the MODELS block backs it up.
+svt = 3.0e-3 is still a placeholder. The loop is final, but the spec it produces isn't real until svt = AVT / √(W·L) from the GF180 mismatch docs. And note: when you bump svt to the (likely larger) real value, your ±30 mV window may become too narrow — a ±3σ window will start clipping the tails and generating misses. Widen it in step with svt (that's why the valid-run guard above matters).
+Minor / optional
+Consider adding alter vvin2 = 1.2 at the top so the run is self-contained and … - 1.200 is guaranteed consistent with the actual reference (right now it relies on the testbench DC value).
+Optional physics: you're only injecting input-pair mismatch (the dominant term, which is the right call for an input-referred offset study). The latch pair (XM9/XM1) adds a smaller contribution if you ever want a fuller picture.
+Bottom line: the loop is correct and ready. Add the valid-run guard so a stray miss can't wreck the average, confirm the two MODELS switches, and remember the σ it prints is only a real spec once svt is the silicon value. With the schematic now fixed, expect the mean to land near 0 this time — that's your built-in sanity check that everything is consistent.
+Want me to fold this reviewed version (plus the valid-run guard and the svt/window note) into your handoff doc?
+vin2                                1.2
+x1.net2                        0.728473
+vin1                               1.23
+vck#branch                            0
+vdd#branch                 -2.36796e-07
+vvin1#branch                          0
+vvin2#branch                          0
+
+Reference value : 5.98546e-06
+No. of Data Rows : 603605
+t_dn             = 2.08035e-06
+vin_dn           = 1.20920e+00
+up=0.009204 dn=0.009196
+---- run 199 ----
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.99789
+vdd                           3
+ck                            0
+x1.net3                   2.99897
+vin2                        1.2
+x1.net2                  0.720476
+vin1                         1.17
+vck#branch                    0
+vdd#branch                 -1.74401e-07
+vvin1#branch                          0
+vvin2#branch                          0
+
+Reference value : 5.99854e-06
+No. of Data Rows : 603605
+t_up             = 3.30033e-06
+vin_up           = 1.20300e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+
+Node                    Voltage
+----                    -------
+out1                          3
+out2                          3
+x1.net1                   2.99831
+vdd                           3
+ck                            0
+x1.net3                   2.99706
+vin2                        1.2
+x1.net2                  0.730648
+vin1                         1.23
+vck#branch                    0
+vdd#branch                 -2.57339e-07
+vvin1#branch                          0
+vvin2#branch                          0
+
+Reference value : 5.99517e-06
+No. of Data Rows : 603605
+t_dn             = 2.70033e-06
+vin_dn           = 1.20300e+00
+up=0.003003 dn=0.002997
+======================================================
+MC done (N=200): mean=0.000217997 V sigma=0.00443714 V
+======================================================
+binary raw file "comp_mc_offsets.raw"
+Warning: No job (tran, ac, op etc.) defined:
+run simulation not started
+ngspice 1 →
+1:06 PM
+Thought
+That's the result you wanted to see. 🎯 The headline:
+Mean offset = +0.22 mV (was +15.6 mV before the fix)
+Sigma = 4.44 mV
