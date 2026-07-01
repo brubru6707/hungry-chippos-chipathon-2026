@@ -15,14 +15,14 @@ N -20 -150 10 -150 {lab=Vc}
 N 10 -190 10 -150 {lab=Vc}
 N 10 -150 30 -150 {lab=Vc}
 N 30 -150 30 -120 {lab=Vc}
-N 90 -120 150 -120 {lab=#net2}
-N 210 -120 240 -120 {lab=#net3}
-N 50 -220 115 -220 {lab=#net2}
-N 115 -220 115 -120 {lab=#net2}
+N 90 -120 150 -120 {lab=VBS}
+N 210 -120 240 -120 {lab=#net2}
+N 50 -220 115 -220 {lab=VBS}
+N 115 -220 115 -120 {lab=VBS}
 N 70 10 85 10 {lab=#net1}
-N 115 -120 115 -30 {lab=#net2}
+N 115 -120 115 -30 {lab=VBS}
 N 145 10 170 10 {lab=VIN}
-N 115 -30 200 -30 {lab=#net2}
+N 115 -30 200 -30 {lab=VBS}
 N 230 10 280 10 {lab=VOUT}
 N -15 -60 10 -60 {lab=CLK}
 N -100 -90 -60 -90 {lab=#net1}
@@ -106,7 +106,7 @@ sa=0 sb=0 sd=0
 model=nfet_03v3
 spiceprefix=X
 }
-C {symbols/cap_mim_2f0fF.sym} -50 -150 1 0 {name=C3
+C {symbols/cap_mim_2f0fF.sym} 280 40 2 0 {name=C3
 W=1e-6
 L=1e-6
 model=cap_mim_2f0fF
@@ -140,9 +140,9 @@ sa=0 sb=0 sd=0
 model=pfet_03v3
 spiceprefix=X
 }
-C {symbols/cap_mim_2f0fF.sym} 280 40 0 0 {name=C2
-W=1e-6
-L=1e-6
+C {symbols/cap_mim_2f0fF.sym} -50 -150 1 0 {name=C2
+W=10u
+L=10u
 model=cap_mim_2f0fF
 spiceprefix=X
 m=1}
@@ -184,6 +184,7 @@ Ainv1 CLK CLKB ideal_inv
 save all
 tran 2n 3u
 plot v(CLK) v(VIN) v(Vc) v(VOUT)
+plot V(vbs)-V(vin)
 .endc
 "}
 C {designs/emily_testing/inv1.sym} -285 10 0 0 {name=x1}
@@ -194,3 +195,4 @@ C {lab_wire.sym} 60 -55 0 0 {name=p9 sig_type=std_logic lab=CLK_INV}
 C {lab_wire.sym} 60 -155 0 0 {name=p10 sig_type=std_logic lab=Vc}
 C {lab_wire.sym} -10 -150 0 0 {name=p4 sig_type=std_logic lab=Vc}
 C {lab_wire.sym} 280 10 0 0 {name=p11 sig_type=std_logic lab=VOUT}
+C {lab_wire.sym} 140 -30 0 0 {name=p12 sig_type=std_logic lab=VBS}
