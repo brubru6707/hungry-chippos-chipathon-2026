@@ -1,0 +1,42 @@
+* Extracted by KLayout with GF180MCU LVS runset on : 10/07/2026 21:48
+
+* cell strongarm
+* pin CK
+* pin VIN1
+* pin VIN2
+* pin VOUT1
+* pin VOUT2
+* pin VDD
+* pin VSS
+.SUBCKT strongarm CK VIN1 VIN2 VOUT1 VOUT2 VDD VSS
+* device instance $1 r0 *1 -7.67,17.68 pfet_03v3
+M$1 VDD VOUT2 VOUT1 VDD pfet_03v3 L=0.28U W=0.42U AS=0.2822P AD=0.2822P
++ PS=2.18U PD=2.18U
+* device instance $2 r0 *1 20.43,18.28 pfet_03v3
+M$2 VDD CK \$4 VDD pfet_03v3 L=0.28U W=0.42U AS=0.2822P AD=0.2822P PS=2.18U
++ PD=2.18U
+* device instance $3 r0 *1 28.71,18.6 pfet_03v3
+M$3 VDD CK \$5 VDD pfet_03v3 L=0.28U W=0.42U AS=0.2822P AD=0.2822P PS=2.18U
++ PD=2.18U
+* device instance $4 r0 *1 -29.05,18.76 pfet_03v3
+M$4 VDD CK VOUT2 VDD pfet_03v3 L=0.28U W=0.42U AS=0.2822P AD=0.2822P PS=2.18U
++ PD=2.18U
+* device instance $5 r0 *1 11.54,18.91 pfet_03v3
+M$5 VDD VOUT1 VOUT2 VDD pfet_03v3 L=0.28U W=0.42U AS=0.2822P AD=0.2822P
++ PS=2.18U PD=2.18U
+* device instance $6 r0 *1 -16.24,20.08 pfet_03v3
+M$6 VOUT1 CK VDD VDD pfet_03v3 L=0.28U W=0.42U AS=0.2822P AD=0.2822P PS=2.18U
++ PD=2.18U
+* device instance $7 r0 *1 3.93,-15.14 nfet_03v3
+M$7 \$3 CK VSS VSS nfet_03v3 L=0.28U W=2U AS=1.22P AD=1.22P PS=5.22U PD=5.22U
+* device instance $8 r0 *1 10.36,-8.18 nfet_03v3
+M$8 \$5 VIN2 \$3 VSS nfet_03v3 L=0.28U W=2U AS=1.22P AD=1.22P PS=5.22U PD=5.22U
+* device instance $9 r0 *1 -6.23,-8.16 nfet_03v3
+M$9 \$3 VIN1 \$4 VSS nfet_03v3 L=0.28U W=2U AS=1.22P AD=1.22P PS=5.22U PD=5.22U
+* device instance $10 r0 *1 13.47,0.67 nfet_03v3
+M$10 VOUT2 VOUT1 \$5 VSS nfet_03v3 L=0.28U W=2U AS=1.22P AD=1.22P PS=5.22U
++ PD=5.22U
+* device instance $11 r0 *1 -8,2.48 nfet_03v3
+M$11 VOUT1 VOUT2 \$4 VSS nfet_03v3 L=0.28U W=2U AS=1.22P AD=1.22P PS=5.22U
++ PD=5.22U
+.ENDS strongarm

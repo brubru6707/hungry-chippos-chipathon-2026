@@ -1,0 +1,122 @@
+magic
+tech gf180mcuD
+magscale 1 5
+timestamp 1782620843
+<< checkpaint >>
+rect -778 1156 1504 1186
+rect -778 1126 1756 1156
+rect -778 1096 2008 1126
+rect -778 1066 2260 1096
+rect -778 1036 2512 1066
+rect -778 1006 2764 1036
+rect -808 826 2764 1006
+rect -808 796 2986 826
+rect -808 766 3238 796
+rect -808 736 3490 766
+rect -808 706 3742 736
+rect -808 -1240 3994 706
+rect -556 -1270 3994 -1240
+rect -304 -1300 3994 -1270
+rect -52 -1330 3994 -1300
+rect 200 -1360 3994 -1330
+rect 452 -1390 3994 -1360
+rect 704 -1420 3994 -1390
+rect 956 -1450 3994 -1420
+rect 1208 -1480 3994 -1450
+rect 1460 -1510 3994 -1480
+rect 1712 -1540 3994 -1510
+<< error_s >>
+rect 469 137 485 160
+rect 346 97 351 120
+rect 468 86 485 110
+rect 492 86 508 137
+rect 721 107 737 130
+rect 304 51 309 74
+rect 388 51 393 74
+rect 346 5 351 28
+rect 492 10 509 86
+rect 598 67 603 90
+rect 720 56 737 80
+rect 744 56 760 107
+rect 973 77 989 100
+rect 556 21 561 44
+rect 640 21 645 44
+rect 492 -41 508 10
+rect 598 -24 603 -1
+rect 744 -20 761 56
+rect 850 37 855 60
+rect 972 26 989 50
+rect 996 26 1012 77
+rect 1225 47 1241 70
+rect 808 -8 813 14
+rect 892 -8 897 14
+rect 744 -71 760 -20
+rect 850 -54 855 -31
+rect 996 -50 1013 26
+rect 1102 7 1107 30
+rect 1224 -4 1241 20
+rect 1248 -4 1264 47
+rect 1477 17 1493 40
+rect 1060 -38 1065 -15
+rect 1144 -38 1149 -15
+rect 996 -101 1012 -50
+rect 1102 -84 1107 -61
+rect 1248 -80 1265 -4
+rect 1354 -22 1359 0
+rect 1476 -34 1493 -10
+rect 1500 -34 1516 17
+rect 1312 -68 1317 -45
+rect 1396 -68 1401 -45
+rect 1248 -131 1264 -80
+rect 1354 -114 1359 -91
+rect 1500 -110 1517 -34
+rect 1606 -52 1611 -29
+rect 1564 -98 1569 -75
+rect 1648 -98 1653 -75
+rect 1500 -161 1516 -110
+rect 1606 -144 1611 -121
+use nfet_03v3_R69U9A  XM1
+timestamp 0
+transform 1 0 333 0 1 -117
+box -141 -123 141 123
+use pfet_03v3_T6ZWHE  XM2 /foss/designs/comparator
+timestamp 1782620652
+transform 1 0 585 0 1 -147
+box -141 -123 141 123
+use pfet_03v3_T6ZWHE  XM3
+timestamp 1782620652
+transform 1 0 837 0 1 -177
+box -141 -123 141 123
+use pfet_03v3_T6ZWHE  XM4
+timestamp 1782620652
+transform 1 0 1089 0 1 -207
+box -141 -123 141 123
+use pfet_03v3_T6ZWHE  XM5
+timestamp 1782620652
+transform 1 0 1341 0 1 -237
+box -141 -123 141 123
+use pfet_03v3_T6ZWHE  XM6
+timestamp 1782620652
+transform 1 0 1593 0 1 -267
+box -141 -123 141 123
+use pfet_03v3_T6ZWHE  XM7
+timestamp 1782620652
+transform 1 0 1845 0 1 -297
+box -141 -123 141 123
+use nfet_03v3_R69U9A  XM8
+timestamp 0
+transform 1 0 2097 0 1 -327
+box -141 -123 141 123
+use nfet_03v3_R69U9A  XM9
+timestamp 0
+transform 1 0 2349 0 1 -357
+box -141 -123 141 123
+use nfet_03v3_R69U9A  XM10
+timestamp 0
+transform 1 0 2601 0 1 -387
+box -141 -123 141 123
+use nfet_03v3_R69U9A  XM11
+timestamp 0
+transform 1 0 2853 0 1 -417
+box -141 -123 141 123
+<< end >>
