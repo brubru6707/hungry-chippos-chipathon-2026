@@ -29,9 +29,9 @@
 | COMP-3 | Functional transient testbench (single-shot) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_tb.sch` |
 | COMP-4 | Monte Carlo testbench setup (N ≥ 100 runs) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_mc_tb.sch` |
 | COMP-5 | **Gate 1** — input-referred offset characterized (MC) + delay < 2 ns | Bruno | 🟡 In Progress | `comparator/comp_mc_report.txt`, `comp_mc_offsets.{raw,txt}` — **Offset DONE:** the +15.1 mV systematic was a `#net5`/M6 wiring bug, now **FIXED**. MC re-run at real silicon mismatch (svt ≈ 24.8 mV, N=100, good=100/100): **mean +2.6 mV (≈ 0, no systematic), σ = 36.9 mV** (matches predicted √2·svt ≈ 35 mV). Note: literal "σ < 2 mV" is a flash/pipeline target — for a SAR, comparator offset is a calibratable **DC shift** with no DNL/INL impact → **offset sub-gate cleared, no device upsizing**. ⏳ **Delay < 2 ns not yet measured (regeneration speed).** |
-| COMP-6 | Comparator physical layout (KLayout) | Bruno | 🟡 In Progress | `designs/libs/core_comparator/comparator/comparator.gds` |
-| COMP-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/drc/comp_drc.log` |
-| COMP-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/lvs/comp_lvs.log` |
+| COMP-6 | Comparator physical layout (KLayout) | Bruno | 🟢 Complete | `comparator/layout/strongarm.gds` |
+| COMP-7 | Sub-block DRC clean | Bruno | 🟢 Complete | `comparator/layout/backups/strongarm_DRC_CLEAN_2026-07-10_15h26m1783711590.gds` — 0 violations (antenna clean; density flags only whole-cell minimum-density, deferred to chip-level dummy fill) |
+| COMP-8 | Sub-block LVS clean (KLayout, not Netgen) | Bruno | 🟢 Complete | `comparator/layout/backups/strongarm_LVS_CLEAN_2026-07-10_10h44m1783694640.gds` — netlists match, 11/11 devices correct. **Note:** verify via the terminal `run_lvs.py` flow in `handoff/README.md`, not the KLayout GUI's "Run KLayout LVS" menu action — that GUI path has a confirmed bug (false short) on this layout, tracked in `bugs/github-issue.md` |
 | COMP-9 | Post-layout extraction (PEX) corner simulation | TBD | ⚪ Not Started | `designs/simulations/comp_pex/comp_pex_transient.log` |
 
 ---
