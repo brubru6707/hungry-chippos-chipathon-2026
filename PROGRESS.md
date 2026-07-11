@@ -29,14 +29,16 @@
 | COMP-3 | Functional transient testbench (single-shot) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_tb.sch` |
 | COMP-4 | Monte Carlo testbench setup (N ≥ 100 runs) | Bruno | 🟢 Complete | `comparator/schematic/strongarm_mc_tb.sch` |
 | COMP-5 | **Gate 1** — input-referred offset characterized (MC) + delay < 2 ns | Bruno | 🟡 In Progress | `comparator/comp_mc_report.txt`, `comp_mc_offsets.{raw,txt}` — **Offset DONE:** the +15.1 mV systematic was a `#net5`/M6 wiring bug, now **FIXED**. MC re-run at real silicon mismatch (svt ≈ 24.8 mV, N=100, good=100/100): **mean +2.6 mV (≈ 0, no systematic), σ = 36.9 mV** (matches predicted √2·svt ≈ 35 mV). Note: literal "σ < 2 mV" is a flash/pipeline target — for a SAR, comparator offset is a calibratable **DC shift** with no DNL/INL impact → **offset sub-gate cleared, no device upsizing**. ⏳ **Delay < 2 ns not yet measured (regeneration speed).** |
-| COMP-6 | Comparator physical layout (KLayout) | Bruno | 🟡 In Progress | `designs/libs/core_comparator/comparator/comparator.gds` |
-| COMP-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/drc/comp_drc.log` |
-| COMP-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `designs/libs/core_comparator/comparator/lvs/comp_lvs.log` |
+| COMP-6 | Comparator physical layout (KLayout) | Bruno | 🟢 Complete | `comparator/layout/strongarm.gds` |
+| COMP-7 | Sub-block DRC clean | Bruno | 🟢 Complete | `comparator/layout/backups/strongarm_DRC_CLEAN_2026-07-10_15h26m1783711590.gds` — 0 violations (antenna clean; density flags only whole-cell minimum-density, deferred to chip-level dummy fill) |
+| COMP-8 | Sub-block LVS clean (KLayout, not Netgen) | Bruno | 🟢 Complete | `comparator/layout/backups/strongarm_LVS_CLEAN_2026-07-10_10h44m1783694640.gds` — netlists match, 11/11 devices correct. **Note:** verify via the terminal `run_lvs.py` flow in `handoff/README.md`, not the KLayout GUI's "Run KLayout LVS" menu action — that GUI path has a confirmed bug (false short) on this layout, tracked in `bugs/github-issue.md` |
 | COMP-9 | Post-layout extraction (PEX) corner simulation | TBD | ⚪ Not Started | `designs/simulations/comp_pex/comp_pex_transient.log` |
 
 ---
 
 ## 3 · Capacitor DAC Block (DAC)
+
+> **Interface note (2026-07-10, from Sam's SAR design doc):** the SAR_LOGIC top-level's bottom row is 8 OR gates (NOR2+INV), one per bit, each driving one DAC switch high/low based on the sequencer + code-register state. DAC-1's schematic should plan for **8 single-ended digital switch-control pins** (one per cap) as the drive interface from the SAR controller — feeds into the INT-2 pin-contract table too.
 
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
@@ -53,14 +55,16 @@
 
 ## 4 · SAR Digital Controller (SAR)
 
+> **Design-flow update (2026-07-10, from Sam's design doc):** the controller is being built as **full-custom schematic capture in xschem** (gate-level, Anderson architecture) rather than the Verilog → Yosys → OpenROAD digital-synthesis flow originally planned below. This work currently lives in Sam's separate local fork and has **not yet been merged into this repo** — `sar_logic/{rtl,syn,pnr}` here still only contain `.gitkeep` placeholders from the old plan.
+
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| SAR-1 | Synchronous FSM Verilog RTL coding | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/rtl/sar_ctrl.v` |
-| SAR-2 | RTL functional validation — Icarus Verilog testbench | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/tb/tb_sar_ctrl.v` |
-| SAR-3 | Yosys synthesis (gf180mcu standard cells) | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/syn/synth.tcl` |
-| SAR-4 | OpenROAD floorplan & place-and-route | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/` |
-| SAR-5 | Timing closure — 20 MHz minimum / 200 MHz target | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/timing_slack.rpt` |
-| SAR-6 | Exported GDS from OpenROAD, DRC/LVS verify | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/sar_ctrl.gds` |
+| SAR-1 | Standard-cell schematic entry + testbench: INV, TG, NAND2, NOR2, DFF_RST_N, DFF_SET_N | Sam | 🟡 In Progress | `sar_logic/cells/*.sch` (Sam's fork) — 5/6 cells built and functionally verified (INV, TG, NAND2, NOR2, DFF_RST_N all pass their testbenches). **DFF_SET_N is broken** — NOR-gate / inverted-RST_N handling bug, needs a fix before it can seed the sequencer's leading bit |
+| SAR-2 | Top-level SAR_LOGIC schematic — Anderson architecture: 9-FF sequencer + 8-FF code register + 8× (NOR2+INV) OR-gate DAC-drive stage, 17 flip-flops total | Sam | 🟡 In Progress | `sar_logic/sar_logic.sch` (Sam's fork) — schematic assembled ("FINAL SAR TOP-LEVEL SCHEMATIC"), not yet simulated end-to-end — **blocked on the DFF_SET_N fix** (SAR-1) |
+| SAR-3 | Full binary-search functional testbench (verify 8-bit code capture + End-of-Conversion signal) | Sam | ⚪ Not Started | `sar_logic/tb/tb_sar_logic.sch` |
+| SAR-4 | SAR_LOGIC physical layout (KLayout) | Sam | ⚪ Not Started | `sar_logic/layout/sar_logic.gds` |
+| SAR-5 | Sub-block DRC clean | Sam | ⚪ Not Started | `sar_logic/layout/drc/sar_logic_drc.log` |
+| SAR-6 | Sub-block LVS clean | Sam | ⚪ Not Started | `sar_logic/layout/lvs/sar_logic_lvs.log` |
 
 ---
 
