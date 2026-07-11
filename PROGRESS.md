@@ -38,6 +38,8 @@
 
 ## 3 · Capacitor DAC Block (DAC)
 
+> **Interface note (2026-07-10, from Sam's SAR design doc):** the SAR_LOGIC top-level's bottom row is 8 OR gates (NOR2+INV), one per bit, each driving one DAC switch high/low based on the sequencer + code-register state. DAC-1's schematic should plan for **8 single-ended digital switch-control pins** (one per cap) as the drive interface from the SAR controller — feeds into the INT-2 pin-contract table too.
+
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
 | DAC-1 | Binary-weighted 8-bit cap array schematic (C_u ≥ 50 fF) | Max | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.sch` |
@@ -53,14 +55,16 @@
 
 ## 4 · SAR Digital Controller (SAR)
 
+> **Design-flow update (2026-07-10, from Sam's design doc):** the controller is being built as **full-custom schematic capture in xschem** (gate-level, Anderson architecture) rather than the Verilog → Yosys → OpenROAD digital-synthesis flow originally planned below. This work currently lives in Sam's separate local fork and has **not yet been merged into this repo** — `sar_logic/{rtl,syn,pnr}` here still only contain `.gitkeep` placeholders from the old plan.
+
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| SAR-1 | Synchronous FSM Verilog RTL coding | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/rtl/sar_ctrl.v` |
-| SAR-2 | RTL functional validation — Icarus Verilog testbench | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/tb/tb_sar_ctrl.v` |
-| SAR-3 | Yosys synthesis (gf180mcu standard cells) | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/syn/synth.tcl` |
-| SAR-4 | OpenROAD floorplan & place-and-route | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/` |
-| SAR-5 | Timing closure — 20 MHz minimum / 200 MHz target | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/timing_slack.rpt` |
-| SAR-6 | Exported GDS from OpenROAD, DRC/LVS verify | Sam | ⚪ Not Started | `designs/libs/core_sar_ctrl/pnr/sar_ctrl.gds` |
+| SAR-1 | Standard-cell schematic entry + testbench: INV, TG, NAND2, NOR2, DFF_RST_N, DFF_SET_N | Sam | 🟡 In Progress | `sar_logic/cells/*.sch` (Sam's fork) — 5/6 cells built and functionally verified (INV, TG, NAND2, NOR2, DFF_RST_N all pass their testbenches). **DFF_SET_N is broken** — NOR-gate / inverted-RST_N handling bug, needs a fix before it can seed the sequencer's leading bit |
+| SAR-2 | Top-level SAR_LOGIC schematic — Anderson architecture: 9-FF sequencer + 8-FF code register + 8× (NOR2+INV) OR-gate DAC-drive stage, 17 flip-flops total | Sam | 🟡 In Progress | `sar_logic/sar_logic.sch` (Sam's fork) — schematic assembled ("FINAL SAR TOP-LEVEL SCHEMATIC"), not yet simulated end-to-end — **blocked on the DFF_SET_N fix** (SAR-1) |
+| SAR-3 | Full binary-search functional testbench (verify 8-bit code capture + End-of-Conversion signal) | Sam | ⚪ Not Started | `sar_logic/tb/tb_sar_logic.sch` |
+| SAR-4 | SAR_LOGIC physical layout (KLayout) | Sam | ⚪ Not Started | `sar_logic/layout/sar_logic.gds` |
+| SAR-5 | Sub-block DRC clean | Sam | ⚪ Not Started | `sar_logic/layout/drc/sar_logic_drc.log` |
+| SAR-6 | Sub-block LVS clean | Sam | ⚪ Not Started | `sar_logic/layout/lvs/sar_logic_lvs.log` |
 
 ---
 
