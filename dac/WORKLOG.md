@@ -79,3 +79,43 @@ NEXT STEP: Brief #3 — implement per-bit switch sizing + build major-carry (011
 - **Docs:** `VERIFICATION_PLAN.md` created with the DAC spec block (FS 3.3V, 1 LSB=12.9mV, Gate-2=0.5LSB/6.45mV settle <40ns) and Gate-2 PASS status; `PROGRESS.md` DAC-3/DAC-4 rows and the Gate 2 summary line flipped to PASS.
 
 NEXT STEP: Brief #5 — in-cell SAMPLE gating to kill sampling contention (bN = bit AND /SAMPLE, bN_bar = /bit AND /SAMPLE), keep 8-bit interface; then S/H sim; then INL/DNL over 256 codes.
+
+## 2026-07-17 — Brief #5: in-cell SAMPLE gating removes sampling contention
+
+- **Branch:** `dac-cap-array`, commit `02a5400` ("dac: in-cell SAMPLE gating removes sampling contention (bN=B&/SAMPLE, bN_bar=/B&/SAMPLE); 8-bit interface unchanged"). Worklog commit follows this one.
+- **The bug:** during SAMPLE=1, `unit_switch`'s M1 ties the bottom plate to VIN, but `bN_bar` was `NOT bN` unconditionally (plain `inv1`, no SAMPLE awareness) — so one of M2 (VREF side)/M3 (GND side) was always on too, fighting VIN through M1. Fixed with in-cell gating, `cap_array.sch`'s 8-bit port list (`VIN VREF VDD SAMPLE B0-B7 DAC_TOP`) unchanged.
+- **Gate realization chosen:** exactly the suggested Option A layout, no deviation. Per bit i: `bN_bar{i} = NOR2(B{i}, SAMPLE)` (direct 1-gate replacement of the old inv1, same downstream net `B{i}_B`). `bN{i} = AND2(B{i}, SAMPLE_N)` built as `NAND2(B{i}, SAMPLE_N)` -> `inv1` (reusing the existing inv1 cell as the second stage), output on a **new** net `B{i}G` — this required rewiring `unit_switch`'s `bN` pin from the raw `B{i}` net to `B{i}G` (the one topology change vs. before). `SAMPLE_N = NOT SAMPLE` is generated **once** by a single shared `inv1` instance (`x_sampinv`) and fanned out to all 8 NAND2 "b" inputs, saving 7 inverters vs. per-bit SAMPLE inversion.
+- **New cells** (`dac/schematic/nand2.sch/.sym`, `dac/schematic/nor2.sch/.sym`), authored in the same hand-coordinate style as `inv1.sch` (PDK `nfet_03v3`/`pfet_03v3` symbols, standard ad/as/pd/ps formulas, `spiceprefix=X`), parameterized like `unit_switch` (`nfet_wid`/`pfet_wid`/`nfet_len`/`pfet_len` subckt params, so any bit's gate can be upsized later without touching the cell definition):
+  - `nand2`: 2 parallel PMOS (source=DVDD, drain=y, gates=a/b) at normal inv1 pfet width (default `pfet_wid=1.7u`); 2 series NMOS (top: drain=y gate=a source=mid; bottom: drain=mid gate=b source=DVSS) at `nfet_wid=1.7u` (2x the single-inverter 0.85u, per spec, to compensate series R).
+  - `nor2`: 2 parallel NMOS (source=DVSS, drain=y, gates=a/b) at `nfet_wid=0.85u` (normal); 2 series PMOS (top: source=DVDD gate=a drain=mid; bottom: source=mid gate=b drain=y) at `pfet_wid=3.4u` (2x the single-inverter 1.7u).
+  - **Connectivity technique (new wrinkle vs. prior files):** these two cells use **zero drawn `N` wires** — every transistor pin gets a `lab_wire.sym` placed at its exact computed absolute coordinate (derived and cross-checked against `inv1.sch`/`unit_switch.sch`'s existing, already-working transistor placements: for `nfet_03v3`/`pfet_03v3` at rot0/flip0, `G=(ox-20,oy)`, nfet `D=(ox+20,oy-30)` `S=(ox+20,oy+30)`, pfet `D=(ox+20,oy+30)` `S=(ox+20,oy-30)`, bulk `B=(ox+20,oy)` always tied to the local supply rail, not to internal series nodes), and cell ports use `ipin`/`opin`/`iopin` placed anywhere convenient (confirmed these need not touch anything geometrically — they merge into the sheet-wide `lab=` alias exactly like `lab_wire.sym`, matching the pattern already documented for `cap_array.sch`'s top-level ports). Verified correct by inspecting the flattened netlist: `.subckt nand2 DVDD a b y DVSS ...` / `.subckt nor2 DVDD a b y DVSS ...` came out with exactly the intended transistor topology and no stray auto-generated `netNN` nodes.
+- **`cap_array.sch` per-bit rewiring:** for each bit i, removed the old `x_inv{i}` plain inverter and its 5 associated connectivity lines; added `x_nor{i}` (a=B{i}, b=SAMPLE, y=B{i}_B, unchanged downstream), `x_nand{i}` (a=B{i}, b=SAMPLE_N, y=B{i}NAND), `x_andinv{i}` (vin=B{i}NAND, vout=B{i}G); relabeled the wire/`lab_wire.sym` feeding `unit_switch`'s `bN` pin from `B{i}` to `B{i}G`. Added one shared `x_sampinv` (vin=SAMPLE, vout=SAMPLE_N). Programmatic diff (Python script over the regular 8x-repeated block) removed exactly 72 lines and modified exactly 24 across the 8 bits, matching hand-derived expectations exactly before writing back.
+- **CONNECTIVITY GUARD: PASS.** Re-netlisted `tb_major_carry.sch` from repo root. Flattened `.subckt cap_array`: all 8 caps (`XC0..XC7`, m=1,2,4,8,16,32,64,128) still share `DAC_TOP`; every top-level port (VIN VREF VDD SAMPLE B0-B7 DAC_TOP) wired to a real net (confirmed via the `x1 VIN VREF VDD SAMPLE B0 ... DAC_TOP cap_array` instance line). New gate instances show real, purposeful node names on every pin (e.g. `x_nor0 VDD B0 SAMPLE B0_B 0 nor2`, `x_nand0 VDD B0 SAMPLE_N B0NAND 0 nand2`, `x_andinv0 VDD B0NAND B0G 0 inv1`) — no floating/auto-generated `netNN` names anywhere in the new gates (the only `netN` names present, `net1..net8`, are the pre-existing, correctly-connected bottom-plate nodes, unchanged from before).
+- **Truth-table verification (new `dac/sim/tb_gate_truth.sch`, DC-style PWL steps through all 4 (SAMPLE,B) combinations, bit0 and bit7 probed via `x1.B0G`/`x1.B0_B`/`x1.B7G`/`x1.B7_B`):**
+
+  | SAMPLE | B | bN (B{i}G) | bN_bar (B{i}_B) | expected | bit0 | bit7 |
+  |---|---|---|---|---|---|---|
+  | 1 | 0 | 0 | 0 | both LOW | 6.6nV / 6.8nV | 6.6nV / 6.8nV |
+  | 1 | 1 | 0 | 0 | both LOW | 30nV / 23.8µV | 29nV / 23.9µV |
+  | 0 | 0 | 0 | VDD | bN=B, bN_bar=/B | 8.7nV / 3.300V | 6.9nV / 3.300V |
+  | 0 | 1 | VDD | 0 | bN=B, bN_bar=/B | 3.300V / 107µV | 3.300V / 123µV |
+
+  All values within a few tens of nV to ~100µV of ideal 0/3.3V — **PASS**, matches spec truth table exactly for both bits.
+- **Contention proof (before/after), SAMPLE=1, B=1, measured via branch current of `V_VREF`/`V_VIN` on a scratch flattened-netlist copy with the OLD plain-`inv1` `cap_array` subckt reconstructed by text substitution — no files under `dac/` were used to represent the old behavior, per instructions):**
+
+  | design | i(V_VREF) | i(V_VIN) | verdict |
+  |---|---|---|---|
+  | OLD (plain inv1, bN=B direct) | **-4.10 mA** | **-9.82 mA** | crowbar current confirmed (VIN/VREF sources fighting through M1+M2, both on) |
+  | NEW (SAMPLE-gated) | **-15.4 pA** | **-126 pA** | leakage only — **contention eliminated (~5-6 orders of magnitude reduction)** |
+
+- **MSB gate-drive delay regression (B7, the largest/slowest 53.76u switch load), `tb_major_carry.sch`, TT/27C/3.3V:** `bN_bar` path (B7_B fall, via new `nor2`): 0.86ns/0.96ns (10%/5% VDD) vs. 0.77ns/0.86ns pre-gating — small increase from the extra gate, as expected. New `bN` path (B7G rise, via `nand2`+`inv1`, 2 extra stages): 0.66ns/0.72ns (90%/95% VDD). Bit6 `bN_bar` delay: 0.54ns (vs. 0.49ns pre-gating). All comfortably under the ~4ns informal threshold — **no gate upsizing needed** for bit 7 (the `nand2_wid`/`nor2_wid` params exist precisely so this could be done per-instance later if a corner ever demanded it, but it isn't needed now).
+- **Gate-2 regression (`tb_major_carry.sch`, unmodified stimulus/measures):**
+
+  | corner | settle_time before | settle_time after | delta | err@40n before | err@40n after | margin to 40ns spec | verdict |
+  |---|---|---|---|---|---|---|---|
+  | TT / 27C / 3.3V | 1.769 ns | **1.856 ns** | +0.087 ns | 0.0000 mV | **0.0000 mV** | 38.14 ns | PASS |
+  | SS / 125C / 2.97V (worst corner) | 2.784 ns | **3.819 ns** | +1.035 ns | 0.0000 mV | **0.0000 mV** | 36.18 ns | PASS |
+
+  Both corners settle well under the 40ns spec with >36ns margin (>9x); the worst-corner delta (+1.035ns) is marginally over the informal "<1ns" expectation but is two extra static-CMOS gate stages' worth of delay at the slowest PVT corner and does not threaten the spec in any way. **Gate-2 PASS at both corners.**
+
+NEXT STEP: Brief #6: real sample-and-hold sim (SAMPLE high->sample VIN, SAMPLE low->convert), measure S/H accuracy incl. kT/C noise; then INL/DNL sweep over 256 codes.
