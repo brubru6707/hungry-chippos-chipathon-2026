@@ -30,3 +30,52 @@ NEXT STEP: Brief #3 — implement per-bit switch sizing + build major-carry (011
 
   ACCEPTANCE: settle 1.77 ns < 40 ns AND |err@40n| ~0 < 6.45 mV -> **Gate-2 PASS @ TT** (unsized run done on a scratch netlist copy, not committed).
 - NEXT STEP: corners SS/FF (+ temp) on the major-carry tb, then INL/DNL linearity sweep over all 256 codes.
+
+## 2026-07-17 — PVT corner sweep on Gate-2 major-carry tb: PASS across all 30 corners
+
+- **Branch:** `dac-cap-array`, commit `34e727b` ("dac: Gate-2 settling verified across PVT corners; record spec + result").
+- **Connectivity guard (re-confirmed before trusting the sweep):** re-netlisted `tb_major_carry.sch` from the repo root (`cd /foss/designs && xschem -q -x -n dac/sim/tb_major_carry.sch`) — netlisting from `dac/sim/` directly breaks the relative symbol path `dac/schematic/cap_array.sym` and silently drops the `x1` instance (`*  x1 -  cap_array  IS MISSING !!!!` in the netlist header comment) — always netlist from `/foss/designs`. Flattened `x1` subckt confirms all 8 caps (`XC0..XC7`, m=1,2,4,8,16,32,64,128) share `DAC_TOP`; every top-level pin (VIN, VREF, VDD, SAMPLE, B0-B7, DAC_TOP) is wired to a real net, no floats.
+- **Sweep method:** netlisted `tb_major_carry.sch` once, then for each of 30 PVT combinations did text substitution on the flat spice deck (`.lib ... <corner>` for the digital section, `.temp <T>` inserted before `.control`, `V_VDD` source value) and ran `ngspice -b` directly — same stimulus/measures as the TT run (major-carry step at t0=700n, settle = last crossing of ±6.45mV band around v_final, err at t0+40n).
+- **Corners:** process = {typical, ss, ff, sf, fs} (all 5 gf180mcuD corners, not just ss/ff — cheap to run) x temp = {-40C, 27C, 125C} x V_DD = {3.3V, 2.97V (-10%)}. V_REF fixed at 1.65V.
+
+  | corner | temp | V_DD | settle_time (ns) | err@40ns (mV) | verdict |
+  |---|---|---|---|---|---|
+  | typical | -40C | 3.3V | 1.459 | 0.0000 | PASS |
+  | typical | -40C | 2.97V | 1.486 | 0.0000 | PASS |
+  | typical | 27C | 3.3V | 1.769 | 0.0000 | PASS |
+  | typical | 27C | 2.97V | 1.801 | 0.0000 | PASS |
+  | typical | 125C | 3.3V | 2.249 | 0.0001 | PASS |
+  | typical | 125C | 2.97V | 2.286 | 0.0000 | PASS |
+  | ss | -40C | 3.3V | 1.777 | 0.0000 | PASS |
+  | ss | -40C | 2.97V | 1.819 | 0.0000 | PASS |
+  | ss | 27C | 3.3V | 2.152 | 0.0000 | PASS |
+  | ss | 27C | 2.97V | 2.201 | 0.0000 | PASS |
+  | ss | 125C | 3.3V | 2.727 | 0.0000 | PASS |
+  | **ss** | **125C** | **2.97V** | **2.784** | **0.0000** | **PASS (worst case)** |
+  | ff | -40C | 3.3V | 1.224 | 0.0000 | PASS |
+  | ff | -40C | 2.97V | 1.240 | 0.0000 | PASS |
+  | ff | 27C | 3.3V | 1.481 | 0.0000 | PASS |
+  | ff | 27C | 2.97V | 1.501 | 0.0000 | PASS |
+  | ff | 125C | 3.3V | 1.883 | 0.0000 | PASS |
+  | ff | 125C | 2.97V | 1.905 | 0.0000 | PASS |
+  | sf | -40C | 3.3V | 1.640 | 0.0000 | PASS |
+  | sf | -40C | 2.97V | 1.665 | 0.0000 | PASS |
+  | sf | 27C | 3.3V | 1.988 | 0.0000 | PASS |
+  | sf | 27C | 2.97V | 2.020 | 0.0000 | PASS |
+  | sf | 125C | 3.3V | 2.525 | 0.0000 | PASS |
+  | sf | 125C | 2.97V | 2.563 | 0.0000 | PASS |
+  | fs | -40C | 3.3V | 1.316 | 0.0000 | PASS |
+  | fs | -40C | 2.97V | 1.344 | 0.0000 | PASS |
+  | fs | 27C | 3.3V | 1.593 | 0.0000 | PASS |
+  | fs | 27C | 2.97V | 1.626 | 0.0000 | PASS |
+  | fs | 125C | 3.3V | 2.023 | 0.0000 | PASS |
+  | fs | 125C | 2.97V | 2.060 | 0.0000 | PASS |
+
+  (settle_time = max of the last ±6.45mV band-crossing times after t0, matching the TT methodology from the previous entry.)
+
+- **Worst-case corner: SS, 125C, V_DD=2.97V** — settle = 2.784 ns, margin to 40 ns spec = **37.22 ns**, err@40ns ≈ 0 mV. Matches expectation that the switch nfet (SS + weakest gate overdrive + highest temp mobility loss) dominates and is slowest here; still >13x margin under spec.
+- **ACCEPTANCE: every one of the 30 corners settles <40ns AND |err@40n|<6.45mV -> Gate-2 PASS across TT + full PVT sweep.**
+- **Testbench quarantine:** deleted `dac/sim/tb_cap_array.sch` (first-pass, single-bit MSB-only settling check, hand-authored outside Xschem with cosmetic-only `lab=` annotations — netlisted with disconnected nodes, same disease as the pre-fix `cap_array.sch` described in the 2026-07-17 Brief #3 entry above). `tb_major_carry.sch` is the sole, authoritative Gate-2 testbench going forward.
+- **Docs:** `VERIFICATION_PLAN.md` created with the DAC spec block (FS 3.3V, 1 LSB=12.9mV, Gate-2=0.5LSB/6.45mV settle <40ns) and Gate-2 PASS status; `PROGRESS.md` DAC-3/DAC-4 rows and the Gate 2 summary line flipped to PASS.
+
+NEXT STEP: Brief #5 — in-cell SAMPLE gating to kill sampling contention (bN = bit AND /SAMPLE, bN_bar = /bit AND /SAMPLE), keep 8-bit interface; then S/H sim; then INL/DNL over 256 codes.
