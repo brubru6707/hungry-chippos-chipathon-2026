@@ -44,9 +44,9 @@
 |----|------|-------|--------|----------|
 | DAC-1 | Binary-weighted 8-bit cap array schematic (C_u ≥ 50 fF) | Max | 🟡 Draft, unverified | `designs/libs/core_cap_dac/cap_array/cap_array.sch` — first-pass 8-row bottom-plate-switching array, hand-authored outside Xschem reusing Max's `unit_switch` + Emily's `inv1` + PDK `cap_mim_2f0fF`. **Not yet opened/simulated in Xschem — must be visually checked and netlisted before trusting.** See `docs/adc_glossary.md` for the DAC concept explainer. |
 | DAC-2 | Cap array symbol | Max | 🟡 Draft, unverified | `designs/libs/core_cap_dac/cap_array/cap_array.sym` — hand-authored 13-pin symbol (VIN, VREF, VDD, SAMPLE, B0-B7, DAC_TOP); can be regenerated cleanly via Xschem's "generate symbol from schematic" once cap_array.sch is confirmed working |
-| DAC-3 | 256×C_u switching & settling time testbench | Max | 🟡 Draft, unverified | `designs/libs/tb_cap_dac/tb_cap_array/tb_cap_array.sch` — first-pass single-bit (MSB) settling check only, not yet the full major-carry/256-code Gate 2 sweep |
+| DAC-3 | 256×C_u switching & settling time testbench | Max | 🟢 Complete | `dac/sim/tb_major_carry.sch` — major-carry (0111_1111→1000_0000) Gate-2 settling testbench, connectivity-verified (all 8 caps share `DAC_TOP`, no floating ports). Supersedes the old first-pass `tb_cap_array.sch` (single-bit MSB-only, electrically disconnected — **deleted 2026-07-17**). |
 | DAC-3b *(ported)* | Max's unit-cell switch, relocated from `origin/max` into the `core_cap_dac` naming convention and reused (unmodified) inside `cap_array.sch` | Max | 🟢 Complete (as ported) | `designs/libs/core_cap_dac/unit_switch.sch`/`.sym` — original WIP branch (`origin/max`, last commit 2026-07-11) still has an untouched `tb_unit_capa.sch` if useful for reference. **⚠️ Heads-up:** that branch's stated next step was a *bootstrap* switch — schematic-review feedback explicitly advised against this for an 8-bit DAC ("unnecessarily increases design time without much benefit... a simple sized transmission gate should be a good start," see [Review Feedback](#review-feedback--open-items)). The unit_switch as ported here is already a simple 3-transistor pass-gate switch, not a bootstrap switch, so this concern is addressed for the DAC's own switches. |
-| DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT) | Max | ⚪ Not started | `designs/simulations/dac_settling/dac_settling_curves.png` — blocked on DAC-1 verification + extending DAC-3 to the real 256-code sweep |
+| DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT + PVT corners) | Max | 🟢 **PASS** | `dac/WORKLOG.md` (2026-07-17 entry), `VERIFICATION_PLAN.md` — TT: 1.77 ns. Full PVT sweep (5 process corners × 3 temps × 2 V_DD, 30 combos): worst case SS/125°C/2.97V settles in 2.78 ns, 37.2 ns margin to spec, err@40ns ≈ 0 mV in every corner. |
 | DAC-5 | Unit-cell layout with common-centroid placement (KLayout) | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cu_cell/cu_cell.gds` |
 | DAC-6 | Full array layout with dummy/fringe peripheral caps | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.gds` |
 | DAC-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/drc/dac_drc.log` |
@@ -128,7 +128,7 @@
 | Gate | Criterion | Block | Status |
 |------|-----------|-------|--------|
 | Gate 1 | σ_offset characterized + delay < 2 ns @ TT (MC N≥100) | Comparator | 🟡 |
-| Gate 2 | DAC settling ≤ 0.5 LSB within 40 ns @ TT | Cap DAC | ⚪ |
+| Gate 2 | DAC settling ≤ 0.5 LSB within 40 ns @ TT | Cap DAC | 🟢 PASS (TT + full PVT sweep, worst case 2.78 ns / 37.2 ns margin — see `VERIFICATION_PLAN.md`) |
 | Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | ⚪ |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
 | Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |
