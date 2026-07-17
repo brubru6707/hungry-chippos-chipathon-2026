@@ -29,7 +29,7 @@ N 2200 -1270 2170 -1270 {lab=B0}
 N 2330 -1270 2360 -1270 {lab=B0_B}
 N 2230 -1340 2230 -1360 {lab=VDD}
 N 2230 -1210 2230 -1190 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -1270 0 0 {name=x_sw0}
+C {dac/schematic/unit_switch.sym} 1880 -1270 0 0 {name=x_sw0 nfet_wid=0.42u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -1370 2 0 {name=C0
 W=5e-6
 L=5e-6
@@ -52,7 +52,7 @@ N 2200 -1670 2170 -1670 {lab=B1}
 N 2330 -1670 2360 -1670 {lab=B1_B}
 N 2230 -1740 2230 -1760 {lab=VDD}
 N 2230 -1610 2230 -1590 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -1670 0 0 {name=x_sw1}
+C {dac/schematic/unit_switch.sym} 1880 -1670 0 0 {name=x_sw1 nfet_wid=0.84u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -1770 2 0 {name=C1
 W=5e-6
 L=5e-6
@@ -75,7 +75,7 @@ N 2200 -2070 2170 -2070 {lab=B2}
 N 2330 -2070 2360 -2070 {lab=B2_B}
 N 2230 -2140 2230 -2160 {lab=VDD}
 N 2230 -2010 2230 -1990 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -2070 0 0 {name=x_sw2}
+C {dac/schematic/unit_switch.sym} 1880 -2070 0 0 {name=x_sw2 nfet_wid=1.68u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -2170 2 0 {name=C2
 W=5e-6
 L=5e-6
@@ -98,7 +98,7 @@ N 2200 -2470 2170 -2470 {lab=B3}
 N 2330 -2470 2360 -2470 {lab=B3_B}
 N 2230 -2540 2230 -2560 {lab=VDD}
 N 2230 -2410 2230 -2390 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -2470 0 0 {name=x_sw3}
+C {dac/schematic/unit_switch.sym} 1880 -2470 0 0 {name=x_sw3 nfet_wid=3.36u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -2570 2 0 {name=C3
 W=5e-6
 L=5e-6
@@ -121,7 +121,7 @@ N 2200 -2870 2170 -2870 {lab=B4}
 N 2330 -2870 2360 -2870 {lab=B4_B}
 N 2230 -2940 2230 -2960 {lab=VDD}
 N 2230 -2810 2230 -2790 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -2870 0 0 {name=x_sw4}
+C {dac/schematic/unit_switch.sym} 1880 -2870 0 0 {name=x_sw4 nfet_wid=6.72u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -2970 2 0 {name=C4
 W=5e-6
 L=5e-6
@@ -144,7 +144,7 @@ N 2200 -3270 2170 -3270 {lab=B5}
 N 2330 -3270 2360 -3270 {lab=B5_B}
 N 2230 -3340 2230 -3360 {lab=VDD}
 N 2230 -3210 2230 -3190 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -3270 0 0 {name=x_sw5}
+C {dac/schematic/unit_switch.sym} 1880 -3270 0 0 {name=x_sw5 nfet_wid=13.44u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -3370 2 0 {name=C5
 W=5e-6
 L=5e-6
@@ -167,7 +167,7 @@ N 2200 -3670 2170 -3670 {lab=B6}
 N 2330 -3670 2360 -3670 {lab=B6_B}
 N 2230 -3740 2230 -3760 {lab=VDD}
 N 2230 -3610 2230 -3590 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -3670 0 0 {name=x_sw6}
+C {dac/schematic/unit_switch.sym} 1880 -3670 0 0 {name=x_sw6 nfet_wid=26.88u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -3770 2 0 {name=C6
 W=5e-6
 L=5e-6
@@ -190,7 +190,7 @@ N 2200 -4070 2170 -4070 {lab=B7}
 N 2330 -4070 2360 -4070 {lab=B7_B}
 N 2230 -4140 2230 -4160 {lab=VDD}
 N 2230 -4010 2230 -3990 {lab=0}
-C {dac/schematic/unit_switch.sym} 1880 -4070 0 0 {name=x_sw7}
+C {dac/schematic/unit_switch.sym} 1880 -4070 0 0 {name=x_sw7 nfet_wid=53.76u nfet_len=0.28u}
 C {symbols/cap_mim_2f0fF.sym} 1860 -4170 2 0 {name=C7
 W=5e-6
 L=5e-6
@@ -212,3 +212,109 @@ C {ipin.sym} 1500 -370 0 0 {name=pB5 lab=B5}
 C {ipin.sym} 1500 -270 0 0 {name=pB6 lab=B6}
 C {ipin.sym} 1500 -170 0 0 {name=pB7 lab=B7}
 C {opin.sym} 1500 -70 0 0 {name=pDACTOP lab=DAC_TOP}
+C {lab_wire.sym} 1830 -1170 0 0 {name=lw0_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -1170 0 0 {name=lw0_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -1420 0 0 {name=lw0_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -1280 0 0 {name=lw0_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -1260 0 0 {name=lw0_4 sig_type=std_logic lab=B0}
+C {lab_wire.sym} 2170 -1270 0 0 {name=lw0_5 sig_type=std_logic lab=B0}
+C {lab_wire.sym} 1960 -1210 0 0 {name=lw0_6 sig_type=std_logic lab=B0_B}
+C {lab_wire.sym} 2360 -1270 0 0 {name=lw0_7 sig_type=std_logic lab=B0_B}
+C {lab_wire.sym} 2230 -1360 0 0 {name=lw0_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -1190 0 0 {name=lginv0 lab=0}
+C {lab_wire.sym} 1830 -1570 0 0 {name=lw1_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -1570 0 0 {name=lw1_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -1820 0 0 {name=lw1_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -1680 0 0 {name=lw1_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -1660 0 0 {name=lw1_4 sig_type=std_logic lab=B1}
+C {lab_wire.sym} 2170 -1670 0 0 {name=lw1_5 sig_type=std_logic lab=B1}
+C {lab_wire.sym} 1960 -1610 0 0 {name=lw1_6 sig_type=std_logic lab=B1_B}
+C {lab_wire.sym} 2360 -1670 0 0 {name=lw1_7 sig_type=std_logic lab=B1_B}
+C {lab_wire.sym} 2230 -1760 0 0 {name=lw1_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -1590 0 0 {name=lginv1 lab=0}
+C {lab_wire.sym} 1830 -1970 0 0 {name=lw2_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -1970 0 0 {name=lw2_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -2220 0 0 {name=lw2_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -2080 0 0 {name=lw2_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -2060 0 0 {name=lw2_4 sig_type=std_logic lab=B2}
+C {lab_wire.sym} 2170 -2070 0 0 {name=lw2_5 sig_type=std_logic lab=B2}
+C {lab_wire.sym} 1960 -2010 0 0 {name=lw2_6 sig_type=std_logic lab=B2_B}
+C {lab_wire.sym} 2360 -2070 0 0 {name=lw2_7 sig_type=std_logic lab=B2_B}
+C {lab_wire.sym} 2230 -2160 0 0 {name=lw2_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -1990 0 0 {name=lginv2 lab=0}
+C {lab_wire.sym} 1830 -2370 0 0 {name=lw3_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -2370 0 0 {name=lw3_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -2620 0 0 {name=lw3_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -2480 0 0 {name=lw3_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -2460 0 0 {name=lw3_4 sig_type=std_logic lab=B3}
+C {lab_wire.sym} 2170 -2470 0 0 {name=lw3_5 sig_type=std_logic lab=B3}
+C {lab_wire.sym} 1960 -2410 0 0 {name=lw3_6 sig_type=std_logic lab=B3_B}
+C {lab_wire.sym} 2360 -2470 0 0 {name=lw3_7 sig_type=std_logic lab=B3_B}
+C {lab_wire.sym} 2230 -2560 0 0 {name=lw3_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -2390 0 0 {name=lginv3 lab=0}
+C {lab_wire.sym} 1830 -2770 0 0 {name=lw4_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -2770 0 0 {name=lw4_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -3020 0 0 {name=lw4_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -2880 0 0 {name=lw4_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -2860 0 0 {name=lw4_4 sig_type=std_logic lab=B4}
+C {lab_wire.sym} 2170 -2870 0 0 {name=lw4_5 sig_type=std_logic lab=B4}
+C {lab_wire.sym} 1960 -2810 0 0 {name=lw4_6 sig_type=std_logic lab=B4_B}
+C {lab_wire.sym} 2360 -2870 0 0 {name=lw4_7 sig_type=std_logic lab=B4_B}
+C {lab_wire.sym} 2230 -2960 0 0 {name=lw4_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -2790 0 0 {name=lginv4 lab=0}
+C {lab_wire.sym} 1830 -3170 0 0 {name=lw5_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -3170 0 0 {name=lw5_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -3420 0 0 {name=lw5_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -3280 0 0 {name=lw5_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -3260 0 0 {name=lw5_4 sig_type=std_logic lab=B5}
+C {lab_wire.sym} 2170 -3270 0 0 {name=lw5_5 sig_type=std_logic lab=B5}
+C {lab_wire.sym} 1960 -3210 0 0 {name=lw5_6 sig_type=std_logic lab=B5_B}
+C {lab_wire.sym} 2360 -3270 0 0 {name=lw5_7 sig_type=std_logic lab=B5_B}
+C {lab_wire.sym} 2230 -3360 0 0 {name=lw5_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -3190 0 0 {name=lginv5 lab=0}
+C {lab_wire.sym} 1830 -3570 0 0 {name=lw6_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -3570 0 0 {name=lw6_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -3820 0 0 {name=lw6_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -3680 0 0 {name=lw6_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -3660 0 0 {name=lw6_4 sig_type=std_logic lab=B6}
+C {lab_wire.sym} 2170 -3670 0 0 {name=lw6_5 sig_type=std_logic lab=B6}
+C {lab_wire.sym} 1960 -3610 0 0 {name=lw6_6 sig_type=std_logic lab=B6_B}
+C {lab_wire.sym} 2360 -3670 0 0 {name=lw6_7 sig_type=std_logic lab=B6_B}
+C {lab_wire.sym} 2230 -3760 0 0 {name=lw6_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -3590 0 0 {name=lginv6 lab=0}
+C {lab_wire.sym} 1830 -3970 0 0 {name=lw7_0 sig_type=std_logic lab=VIN}
+C {lab_wire.sym} 1860 -3970 0 0 {name=lw7_1 sig_type=std_logic lab=VREF}
+C {lab_wire.sym} 1860 -4220 0 0 {name=lw7_2 sig_type=std_logic lab=DAC_TOP}
+C {lab_wire.sym} 2090 -4080 0 0 {name=lw7_3 sig_type=std_logic lab=SAMPLE}
+C {lab_wire.sym} 2180 -4060 0 0 {name=lw7_4 sig_type=std_logic lab=B7}
+C {lab_wire.sym} 2170 -4070 0 0 {name=lw7_5 sig_type=std_logic lab=B7}
+C {lab_wire.sym} 1960 -4010 0 0 {name=lw7_6 sig_type=std_logic lab=B7_B}
+C {lab_wire.sym} 2360 -4070 0 0 {name=lw7_7 sig_type=std_logic lab=B7_B}
+C {lab_wire.sym} 2230 -4160 0 0 {name=lw7_8 sig_type=std_logic lab=VDD}
+C {gnd.sym} 2230 -3990 0 0 {name=lginv7 lab=0}
+N 1500 -1270 1560 -1270 {lab=VIN}
+C {lab_wire.sym} 1560 -1270 0 0 {name=lwp0 sig_type=std_logic lab=VIN}
+N 1500 -1170 1560 -1170 {lab=VREF}
+C {lab_wire.sym} 1560 -1170 0 0 {name=lwp1 sig_type=std_logic lab=VREF}
+N 1500 -1070 1560 -1070 {lab=VDD}
+C {lab_wire.sym} 1560 -1070 0 0 {name=lwp2 sig_type=std_logic lab=VDD}
+N 1500 -970 1560 -970 {lab=SAMPLE}
+C {lab_wire.sym} 1560 -970 0 0 {name=lwp3 sig_type=std_logic lab=SAMPLE}
+N 1500 -870 1560 -870 {lab=B0}
+C {lab_wire.sym} 1560 -870 0 0 {name=lwp4 sig_type=std_logic lab=B0}
+N 1500 -770 1560 -770 {lab=B1}
+C {lab_wire.sym} 1560 -770 0 0 {name=lwp5 sig_type=std_logic lab=B1}
+N 1500 -670 1560 -670 {lab=B2}
+C {lab_wire.sym} 1560 -670 0 0 {name=lwp6 sig_type=std_logic lab=B2}
+N 1500 -570 1560 -570 {lab=B3}
+C {lab_wire.sym} 1560 -570 0 0 {name=lwp7 sig_type=std_logic lab=B3}
+N 1500 -470 1560 -470 {lab=B4}
+C {lab_wire.sym} 1560 -470 0 0 {name=lwp8 sig_type=std_logic lab=B4}
+N 1500 -370 1560 -370 {lab=B5}
+C {lab_wire.sym} 1560 -370 0 0 {name=lwp9 sig_type=std_logic lab=B5}
+N 1500 -270 1560 -270 {lab=B6}
+C {lab_wire.sym} 1560 -270 0 0 {name=lwp10 sig_type=std_logic lab=B6}
+N 1500 -170 1560 -170 {lab=B7}
+C {lab_wire.sym} 1560 -170 0 0 {name=lwp11 sig_type=std_logic lab=B7}
+N 1500 -70 1560 -70 {lab=DAC_TOP}
+C {lab_wire.sym} 1560 -70 0 0 {name=lwp12 sig_type=std_logic lab=DAC_TOP}
