@@ -323,3 +323,40 @@ NEXT STEP: Step 2 — capacitor mismatch analysis (the real linearity limit): ch
 - **Read on the result:** with the conservative 2.5%-per-unit-cap sigma sourced from the PDK's global MC parameter, yield is 71.52% — the mean max|DNL| (0.416 LSB) already sits close to the 0.5 LSB spec, and the MSB major carry alone can push DNL past 1 LSB (worst-case 1.664 LSB) in unlucky draws. Because the true local-mismatch sigma is expected to be smaller than this proxy (see 2a caveat), this is a pessimistic bound, not necessarily the real silicon outcome — but as-is it does **not** clear 0.5 LSB with comfortable margin. Cu adequacy verdict and any required unit-cap upsizing to be finalized in Step 2d after the ngspice cross-check (2c, if budget allows).
 
 >>> CHECKPOINT reached — see chat response for full report. Steps 2c/2d not yet started. <<<
+
+## 2026-07-17 — Step 2c/2d: silicon-level MC cross-check, mismatch sign-off, S/H IC re-verify
+
+- **Branch:** `dac-cap-array`. New file: `designs/scripts/dac_mismatch_mc_spice.py`.
+
+- **Step 2c — transistor-level cross-check on the 3 dominant major carries (0x7F→0x80, 0x3F→0x40, 0xBF→0xC0), N=50 runs each, `tb_major_carry.sch` structure (TT/27C/3.3V):**
+  - **Method:** per run, draws the same per-bit relative cap deltas as `dac_mismatch_mc.py` (`sigma(C_i)/C_i = 2.5%/sqrt(N_i)`), injects them by scaling each `XC{i}` cap_mim instance's `c_width`/`c_length` together (area ∝ scale², keeping `m=N_i` unchanged — an aggregate-capacitance injection, not per-unit-cell, matching how the Python model already collapses each bit's N_i unit cells into one Gaussian `C_i`), and generalizes `tb_major_carry.sch`'s hardcoded 0x7F→0x80 stimulus to arbitrary pre/post code pairs (constant sources for unchanged bits, `pulse()` sources matching the existing rising/falling-edge patterns for bits that flip at t0=700ns).
+  - **Real bug hit and fixed (not something this analysis caused, but only exposed here):** running `tb_major_carry.sch`'s flat netlist for its own native full 1.05µs duration is numerically unstable in this ngspice build — a duration sweep on the *pristine, unmodified* netlist found clean runs through ~750ns, hangs/timeouts 780-870ns, and a hard `memory required X more than available Y` fatal error at 1.05µs (~7.6M accepted timepoints instead of the expected ~52,500 at the deck's native 0.02ns step — a genuine solver instability in the post-major-carry "hold" phase, not something introduced by this script's cap substitutions or by the earlier `save all`→`save v(dac_top)` fix, which is also insufficient by itself). Since Gate-2's own spec point is settle-by-t0+40ns (worst PVT corner from Brief #10 settles by ~80ns; nominal TT settles in ~2-4ns), there is no need to simulate anywhere near the unstable region: the script truncates each run to `t0+45ns` and samples `v_final` at `t0+40ns`. Verified this truncation loses no signal — it reproduces the committed `v_at40=2.02645V` figures-export number exactly on the unperturbed netlist. A small fraction of random cap draws still shift the instability earlier than 745ns total duration; the script retries at `t0+25/15/10ns` (still ≥2.5x real settling time) on failure rather than dropping the run, and this fully eliminated crashes in testing.
+  - **Result — mean/sigma/worst-case |DNL| (N=50 ngspice runs) vs. the idealized Python transfer-function model (same N=5000-run population, sampled at the corresponding code):**
+
+    | transition | ngspice (N=50) mean / sigma / worst | Python MC (N=5000) mean / sigma / worst |
+    |---|---|---|
+    | 0x7F→0x80 | 0.296 / 0.232 / 0.903 LSB | 0.312 / 0.241 / 1.363 LSB |
+    | 0x3F→0x40 | 0.231 / 0.143 / 0.562 LSB | 0.222 / 0.169 / 1.282 LSB |
+    | 0xBF→0xC0 | 0.225 / 0.163 / 0.642 LSB | 0.222 / 0.169 / 1.282 LSB |
+
+    Mean and sigma agree within ~5-15% between the transistor-level (real TG resistance, real digital gate delay, real charge injection) and idealized instantaneous-charge-conservation models at all three transitions — **confirms the idealized Python MC's mismatch-driven DNL is not an artifact of the simplified transfer function; switch/gate second-order effects do not change the conclusion.** The larger gap in the "worst" column is expected sampling-size noise (N=50 vs N=5000 undersamples the tail of the same underlying distribution, not a physical discrepancy) — mean/sigma (which converge much faster) are the numbers that matter for this cross-check and they agree well.
+
+- **Step 2d — verdict: Cu=50fF is NOT adequate for <0.5 LSB INL/DNL with comfortable yield margin.** Under the PDK-sourced (conservative, see 2a) 2.5%-per-unit-cap sigma: mean max|DNL|=0.416 LSB already sits close to the 0.5 LSB spec, and yield is only 71.5%. Swept unit-cap area (`sigma_unit ∝ 1/sqrt(area)`, same Python transfer-function model, N=3000/point):
+
+  | Cu | sigma_unit | mean\|DNL\| | worst\|DNL\| | mean\|INL\| | yield |
+  |---|---|---|---|---|---|
+  | 50 fF (current, 5µm×5µm) | 2.50% | 0.415 | 1.359 | 0.313 | 71.7% |
+  | 100 fF (2×, ~7.1µm×7.1µm) | 1.77% | 0.293 | 0.961 | 0.221 | 91.7% |
+  | 150 fF (3×) | 1.44% | 0.239 | 0.785 | 0.181 | 96.7% |
+  | 200 fF (4×, ~10µm×10µm) | 1.25% | 0.207 | 0.680 | 0.157 | 98.7% |
+  | 250 fF (5×) | 1.12% | 0.185 | 0.608 | 0.140 | 99.5% |
+  | 300 fF (6×) | 1.02% | 0.169 | 0.555 | 0.128 | 99.8% |
+  | 400 fF (8×, ~14.1µm×14.1µm) | 0.88% | 0.147 | 0.481 | 0.111 | 100.0% (of 3000) |
+
+  **Recommendation: Cu ≥ 200 fF (4× current area) for ≥98.7% yield, Cu ≥ 300-400 fF for a comfortable (<0.5 LSB even worst-case-observed) margin.** Since the 2.5% sigma is itself a conservative global-variation proxy (see 2a — real local mismatch is expected to be smaller), this sizing recommendation is itself conservative; an even smaller Cu bump may prove adequate once/if gf180mcuD ships an actual local-mismatch number, but there's no PDK data to relax the target below this bound today. **Common-centroid layout is mandatory regardless of Cu** (feeds DAC-5) — the statistical model here only captures *random* mismatch; any systematic oxide-thickness gradient across the die adds on top of it and only layout (common-centroid, not sizing) cancels that term.
+
+- **S/H IC re-check (per instructions, using a batch-valid initial condition):** re-ran `tb_sample_hold.sch` at VIN=3.0V and VIN=3.2V (the two points that failed pre-TG and are the acceptance-critical cases). Confirmed the flagged `.ic` behavior directly: `.ic v(DAC_TOP)=0` inside `.control` does throw `` .ic: no such command available in ngspice `` in this build's batch mode (exactly as suspected in the Step-1 entry) — but it is **non-fatal and inconsequential** because the deck's `tran ... uic` independently triggers ngspice's own zero-value default initial condition (`Operating point simulation simulation skipped by 'uic', now using transient initial conditions.`), achieving the same physically-meaningful cold start the `.ic` line was trying to force. Result: `v_acq_final` = **3.000000V** (VIN=3.0V) and **3.200000V** (VIN=3.2V) exactly, hold droop 0.000mV both — **S/H full-range acquisition PASS reconfirmed under a genuine batch-valid cold start, not a DC-solver pre-charge artifact.**
+
+- **Commit:** `dac: mismatch linearity sign-off + S/H IC re-verify`. `PROGRESS.md` (DAC-9, Gate 3 summary) and `VERIFICATION_PLAN.md` (Gate 3) updated to reflect the mismatch verdict.
+
+NEXT STEP: DAC-5 unit-cell common-centroid layout at the recommended Cu≥200-400fF; full ADC-level (with comparator + SAR sequencing) integration for Gate 3/4; resolve the still-open VREF/FS gain-mismatch flag from the nominal sweep.

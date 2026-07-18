@@ -80,12 +80,67 @@ still pending.**
 
 ---
 
+## Capacitor DAC (DAC) — Gate 3 (real limit): capacitor-mismatch Monte Carlo INL/DNL
+
+**Testbench:** `designs/scripts/dac_mismatch_mc.py` (primary — idealized
+charge-redistribution transfer function, N=5000 runs, all 256 codes) +
+`designs/scripts/dac_mismatch_mc_spice.py` (cross-check — transistor-level
+ngspice via `tb_major_carry.sch`'s structure, N=50/transition, the 3
+dominant major carries only).
+
+**Mismatch source:** gf180mcuD `libs.tech/ngspice/sm141064.ngspice`,
+`.LIB mimcap_statistical` — `mc_c_cox_2p0fF2=agauss(0, 0.025, 3)`, i.e.
+2.5% (1-sigma) relative variation on `cap_mim_2f0_*` capacitance (the
+2fF/µm² MIM option backing this design's 50fF/5µm×5µm unit cell). This PDK
+parameter is gated only by `sw_stat_global` (never `sw_stat_mismatch`, which
+gates every other device's mismatch term in the same deck) — i.e. it is a
+**global/process-corner-style** parameter, not a local intra-die mismatch
+model; no local-mismatch (Pelgrom A_C) number exists anywhere else in this
+PDK release. Used as a deliberately conservative proxy for the required
+per-unit-cap local sigma(C)/C (real local mismatch is expected to be
+smaller). Each binary cap modeled as `N_i=2^i` parallel 50fF unit cells,
+`sigma(C_i)/C_i(ideal) = 2.5%/sqrt(N_i)`.
+
+**Status: 🔴 FAIL at the current Cu=50fF — verified 2026-07-17.**
+
+| metric | value | spec | verdict |
+|---|---|---|---|
+| max\|DNL\|, mean / sigma / worst (N=5000) | 0.416 / 0.202 / 1.664 LSB | < 0.5 LSB | mean already near spec |
+| max\|INL\|, mean / sigma / worst (N=5000) | 0.314 / 0.114 / 0.880 LSB | < 0.5 LSB | — |
+| worst code | 128 (0x80), MSB major carry, 50.7% of runs | (expected 0x7F→0x80) | matches prediction |
+| **YIELD** (both < 0.5 LSB) | **71.52%** | high yield required | **FAIL** |
+
+Transistor-level cross-check (N=50/transition, real TG resistance/charge
+injection/gate delay) agrees with the idealized model's mean/sigma within
+5-15% at all 3 dominant major carries — confirms the mismatch conclusion is
+not a transfer-function-modeling artifact.
+
+**Required fix:** Cu ≥ 200-400 fF (4-8× the current 50fF/5µm×5µm unit cap)
+for 98.7-100% yield (swept in `dac/WORKLOG.md`'s Step 2d entry), plus
+mandatory common-centroid unit-cell layout (DAC-5) — the statistical model
+here only covers random mismatch; systematic oxide-gradient error adds on
+top and only common-centroid layout cancels it. Since the 2.5% figure is a
+conservative proxy, the true required Cu may be smaller once/if gf180mcuD
+ships a real local-mismatch number, but there is no PDK data to relax the
+target below this bound today.
+
+**S/H IC re-check (batch-valid cold start):** re-ran `tb_sample_hold.sch` at
+VIN=3.0V/3.2V with ngspice's own `uic` zero-initial-condition default (the
+schematic's `.ic v(DAC_TOP)=0` line is confirmed to no-op in this ngspice
+build's batch mode — `.ic: no such command available in ngspice` — but is
+inconsequential since `uic` already forces the same cold start).
+`v_acq_final` = 3.000000V / 3.200000V exactly, hold droop 0.000mV both —
+**S/H full-range acquisition PASS reconfirmed**, not a DC-solver pre-charge
+artifact.
+
+---
+
 ## Verification Gates Summary
 
 | Gate | Criterion | Block | Status |
 |------|-----------|-------|--------|
 | Gate 1 | σ_offset characterized + delay < 2 ns @ TT (MC N≥100) | Comparator | 🟡 |
 | Gate 2 | DAC settling ≤ 0.5 LSB (6.45 mV) within 40 ns, TT + PVT corners | Cap DAC | 🟢 **PASS** (worst case SS/125°C/2.97V: 2.78 ns, 37.2 ns margin) |
-| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🟡 DAC-only nominal sweep PASS (max\|DNL\|=0.007, max\|INL\|=0.008 LSB); cap-mismatch (Step 2) and full ADC-level integration still pending |
+| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🔴 DAC-only nominal sweep PASS (max\|DNL\|=0.007, max\|INL\|=0.008 LSB) but **cap-mismatch FAILS at Cu=50fF (71.5% yield)** — need Cu≥200-400fF + common-centroid layout (see above); full ADC-level integration still pending |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
 | Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |
