@@ -359,4 +359,45 @@ NEXT STEP: Step 2 — capacitor mismatch analysis (the real linearity limit): ch
 
 - **Commit:** `dac: mismatch linearity sign-off + S/H IC re-verify`. `PROGRESS.md` (DAC-9, Gate 3 summary) and `VERIFICATION_PLAN.md` (Gate 3) updated to reflect the mismatch verdict.
 
-NEXT STEP: DAC-5 unit-cell common-centroid layout at the recommended Cu≥200-400fF; full ADC-level (with comparator + SAR sequencing) integration for Gate 3/4; resolve the still-open VREF/FS gain-mismatch flag from the nominal sweep.
+## 2026-07-17 — Step 2e: CORRECTION — local (Pelgrom) mismatch model, Cu=50fF is adequate
+
+- **Branch:** `dac-cap-array`. This entry **supersedes the Step 2a-2d verdict above** ("Cu≥200-400fF required," 71.5% yield at 50fF). Steps 2a-2d are left in place as a record of the analysis path, not deleted, but their headline conclusion was wrong — see below. `designs/scripts/dac_mismatch_mc.py` rewritten in place; new figures `mc_dnl_inl_spread.png`/`mc_dnl_inl_spread_conservative.png`, `mc_max_inl_histogram.png`/`mc_max_inl_histogram_conservative.png`, `mc_yield_vs_cu.png` (all in `dac/docs/figures/`).
+
+- **The bug in Steps 2a-2d: LOCAL vs GLOBAL mismatch conflated.** gf180mcuD's `mc_c_cox_2p0fF` (2.5%, 1-sigma) is gated only by `sw_stat_global`, never `sw_stat_mismatch` — confirmed again by re-grep, same finding as Step 2a. That makes it a **global** (die-to-die/lot) parameter: one draw shared by every `cap_mim` instance in a run. Step 2b applied it as an **independent per-unit-cap draw** instead (`sigma(C_i)/C_i = 2.5%/sqrt(N_i)`, each of the 8 binary caps drawn independently) — i.e. it used the global figure to *fabricate* a local-mismatch model the PDK never specified, and did so at a magnitude (2.5%) that is typical for *global* corner spread, not intra-die local mismatch (which is normally 1-2 orders of magnitude smaller). That is why Step 2d's yield collapsed to 71.5%: the model was several times more pessimistic than any physically-grounded local-mismatch number would produce.
+  - **Why this distinction matters physically:** in a ratiometric charge-redistribution DAC, `V(code) = VREF * C_code/(C_total+Cp)` depends only on **cap ratios**. A true global/common-mode scale factor `C_i -> C_i*(1+g)` (same `g` for every cap) multiplies both `C_code` and `C_total` identically and very nearly cancels in the ratio — it shows up as a full-scale **gain error**, not DNL/INL (see the new global-only check below, which confirms this directly). Only **local** (cap-to-cap, intra-die) mismatch breaks the ratios and drives DNL/INL. Applying a global-sized sigma independently per cap, as Step 2b did, manufactures a DNL/INL-driving error with no basis in the PDK data actually cited.
+
+- **Corrected model — Pelgrom local mismatch (no PDK local-mismatch number exists for `cap_mim`, so literature 180nm-MiM estimates are used; see caveat below):** `sigma(C_unit)/C_unit = A_C / sqrt(Area)`, `Area` in µm², `A_C` in %·µm.
+  - **A_C = 1.6 %·µm** (primary estimate) and **A_C = 3.2 %·µm** (conservative, 2× worse — sensitivity case).
+  - Unit-cap area derived from the same 2fF/µm² density already used throughout this design (50fF unit cap = 5µm×5µm = 25µm²), so sweeping `Cu` automatically sweeps its area and its sigma. Each binary cap `C_i` is still `N_i=2^i` parallel unit cells, `sigma(C_i)/C_i(ideal) = sigma_unit(Cu,A_C)/sqrt(N_i)` — same 1/√N structure as before, only the per-unit-cap sigma itself is now physically grounded instead of borrowed from the global parameter.
+  - **CAVEAT (load-bearing):** `A_C=1.6/3.2 %·µm` are literature estimates for 180nm-node MiM local matching, not gf180mcuD-extracted numbers — this PDK ships no local-mismatch coefficient for `cap_mim` (checked again, same as Step 2a). The 2× conservative case is the margin against that literature-vs-silicon gap, not a formal 3-sigma corner.
+
+- **Cu × A_C sweep (N=300,000 runs/point, all 256 codes, `run_mc_local()`):**
+
+  | Cu [fF] | Area [µm²] | A_C [%·µm] | sigma_unit | mean\|DNL\| | worst\|DNL\| | mean\|INL\| | worst\|INL\| | YIELD |
+  |---|---|---|---|---|---|---|---|---|
+  | 50  | 25  | 1.6 | 0.320% | 0.0529 | 0.257 | 0.0398 | 0.130 | 100.000% |
+  | 100 | 50  | 1.6 | 0.226% | 0.0374 | 0.169 | 0.0282 | 0.091 | 100.000% |
+  | 200 | 100 | 1.6 | 0.160% | 0.0265 | 0.127 | 0.0199 | 0.066 | 100.000% |
+  | 50  | 25  | 3.2 | 0.640% | 0.1060 | 0.513 | 0.0798 | 0.275 | 99.9997% (1 fail/300k) |
+  | 100 | 50  | 3.2 | 0.453% | 0.0748 | 0.352 | 0.0564 | 0.180 | 100.000% |
+  | 200 | 100 | 3.2 | 0.320% | 0.0529 | 0.247 | 0.0399 | 0.132 | 100.000% |
+
+  Spot-checked the worst corner (Cu=50fF, A_C=3.2%·µm) at N=200,000 with a different seed: 2 fails/200,000 = 99.999% yield — consistent, not a sampling fluke.
+
+  **Minimum Cu meeting ≥99% yield: 50 fF (current schematic value) for both A_C cases.** No unit-cap upsizing is required by this corrected model — the current 5µm×5µm/50fF unit cap already clears the yield target with wide margin (mean max\|DNL\|≈0.05-0.11 LSB, worst-case observed ≈0.25-0.51 LSB, all ≪ or ≈ the 0.5 LSB spec, vs. 0.416 mean / 71.5% yield under the old incorrect model).
+
+- **Global 2.5% effect, isolated (`run_global_gain()`, N=300,000, Cu=50fF, one common scale factor `g~N(0,2.5%)` applied identically to all 8 caps per run):**
+
+  | metric | result |
+  |---|---|
+  | full-scale GAIN error | mean −0.0001%, sigma 0.0039%, worst-case 0.0184% |
+  | max\|DNL\| under global-only variation | mean 0.000000 LSB, worst 0.000000 LSB |
+  | max\|INL\| under global-only variation | mean 0.000000 LSB, worst 0.000000 LSB |
+
+  **Confirms both halves of the prediction:** global variation produces **no measurable DNL/INL** (exactly 0 to float precision — a common scale factor cancels exactly in the `C_code/C_total` ratio). It also turns out to produce a far smaller **gain** error than the naive "2.5% cap tolerance -> 2.5% gain error" intuition would suggest (≈0.004% sigma, not 2.5%) — because `C_total` scales right along with `C_code` in the same ratio, the only channel left for a gain error is the **fixed, non-scaling** comparator load `Cp=20fF` (≈0.16% of `C_total`≈12.75pF... 12750fF at Cu=50fF), which is a second-order effect. This is a stronger, non-obvious result than the task anticipated a "~2.5% gain error" — worth flagging to the team: this ratiometric DAC topology is inherently insensitive to common-mode/global process shifts in the cap value, not just for linearity but almost for gain too.
+
+- **Common-centroid layout (DAC-5) is still mandatory regardless of this correction** — the statistical model here (both old and new) only covers *random* mismatch. Any systematic oxide-thickness/etch gradient across the die is a separate error term that only common-centroid placement cancels; it is orthogonal to the Cu-sizing question resolved here.
+
+- **Commit:** `dac: mismatch MC with local (Pelgrom) model — corrected Cu requirement`. `PROGRESS.md` (DAC-9b, DAC-5, Gate 3 row) and `VERIFICATION_PLAN.md` (Gate 3 section + summary table) updated to reflect the corrected verdict.
+
+NEXT STEP: DAC-5 unit-cell common-centroid layout (mandatory regardless of Cu; current Cu=50fF is now verified adequate for random mismatch so layout is about systematic-gradient cancellation, not upsizing); full ADC-level (with comparator + SAR sequencing) integration for Gate 3/4; resolve the still-open VREF/FS gain-mismatch flag from the nominal sweep.

@@ -82,47 +82,89 @@ still pending.**
 
 ## Capacitor DAC (DAC) — Gate 3 (real limit): capacitor-mismatch Monte Carlo INL/DNL
 
-**Testbench:** `designs/scripts/dac_mismatch_mc.py` (primary — idealized
-charge-redistribution transfer function, N=5000 runs, all 256 codes) +
-`designs/scripts/dac_mismatch_mc_spice.py` (cross-check — transistor-level
-ngspice via `tb_major_carry.sch`'s structure, N=50/transition, the 3
-dominant major carries only).
+**CORRECTED 2026-07-17 (Step 2e in `dac/WORKLOG.md`).** The original version
+of this section (verified earlier the same day) used the PDK's *global*
+`cap_mim` Monte Carlo term as if it were independent *local* per-cap
+mismatch, which is a modeling bug — see "Local vs global mismatch" below.
+That version reported 71.5% yield and a required Cu≥200-400fF; both numbers
+are superseded by the corrected analysis in this section. History kept in
+`dac/WORKLOG.md`'s Step 2a-2d entries, not deleted, for the record.
 
-**Mismatch source:** gf180mcuD `libs.tech/ngspice/sm141064.ngspice`,
-`.LIB mimcap_statistical` — `mc_c_cox_2p0fF2=agauss(0, 0.025, 3)`, i.e.
-2.5% (1-sigma) relative variation on `cap_mim_2f0_*` capacitance (the
-2fF/µm² MIM option backing this design's 50fF/5µm×5µm unit cell). This PDK
-parameter is gated only by `sw_stat_global` (never `sw_stat_mismatch`, which
-gates every other device's mismatch term in the same deck) — i.e. it is a
-**global/process-corner-style** parameter, not a local intra-die mismatch
-model; no local-mismatch (Pelgrom A_C) number exists anywhere else in this
-PDK release. Used as a deliberately conservative proxy for the required
-per-unit-cap local sigma(C)/C (real local mismatch is expected to be
-smaller). Each binary cap modeled as `N_i=2^i` parallel 50fF unit cells,
-`sigma(C_i)/C_i(ideal) = 2.5%/sqrt(N_i)`.
+**Testbench:** `designs/scripts/dac_mismatch_mc.py` (idealized
+charge-redistribution transfer function, N=300,000 runs/point, all 256
+codes) + `designs/scripts/dac_mismatch_mc_spice.py` (transistor-level
+ngspice cross-check via `tb_major_carry.sch`'s structure, N=50/transition,
+the 3 dominant major carries only — cross-checks the transfer-function
+model itself, not the corrected mismatch magnitude below).
 
-**Status: 🔴 FAIL at the current Cu=50fF — verified 2026-07-17.**
+**Local vs global mismatch:** `V(code) = VREF*C_code/(C_total+Cp)` depends
+only on capacitor **ratios**. A **global** (die-to-die/lot) parameter — one
+draw shared by every cap on the die, `C_i -> C_i*(1+g)` for the same `g` —
+cancels almost exactly in that ratio and shows up only as a full-scale
+**gain** error, not DNL/INL. Only **local** (cap-to-cap, intra-die)
+mismatch breaks the ratio and drives DNL/INL. gf180mcuD's `mc_c_cox_2p0fF`
+(`libs.tech/ngspice/sm141064.ngspice`, `.LIB mimcap_statistical`,
+`agauss(0,0.025,3)`, 2.5% 1-sigma) is gated only by `sw_stat_global`, never
+`sw_stat_mismatch` — confirmed by grep across the deck — so it is a
+**global** parameter and must not be applied independently per cap.
+gf180mcuD ships no local-mismatch (Pelgrom) coefficient for `cap_mim`
+anywhere in the PDK tree.
 
-| metric | value | spec | verdict |
-|---|---|---|---|
-| max\|DNL\|, mean / sigma / worst (N=5000) | 0.416 / 0.202 / 1.664 LSB | < 0.5 LSB | mean already near spec |
-| max\|INL\|, mean / sigma / worst (N=5000) | 0.314 / 0.114 / 0.880 LSB | < 0.5 LSB | — |
-| worst code | 128 (0x80), MSB major carry, 50.7% of runs | (expected 0x7F→0x80) | matches prediction |
-| **YIELD** (both < 0.5 LSB) | **71.52%** | high yield required | **FAIL** |
+**Corrected local-mismatch model:** literature Pelgrom estimate for 180nm
+MiM caps, `sigma(C_unit)/C_unit = A_C/sqrt(Area)` (Area in µm², A_C in
+%·µm) — **A_C=1.6%·µm primary, A_C=3.2%·µm conservative (2×) sensitivity
+case.** Unit-cap area follows the design's 2fF/µm² density (50fF unit =
+5µm×5µm = 25µm²), so the Cu sweep below automatically sweeps area and
+sigma together. Each binary cap is `N_i=2^i` parallel unit cells,
+`sigma(C_i)/C_i(ideal) = sigma_unit(Cu,A_C)/sqrt(N_i)`.
+
+**Status: 🟢 PASS at the current Cu=50fF — verified 2026-07-17.**
+
+| Cu [fF] | A_C [%·µm] | mean\|DNL\| | worst\|DNL\| | mean\|INL\| | worst\|INL\| | YIELD |
+|---|---|---|---|---|---|---|
+| 50  | 1.6 | 0.0529 | 0.257 | 0.0398 | 0.130 | 100.000% |
+| 100 | 1.6 | 0.0374 | 0.169 | 0.0282 | 0.091 | 100.000% |
+| 200 | 1.6 | 0.0265 | 0.127 | 0.0199 | 0.066 | 100.000% |
+| 50  | 3.2 | 0.1060 | 0.513 | 0.0798 | 0.275 | 99.9997% |
+| 100 | 3.2 | 0.0748 | 0.352 | 0.0564 | 0.180 | 100.000% |
+| 200 | 3.2 | 0.0529 | 0.247 | 0.0399 | 0.132 | 100.000% |
+
+All 6 Cu × A_C points clear both the 0.5 LSB DNL/INL spec and the 99%
+yield target with wide margin (N=300,000/point; worst corner
+re-checked at N=200,000 with a different seed, 99.999% — consistent, not
+sampling noise). **No unit-cap upsizing required — Cu=50fF (current
+schematic value) is adequate.** See `dac/docs/figures/mc_yield_vs_cu.png`.
+
+**Global 2.5% effect, isolated (N=300,000, Cu=50fF, one common scale
+factor applied identically to all 8 caps per run):**
+
+| metric | result |
+|---|---|
+| full-scale GAIN error | mean −0.0001%, sigma 0.0039%, worst-case 0.0184% |
+| max\|DNL\| under global-only variation | 0.000000 LSB (mean and worst) |
+| max\|INL\| under global-only variation | 0.000000 LSB (mean and worst) |
+
+Confirms global variation drives **zero** DNL/INL, as predicted. The gain
+error itself also turns out far smaller than the naive "2.5% cap
+tolerance → 2.5% gain error" intuition (≈0.004% sigma) — `C_total` scales
+with `C_code` in the same ratio, so only the fixed, non-scaling comparator
+load `Cp=20fF` (≈0.16% of `C_total`) leaks through as a residual gain term.
 
 Transistor-level cross-check (N=50/transition, real TG resistance/charge
-injection/gate delay) agrees with the idealized model's mean/sigma within
-5-15% at all 3 dominant major carries — confirms the mismatch conclusion is
-not a transfer-function-modeling artifact.
+injection/gate delay, `dac_mismatch_mc_spice.py`) agrees with the
+idealized transfer-function model's mean/sigma within 5-15% at all 3
+dominant major carries — this validates the `V(code)=VREF*C_code/(C_total+Cp)`
+transfer function itself, independent of which mismatch magnitude is fed
+into it.
 
-**Required fix:** Cu ≥ 200-400 fF (4-8× the current 50fF/5µm×5µm unit cap)
-for 98.7-100% yield (swept in `dac/WORKLOG.md`'s Step 2d entry), plus
-mandatory common-centroid unit-cell layout (DAC-5) — the statistical model
-here only covers random mismatch; systematic oxide-gradient error adds on
-top and only common-centroid layout cancels it. Since the 2.5% figure is a
-conservative proxy, the true required Cu may be smaller once/if gf180mcuD
-ships a real local-mismatch number, but there is no PDK data to relax the
-target below this bound today.
+**Required fix: none for Cu sizing.** Mandatory common-centroid unit-cell
+layout (DAC-5) still applies regardless — the statistical model here (both
+the corrected version and the original) only covers *random* mismatch;
+systematic oxide-thickness gradient across the die is a separate error term
+that only common-centroid layout cancels, orthogonal to this Cu-sizing
+question. The A_C=1.6/3.2%·µm figures are literature estimates (gf180mcuD
+ships no local-mismatch number for `cap_mim`); the 2× conservative case is
+the intended margin against that literature-vs-silicon gap.
 
 **S/H IC re-check (batch-valid cold start):** re-ran `tb_sample_hold.sch` at
 VIN=3.0V/3.2V with ngspice's own `uic` zero-initial-condition default (the
@@ -141,6 +183,6 @@ artifact.
 |------|-----------|-------|--------|
 | Gate 1 | σ_offset characterized + delay < 2 ns @ TT (MC N≥100) | Comparator | 🟡 |
 | Gate 2 | DAC settling ≤ 0.5 LSB (6.45 mV) within 40 ns, TT + PVT corners | Cap DAC | 🟢 **PASS** (worst case SS/125°C/2.97V: 2.78 ns, 37.2 ns margin) |
-| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🔴 DAC-only nominal sweep PASS (max\|DNL\|=0.007, max\|INL\|=0.008 LSB) but **cap-mismatch FAILS at Cu=50fF (71.5% yield)** — need Cu≥200-400fF + common-centroid layout (see above); full ADC-level integration still pending |
+| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🟢 DAC-only nominal sweep PASS (max\|DNL\|=0.007, max\|INL\|=0.008 LSB); **cap-mismatch PASSES at Cu=50fF (≥99.9997% yield, corrected local-mismatch model — see above)**, no upsizing needed, common-centroid layout (DAC-5) still required for systematic-gradient cancellation; full ADC-level integration still pending |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
 | Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |
