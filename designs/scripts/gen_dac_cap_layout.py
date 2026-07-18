@@ -65,6 +65,12 @@ breakout topology built below is exactly what LVS expects for Option B.
 import klayout.db as db
 
 LAYER = {
+    "metal1": (34, 0),
+    "via1": (35, 0),
+    "metal2": (36, 0),
+    "via2": (38, 0),
+    "metal3": (42, 0),
+    "via3": (40, 0),
     "metal4": (46, 0),
     "metal5": (81, 0),
     "via4": (41, 0),
@@ -378,10 +384,464 @@ def report_centroids(placements):
     return report
 
 
+#
+# ---------------------------------------------------------------------------
+# Step 3 (DAC-6 routing / DAC-7/8): DAC_TOP mesh, 8 bit rails, dummy GND.
+#
+# LAYER PLAN -- chosen so every crossing between *unrelated* nets is
+# guaranteed to be on different GDS layers (no via placed there), so a
+# same-layer short is impossible by construction. The only same-layer
+# adjacency between different nets is lane-separated *parallel* routing
+# within one channel, which real DRC spacing-checks below:
+#   Metal5 : DAC_TOP mesh (top plates of all 255 active cells). Exclusive
+#            layer -- nothing else ever touches metal5 inside the core.
+#   Metal4 : B7 bit-rail mesh (128 cells, direct merge to each cell's own
+#            Metal4 bottom-plate slab, no via -- topologically identical to
+#            the DAC_TOP mesh, just on metal4/for B7 only) PLUS, in the two
+#            *boundary* channels (left of col0, right of col15 -- these
+#            carry no B7 spine since B7's mesh only spans the 15 internal
+#            channels), two extra private-trunk lanes for B2/B4.
+#   Metal3 : per-column "private" vertical trunks for B1/B3/B5/B6 (and
+#            B1/B3/B4 portions at col0/15, B4 at col7/8), each reached from
+#            its cell's Metal4 slab via one Via3. A metal3 trunk coexists in
+#            the same channel as a Metal4 B7 spine with zero risk (distinct
+#            layers, even at the same X). Also carries the center dummy's
+#            GND vertical drop (its own dedicated lane in col7/8's channel).
+#   Metal2 : horizontal cross-column backbones, one per non-B7 bit (+ GND),
+#            each given its own fully exclusive row channel (no lane
+#            sharing needed). Reached from a Metal3 trunk via one Via2, or
+#            from a Metal4 col0/15 lane via Via3+Via2 through a small
+#            intermediate Metal3 pad.
+# All per-column bit membership is *derived from the actual placement*
+# (`_col_bit_membership`), not hardcoded, so this stays correct if the
+# pair-assignment algorithm in build_pair_assignment() ever changes.
+# ---------------------------------------------------------------------------
+
+TRACK_W = 0.28        # M2.1/M3.1/M4.1 min width, used for all long-haul wires
+SPINE_W = 0.9          # DAC_TOP/B7 mesh spine width (>=0.28 margin to nbr slab
+                        # on each side of the 1.5um channel: (1.5-0.9)/2=0.3)
+LANE_PITCH = 0.75      # same-layer parallel-lane center-to-center spacing.
+                        # Every lane gets a VIA_PAD-wide (0.44) enclosure
+                        # pad at its own trunk-to-metal2 hop (every cell
+                        # row), so the binding constraint isn't TRACK_W but
+                        # a pad on one lane vs. the *trunk* edge of the
+                        # lane next to it (which, for a full-height trunk
+                        # like B7's, is present at every row): need pitch
+                        # >= TRACK_W/2 + VIA_PAD/2 + 0.28 = 0.64; 0.75
+                        # gives 0.11um margin (0.6 measured 0.24um gaps
+                        # against the 0.28 minimum in an actual DRC run).
+VIA_SZ = 0.26          # V2.1/V3.1/V4.1 via size
+VIA_PAD = 0.44         # local via enclosure pad (>=0.34 avoids the
+                        # "<0.34um end-of-line" bonus overlap rules; gives
+                        # (0.44-0.26)/2=0.09 plain overlap, well over the
+                        # 0.01um V*.3b/V*.4a minimum)
+
+VIA_BETWEEN = {
+    frozenset(("metal1", "metal2")): "via1",
+    frozenset(("metal2", "metal3")): "via2",
+    frozenset(("metal3", "metal4")): "via3",
+    frozenset(("metal4", "metal5")): "via4",
+}
+METAL_STACK = ["metal1", "metal2", "metal3", "metal4", "metal5"]
+
+
+def _chain_between(layer_a, layer_b):
+    ia, ib = METAL_STACK.index(layer_a), METAL_STACK.index(layer_b)
+    lo, hi = min(ia, ib), max(ia, ib)
+    return METAL_STACK[lo:hi + 1]
+
+
+def _rect(cell, layer_index, x0, y0, x1, y1, dbu):
+    cell.shapes(layer_index).insert(_box(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1), dbu))
+
+
+def _via_chain(cell, li, x, y, dbu, layers):
+    """Drop vias connecting consecutive layers in `layers` (e.g.
+    ['metal2','metal3','metal4']), each with a local VIA_PAD enclosure on
+    both sides -- so a caller can bridge metal2 to metal4 with one call."""
+    for a, b in zip(layers, layers[1:]):
+        vname = VIA_BETWEEN[frozenset((a, b))]
+        _rect(cell, li[vname], x - VIA_SZ / 2, y - VIA_SZ / 2, x + VIA_SZ / 2, y + VIA_SZ / 2, dbu)
+        _rect(cell, li[a], x - VIA_PAD / 2, y - VIA_PAD / 2, x + VIA_PAD / 2, y + VIA_PAD / 2, dbu)
+        _rect(cell, li[b], x - VIA_PAD / 2, y - VIA_PAD / 2, x + VIA_PAD / 2, y + VIA_PAD / 2, dbu)
+
+
+def col_x(col):
+    x, _ = grid_xy(0, col)
+    return x
+
+
+def row_y(row):
+    _, y = grid_xy(row, 0)
+    return y
+
+
+def chan_x_range(left_idx):
+    """x-range of the vertical channel between column `left_idx` and
+    `left_idx+1` (left_idx=-1 is the boundary channel left of col0,
+    left_idx=CORE_N-1 is the boundary channel right of the last column)."""
+    xl = col_x(left_idx) + M4_X_HALF
+    xr = col_x(left_idx + 1) - M4_X_HALF
+    return xl, xr
+
+
+def chan_y_range(top_idx):
+    """y-range of the horizontal channel between row `top_idx` and
+    `top_idx+1` (same -1/CORE_N-1 boundary convention as chan_x_range)."""
+    yl = row_y(top_idx) + M4_Y_HALF
+    yr = row_y(top_idx + 1) - M4_Y_HALF
+    return yl, yr
+
+
+def _mesh(cell, li, layer, dbu, cell_predicate, placements):
+    """DAC_TOP/B7-style full mesh: one vertical spine (width SPINE_W,
+    centered) per internal channel (between col c, c+1 for c=0..CORE_N-2),
+    plus a core-height horizontal strap for every active cell satisfying
+    cell_predicate(label), spanning from its left neighbor spine to its
+    right neighbor spine (or just to its own core edge at the array's outer
+    columns, which have only one neighbor spine)."""
+    spine_x = {}
+    y0 = row_y(0) - FUSETOP_HALF
+    y1 = row_y(CORE_N - 1) + FUSETOP_HALF
+    for c in range(CORE_N - 1):
+        xl, xr = chan_x_range(c)
+        x = (xl + xr) / 2.0
+        spine_x[c] = x
+        _rect(cell, li[layer], x - SPINE_W / 2, y0, x + SPINE_W / 2, y1, dbu)
+
+    for label, cells in placements.items():
+        if label == "DUMMY" or not cell_predicate(label):
+            continue
+        for (row, col) in cells:
+            cx, cy = grid_xy(row, col)
+            left = spine_x.get(col - 1)
+            right = spine_x.get(col)
+            x0 = left if left is not None else cx - FUSETOP_HALF
+            x1 = right if right is not None else cx + FUSETOP_HALF
+            _rect(cell, li[layer], x0, cy - FUSETOP_HALF, x1, cy + FUSETOP_HALF, dbu)
+
+
+def _col_bit_membership(placements):
+    """col -> sorted list of bit labels (excluding B0/DUMMY) present in that
+    column, derived from the actual placement. B7 IS included -- unlike an
+    earlier draft, B7 gets no special Metal4-mesh treatment (a Metal4 shape
+    threading through an inter-cell channel is *always* within 1.2um of an
+    unrelated cell's bottom-plate slab there -- MIMTM.1 requires 1.2um and
+    the channel is only 1.5um wide total, so no nonzero-width Metal4 shape
+    can satisfy it on both sides at once; confirmed by an actual DRC run
+    that flagged 2677 MIMTM.1 violations against a first attempt at a
+    Metal4 B7 mesh). B7 is therefore routed exactly like every other bit:
+    a per-column Metal3 (or Metal1, for column0/15 overflow) trunk reached
+    from the cell's own Metal4 slab by a single Via3 stub."""
+    membership = {c: set() for c in range(CORE_N)}
+    for label, cells in placements.items():
+        if label in ("B0", "DUMMY"):
+            continue
+        for (row, col) in cells:
+            membership[col].add(label)
+    return {c: sorted(bits) for c, bits in membership.items()}
+
+
+def _private_channel_idx(col):
+    if col == 0:
+        return -1
+    if col == CORE_N - 1:
+        return CORE_N - 1
+    return col - 1
+
+
+def _lane_offsets(n):
+    """n evenly spaced x-offsets (um) centered on 0, LANE_PITCH apart."""
+    if n == 1:
+        return [0.0]
+    start = -(n - 1) / 2.0 * LANE_PITCH
+    return [start + i * LANE_PITCH for i in range(n)]
+
+
+def _private_trunk_plan(col_bits):
+    """col -> [(bit, layer, x_offset_from_channel_center), ...].
+
+    A 1.5um channel safely accommodates only two Metal3 trunks once the
+    Metal3 landing pad of each M2-to-M4 cell stub is included. Additional
+    trunks use Metal1, isolated from the Metal2 backbones and from that
+    mandatory Metal3 pad. GND stays on Metal3 so the buried dummy can join
+    its frame without an extra layer change."""
+    plan = {}
+    for col, bits in col_bits.items():
+        if not bits:
+            continue
+        if "GND" in bits:
+            others = [b for b in bits if b != "GND"]
+            # The buried-dummy tie is a horizontal Metal3 jog from this
+            # trunk to the dummy's slab.  It spans the whole channel, so
+            # no other Metal3 trunk may share this channel; use Metal1 for
+            # every active-bit trunk here.
+            m3_bits, m1_bits = ["GND"], others
+        else:
+            m3_bits, m1_bits = bits[:2], bits[2:]
+        entries = [(b, "metal3", o) for b, o in zip(m3_bits, _lane_offsets(len(m3_bits)))]
+        entries += [(b, "metal1", o) for b, o in zip(m1_bits, _lane_offsets(len(m1_bits)))]
+        plan[col] = entries
+    return plan
+
+
+BACKBONE_ROW = {
+    "B7": -1,   # top edge channel
+    "B6": CORE_N - 1,  # bottom edge channel (=15)
+    "B5": 9,
+    "B4": 7,
+    "B3": 5,
+    "B2": 3,
+    "B1": 1,
+    "GND": 11,
+    "B0": 13,
+}
+
+
+def _route_bit_rails(cell, li, placements, dbu):
+    col_bits = _col_bit_membership(placements)
+    col_bits[8] = col_bits.get(8, []) + ["GND"]  # buried dummy's GND lane
+    plan = _private_trunk_plan(col_bits)
+
+    top_edge_y = sum(chan_y_range(-1)) / 2.0
+    bot_edge_y = sum(chan_y_range(CORE_N - 1)) / 2.0
+    trunk_y0 = min(top_edge_y, bot_edge_y)
+    trunk_y1 = max(top_edge_y, bot_edge_y)
+
+    # trunk_x[col][bit] = (layer, absolute_x) -- used both to draw the
+    # vertical trunk and to route each cell's stub + the backbone via-drop.
+    trunk_x = {}
+    for col, entries in plan.items():
+        idx = _private_channel_idx(col)
+        xl, xr = chan_x_range(idx)
+        xc = (xl + xr) / 2.0
+        trunk_x[col] = {}
+        for bit, layer, off in entries:
+            x = xc + off
+            _rect(cell, li[layer], x - TRACK_W / 2, trunk_y0, x + TRACK_W / 2, trunk_y1, dbu)
+            trunk_x[col][bit] = (layer, x)
+    gnd_x = trunk_x[8]["GND"][1]
+
+    # Per-cell stub: connect each private-bit cell's Metal4 slab edge to its
+    # column's trunk. A channel commonly carries >1 lane (e.g. B7 + the
+    # column's own bit, or up to 5 at col0/15), all funneling toward the
+    # SAME slab edge -- so a lane that isn't the closest one to that edge
+    # must physically cross the nearer lanes' full-height trunks on its way
+    # out. Hopping the crossing portion onto Metal2 avoids a same-layer
+    # short there: Metal2 is otherwise used only by the backbones, which
+    # sit in the *gap* between two rows (chan_y_range), never at a cell's
+    # own row_y -- so a stub's Metal2 jog (always at some cell's row_y)
+    # can never coincide with a backbone. Reaches whichever side the trunk
+    # is actually on -- left for every column except col15, whose private
+    # channel (_private_channel_idx returns CORE_N-1) sits to its *right*.
+    for label, cells in placements.items():
+        if label in ("B0", "DUMMY"):
+            continue
+        for (row, col) in cells:
+            cx, cy = grid_xy(row, col)
+            layer, tx = trunk_x[col][label]
+            leftward = tx < cx
+            slab_edge = cx - M4_X_HALF if leftward else cx + M4_X_HALF
+            sign = 1 if leftward else -1
+            # Keep the Metal3 pad at the slab-side Via3/Via2 stack at
+            # least M3.2a away from the pad that terminates the private
+            # trunk.  0.3um put the two 0.44um pads only 0.235um apart for
+            # some lanes; 0.7um provides a 0.635um physical gap.
+            via_x = slab_edge + sign * 0.4
+            _via_chain(cell, li, tx, cy, dbu, _chain_between(layer, "metal2"))
+            # Connecting rect must be VIA_PAD-tall (not just TRACK_W), or it
+            # only bridges the middle sliver of the two end pads (each
+            # VIA_PAD=0.44 tall) -- leaving their top/bottom strips
+            # disconnected by less than M2.2a's 0.28 min spacing, exactly
+            # the failure an actual DRC run caught.
+            _rect(cell, li["metal2"], tx - TRACK_W / 2, cy - VIA_PAD / 2,
+                  via_x + sign * VIA_PAD / 2, cy + VIA_PAD / 2, dbu)
+            _via_chain(cell, li, via_x, cy, dbu, _chain_between("metal2", "metal4"))
+
+    # Cross-column backbones (Metal2), one dedicated row channel per bit.
+    x_lo = chan_x_range(-1)[0] - 0.5
+    x_hi = chan_x_range(CORE_N - 1)[1] + 0.5
+    for bit, row_idx in BACKBONE_ROW.items():
+        if bit == "B0":
+            continue
+        byl, byr = chan_y_range(row_idx)
+        by = (byl + byr) / 2.0
+        _rect(cell, li["metal2"], x_lo, by - TRACK_W / 2, x_hi, by + TRACK_W / 2, dbu)
+        for col, entries in trunk_x.items():
+            if bit not in entries:
+                continue
+            layer, tx = entries[bit]
+            chain = _chain_between(layer, "metal2")
+            _via_chain(cell, li, tx, by, dbu, chain)
+
+    # B0 is the one unpaired active cell.  Give it its own Metal1 trunk in
+    # the channel immediately to its right and a private Metal2 backbone;
+    # it must not be left as an accidental degree-one connection to GND.
+    (b0_row, b0_col), = placements["B0"]
+    cx, cy = grid_xy(b0_row, b0_col)
+    b0_channel = b0_col
+    b0_slab_edge = cx + M4_X_HALF
+    b0_via_x = b0_slab_edge - 0.4
+    # Start B0's Metal1 trunk directly at its M4-to-M1 via stack inside the
+    # B0 slab.  A previous M2 jog toward the central channel intersected the
+    # same-row B7 cell's M2 stub, merging B0 and B7 despite passing DRC.
+    b0_x = b0_via_x
+    b0_yl, b0_yr = chan_y_range(BACKBONE_ROW["B0"])
+    b0_y = (b0_yl + b0_yr) / 2.0
+    _rect(cell, li["metal1"], b0_x - TRACK_W / 2, cy,
+          b0_x + TRACK_W / 2, b0_y, dbu)
+    _via_chain(cell, li, b0_x, cy, dbu, ["metal1", "metal2", "metal3", "metal4"])
+    _rect(cell, li["metal2"], x_lo, b0_y - TRACK_W / 2,
+          x_hi, b0_y + TRACK_W / 2, dbu)
+    _via_chain(cell, li, b0_x, b0_y, dbu, ["metal1", "metal2"])
+
+    return {"trunk_x": trunk_x, "gnd_x": gnd_x, "trunk_y0": trunk_y0, "trunk_y1": trunk_y1}
+
+
+def _tie_top_to_bottom_local(cell, li, row, col, dbu):
+    """Shorts one dummy cell's own top plate (Metal5 core) directly to its
+    own bottom plate (Metal5 north pad, already Via4-tied to the Metal4
+    slab) with a plain Metal5 strip bridging the PAD_GAP between them. No
+    via needed (both already metal5) -- and no MIMTM.4/.5 exclusion-zone
+    conflict, since unlike a sideways tab this uses the *existing* bottom-
+    plate pad geometry rather than adding a new via near fusetop (a new
+    via4 can't satisfy MIMTM.4 -inset- and MIMTM.5 -outset- simultaneously
+    within this cell's 0.6um E/W margin -- confirmed infeasible by
+    construction, hence routing the tie through the N pad instead, which
+    already sits >=BOTVIA_GAP clear of fusetop by design)."""
+    cx, cy = grid_xy(row, col)
+    _rect(cell, li["metal5"], cx - PAD_HALF_W, cy + FUSETOP_HALF,
+          cx + PAD_HALF_W, cy + PAD_Y1, dbu)
+
+
+def _route_dummy_gnd(cell, li, placements, dbu, gnd_x, trunk_y0):
+    """Ties both plates of every dummy cell (68-cell ring + the one buried
+    in-core dummy) to a single GND net.
+
+    Ring cells are NOT bridged with a raw Metal4 rectangle between
+    neighbors (an earlier attempt at that re-triggered MIMTM.1: the
+    recognized bottom-plate region "mimtm_virtual" is fusetop sized by only
+    1.06um AND the metal4 slab, so for a ring cell whose slab already
+    extends 0.6um past its own fusetop edge, a bridge into the channel
+    beyond it creates a stretch of plain "topmin1_metal" that ISN'T
+    anyone's mimtm_virtual, sitting well under 1.2um from the neighbor's --
+    a structural conflict, not a sizing mistake, so no channel-spanning
+    Metal4 shape works here regardless of width). Instead every ring cell
+    (and the buried center dummy) gets a single Via3 stub -- exactly the
+    private-bit-trunk pattern -- out to a Metal3 frame running just OUTSIDE
+    the ring's own footprint (never inside any channel between two real
+    cells), one dedicated lane per side, joined at the corners.
+    """
+    ring = sorted(placements.get("DUMMY", []))
+    ring_incore = [(r, c) for (r, c) in ring if 0 <= r < CORE_N and 0 <= c < CORE_N]
+    ring_outer = [(r, c) for (r, c) in ring if not (0 <= r < CORE_N and 0 <= c < CORE_N)]
+    assert len(ring_incore) == 1, ring_incore
+    center_rc = ring_incore[0]
+
+    for (r, c) in ring:
+        _tie_top_to_bottom_local(cell, li, r, c, dbu)
+
+    top_y = row_y(-1) - M4_Y_HALF - 0.5
+    bot_y = row_y(CORE_N) + M4_Y_HALF + 0.5
+    left_x = col_x(-1) - M4_X_HALF - 0.5
+    right_x = col_x(CORE_N) + M4_X_HALF + 0.5
+    # Horizontal trunks extend TRACK_W/2 past left_x/right_x so each corner
+    # overlap with the vertical trunks is a clean square, not an L-shaped
+    # notch narrower than M3.1's min width.
+    _rect(cell, li["metal3"], left_x - TRACK_W / 2, top_y - TRACK_W / 2, right_x + TRACK_W / 2, top_y + TRACK_W / 2, dbu)
+    _rect(cell, li["metal3"], left_x - TRACK_W / 2, bot_y - TRACK_W / 2, right_x + TRACK_W / 2, bot_y + TRACK_W / 2, dbu)
+    _rect(cell, li["metal3"], left_x - TRACK_W / 2, top_y, left_x + TRACK_W / 2, bot_y, dbu)
+    _rect(cell, li["metal3"], right_x - TRACK_W / 2, top_y, right_x + TRACK_W / 2, bot_y, dbu)
+
+    # Y_STUB_OFFSET (2.9um from the cell's own center): the via3 itself
+    # (0.26um wide) must clear fusetop's edge (2.5) -- offset 2.6 put the
+    # via's own inner edge at 2.47, *inside* fusetop, tripping MIMTM.10
+    # ("via3 must not touch metal4 AND fusetop"). Must also stay under
+    # mimtm_virtual's 1.06um-sized-fusetop reach (3.56, minus the via pad's
+    # half-width) or recreate the "orphan metal4" MIMTM.1 trap the whole
+    # ring-frame redesign exists to avoid. 2.9 clears both with margin.
+    Y_STUB_OFFSET = 2.9
+    for (r, c) in ring_outer:
+        cx, cy = grid_xy(r, c)
+        if r == -1:
+            via_y = cy - Y_STUB_OFFSET
+            _rect(cell, li["metal3"], cx - TRACK_W / 2, top_y, cx + TRACK_W / 2, via_y - VIA_PAD / 2, dbu)
+            _via_chain(cell, li, cx, via_y, dbu, ["metal3", "metal4"])
+        elif r == CORE_N:
+            via_y = cy + Y_STUB_OFFSET
+            _rect(cell, li["metal3"], cx - TRACK_W / 2, via_y + VIA_PAD / 2, cx + TRACK_W / 2, bot_y, dbu)
+            _via_chain(cell, li, cx, via_y, dbu, ["metal3", "metal4"])
+        elif c == -1:
+            via_x = cx - M4_X_HALF + 0.4
+            _rect(cell, li["metal3"], left_x, cy - TRACK_W / 2, via_x - VIA_PAD / 2, cy + TRACK_W / 2, dbu)
+            _via_chain(cell, li, via_x, cy, dbu, ["metal3", "metal4"])
+        else:  # c == CORE_N
+            via_x = cx + M4_X_HALF - 0.4
+            _rect(cell, li["metal3"], via_x + VIA_PAD / 2, cy - TRACK_W / 2, right_x, cy + TRACK_W / 2, dbu)
+            _via_chain(cell, li, via_x, cy, dbu, ["metal3", "metal4"])
+
+    # Buried center dummy: same Via3-stub pattern, straight to its own slab.
+    rC, cC = center_rc
+    cx, cy = grid_xy(rC, cC)
+    via_x = cx - M4_X_HALF + 0.4
+    _rect(cell, li["metal3"], gnd_x - TRACK_W / 2, cy - TRACK_W / 2,
+          via_x + VIA_PAD / 2, cy + TRACK_W / 2, dbu)
+    _via_chain(cell, li, via_x, cy, dbu, ["metal3", "metal4"])
+
+    # Tie the GND metal3 trunk into the ring frame: both metal3, so a plain
+    # extension of the trunk up to top_y merges with the frame directly --
+    # no via needed. trunk_y0 is the trunk's own upper end (already reaches
+    # the top-edge channel); this just continues it a bit further out.
+    _rect(cell, li["metal3"], gnd_x - TRACK_W / 2, top_y, gnd_x + TRACK_W / 2, trunk_y0, dbu)
+
+
+def build_routing(layout, top, placements):
+    li = _mk_layers(layout)
+    dbu = layout.dbu
+    _mesh(top, li, "metal5", dbu, lambda label: True, placements)  # DAC_TOP
+    info = _route_bit_rails(top, li, placements, dbu)
+    _route_dummy_gnd(top, li, placements, dbu, info["gnd_x"], info["trunk_y0"])
+    return info
+
+
+def write_caps_only_reference(path, placements):
+    """Write the flat, native-C-element LVS reference for the routed array.
+
+    Native C syntax is deliberate: an X-instance of cap_mim_2f0fF is silently
+    discarded by this PDK LVS reader and can produce a false 0-device pass.
+    """
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("* Generated caps-only LVS reference for routed cap_array.\n")
+        f.write("* 255 active caps: DAC_TOP to B0..B7; 69 dummies: GND to GND.\n")
+        f.write("* Native C cards are mandatory for gf180mcu LVS extraction.\n")
+        f.write(".subckt cap_array DAC_TOP B0 B1 B2 B3 B4 B5 B6 B7 GND\n")
+        index = 0
+        for bit in [f"B{i}" for i in range(8)]:
+            for _ in placements[bit]:
+                index += 1
+                f.write(f"C{index} {bit} DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1\n")
+        for _ in placements["DUMMY"]:
+            index += 1
+            f.write(f"C{index} GND GND cap_mim_2f0fF W=5e-6 L=5e-6 M=1\n")
+        assert index == 324, index
+        f.write(".ends cap_array\n")
+
+
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) > 1 and sys.argv[1] == "array":
+    if len(sys.argv) > 1 and sys.argv[1] == "route":
+        layout, top, placements = build_cap_array()
+        build_routing(layout, top, placements)
+        out = "/foss/designs/dac/layout/cap_array.gds"
+        layout.write(out)
+        print("wrote", out, "topcell", top.name)
+    elif len(sys.argv) > 1 and sys.argv[1] == "ref":
+        _, _, placements = build_cap_array()
+        out = "/foss/designs/dac/layout/cap_array_caps_only_ref.spice"
+        write_caps_only_reference(out, placements)
+        print("wrote", out)
+    elif len(sys.argv) > 1 and sys.argv[1] == "array":
         layout, top, placements = build_cap_array()
         out = "/foss/designs/dac/layout/cap_array.gds"
         layout.write(out)
