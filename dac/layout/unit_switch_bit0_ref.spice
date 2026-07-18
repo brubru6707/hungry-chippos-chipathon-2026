@@ -1,0 +1,8 @@
+* Native SPICE LVS reference for unit_switch_bit0 (checkpoint driver cell,
+* CMOS rail driver, VREF=VDD rework -- see dac/schematic/unit_switch.sch).
+* Pin order matches unit_switch.sch's ipin/iopin declarations: bN_bar VOUT VDD GND.
+* Native M elements required (not X-subckt calls) -- see run_dac_lvs.sh header.
+.subckt unit_switch_bit0 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=0.84u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=0.42u nf=1
+.ends
