@@ -5,20 +5,22 @@ V {}
 S {}
 F {}
 E {}
-T {Gate-2 major-carry settling testbench (DAC-3).
-Timeline: 0-100n SAMPLE=1 (bottom plates to VIN=1.2V), code=0.
+T {Gate-2 major-carry settling testbench (DAC-3). VREF=VDD=3.3V rework
+(2026-07-18): bottom plates now drive VDD/GND (CMOS rail driver, see
+unit_switch.sch), not VREF/GND; 1 LSB = VDD/256 = 12.9mV, FS = 3.3V.
+Timeline: 0-100n SAMPLE=1 (top plate DAC_TOP tied to VIN=1.2V via the
+x_tg transmission gate; bottom plates to GND), code=0.
 At 100n SAMPLE->0 and code set to 0111_1111 (B6..B0=1, B7=0);
 held 600ns so DAC_TOP fully settles. At t0=700n the code steps to
 1000_0000 (major carry) with 50ps edges while SAMPLE stays low (hold).
 DAC_TOP is loaded with an explicit 20fF comparator-input placeholder.
 Measures: v_final near end of sim; last time |V(DAC_TOP)-v_final|
-crosses +/-6.45mV (0.5 LSB) -> settle time after t0; error at t0+40n;
-MSB gate-drive delay B7 -> x1.B7_B through inv1.
+crosses +/-6.45mV (0.5 LSB of the new 12.9mV LSB) -> settle time after
+t0; error at t0+40n; MSB gate-drive delay B7 -> x1.B7NAND (bN_bar,
+now drives both the PMOS pull-up and NMOS pull-down gates directly).
 Spec (Gate 2): settle < 40ns and |error| at t0+40n < 6.45mV, TT 27C.} 0 -300 0 0 0.25 0.25 {}
 N -400 -100 -400 -80 {lab=VIN}
 N -400 -20 -400 0 {lab=0}
-N -300 -100 -300 -80 {lab=VREF}
-N -300 -20 -300 0 {lab=0}
 N -200 -100 -200 -80 {lab=VDD}
 N -200 -20 -200 0 {lab=0}
 N -100 -100 -100 -80 {lab=SAMPLE}
@@ -40,7 +42,6 @@ N 600 -20 600 0 {lab=0}
 N 700 -100 700 -80 {lab=B0}
 N 700 -20 700 0 {lab=0}
 N -85 70 -110 70 {lab=VIN}
-N -85 90 -110 90 {lab=VREF}
 N -85 110 -110 110 {lab=VDD}
 N -85 130 -110 130 {lab=SAMPLE}
 N -85 150 -110 150 {lab=B0}
@@ -55,7 +56,6 @@ N 85 200 200 200 {lab=DAC_TOP}
 N 200 200 200 230 {lab=DAC_TOP}
 N 200 290 200 310 {lab=0}
 C {vsource.sym} -400 -50 0 0 {name=V_VIN value=1.2 savecurrent=false}
-C {vsource.sym} -300 -50 0 0 {name=V_VREF value=1.65 savecurrent=false}
 C {vsource.sym} -200 -50 0 0 {name=V_VDD value=3.3 savecurrent=false}
 C {vsource.sym} -100 -50 0 0 {name=V_SAMPLE value="pulse(3.3 0 100n 1n 1n 40u 80u)" savecurrent=false}
 C {vsource.sym} 0 -50 0 0 {name=V_B7 value="pulse(0 3.3 700n 50p 50p 40u 80u)" savecurrent=false}
@@ -67,7 +67,6 @@ C {vsource.sym} 500 -50 0 0 {name=V_B2 value="pulse(0 3.3 100n 50p 50p 599.95n 8
 C {vsource.sym} 600 -50 0 0 {name=V_B1 value="pulse(0 3.3 100n 50p 50p 599.95n 80u)" savecurrent=false}
 C {vsource.sym} 700 -50 0 0 {name=V_B0 value="pulse(0 3.3 100n 50p 50p 599.95n 80u)" savecurrent=false}
 C {gnd.sym} -400 0 0 0 {name=l1 lab=0}
-C {gnd.sym} -300 0 0 0 {name=l2 lab=0}
 C {gnd.sym} -200 0 0 0 {name=l3 lab=0}
 C {gnd.sym} -100 0 0 0 {name=l4 lab=0}
 C {gnd.sym} 0 0 0 0 {name=l5 lab=0}
@@ -79,7 +78,6 @@ C {gnd.sym} 500 0 0 0 {name=l10 lab=0}
 C {gnd.sym} 600 0 0 0 {name=l11 lab=0}
 C {gnd.sym} 700 0 0 0 {name=l12 lab=0}
 C {lab_wire.sym} -400 -80 0 0 {name=p1 sig_type=std_logic lab=VIN}
-C {lab_wire.sym} -300 -80 0 0 {name=p2 sig_type=std_logic lab=VREF}
 C {lab_wire.sym} -200 -80 0 0 {name=p3 sig_type=std_logic lab=VDD}
 C {lab_wire.sym} -100 -80 0 0 {name=p4 sig_type=std_logic lab=SAMPLE}
 C {lab_wire.sym} 0 -80 0 0 {name=p5 sig_type=std_logic lab=B7}
@@ -91,7 +89,6 @@ C {lab_wire.sym} 500 -80 0 0 {name=p10 sig_type=std_logic lab=B2}
 C {lab_wire.sym} 600 -80 0 0 {name=p11 sig_type=std_logic lab=B1}
 C {lab_wire.sym} 700 -80 0 0 {name=p12 sig_type=std_logic lab=B0}
 C {lab_wire.sym} -110 70 0 0 {name=p13 sig_type=std_logic lab=VIN}
-C {lab_wire.sym} -110 90 0 0 {name=p14 sig_type=std_logic lab=VREF}
 C {lab_wire.sym} -110 110 0 0 {name=p15 sig_type=std_logic lab=VDD}
 C {lab_wire.sym} -110 130 0 0 {name=p16 sig_type=std_logic lab=SAMPLE}
 C {lab_wire.sym} -110 150 0 0 {name=p17 sig_type=std_logic lab=B0}
