@@ -1,87 +1,101 @@
 #!/usr/bin/env python3
 """
-Generate DAC binary-weighted cap-array layout for gf180mcuD (MIM Option A).
+Generate DAC binary-weighted cap-array layout for gf180mcuD (MIM Option B,
+5LM stack -- variant=D, metal_top=11K, mim_option=B, metal_level=5LM).
 
-Unit cap: 50fF cap_mim (FuseTop=top plate, Metal2=bottom plate), 5um x 5um
-(2.0 fF/um^2), with top/bottom-plate breakouts on Metal3:
-  - top plate:    bare Metal3/FuseTop core overlap (5x5um, already >>
-                   MT30.1a's 1.8um min) is itself the DAC_TOP landing
-                   surface, with a Via2 "sea of vias" inside FuseTop
-                   (MIM.4/MIM.9).
-  - bottom plate: Metal2 slab under/around FuseTop (MIM.3 0.6um min
-                   enclosure), with a 2x2 Via2 array south of FuseTop
-                   by >=0.4um (MIM.5), enclosed by Metal2 by >=0.4um
-                   (MIM.2), landing on a *separate* Metal3 pad kept
-                   >=1.8um from the top-plate's own Metal3 island
-                   (MT30.2/3/4 -- metal3 is process top_metal in the
-                   3LM/mim_option=A stack, so it inherits the "thick
-                   top metal" 1.8um width/spacing rules, not the
-                   generic 0.28um M3.1/M3.2a).
+STANDING RULE: this chip tapes out on variant=D. Option A/3LM geometry
+(Metal2/Via2 bottom plate) is WRONG for this stack -- under mim_option=B the
+bottom plate must be on Metal4 (topmin1_metal), contacted by Via4
+(top_via), because metal_level=5LM makes top_metal=Metal5/top_via=Via4/
+topmin1_metal=Metal4 (see layers_def.drc: `when '5LM' -> top_via=via4,
+topmin1_via=via3, top_metal=metal5, topmin1_metal=metal4`). A 3LM-built cell
+(Metal2/Via2 bottom plate) extracts as 0 devices under variant=D.
 
-Design rules used (from gf180mcuD klayout DRC deck, rule_decks/mim_a.drc,
-via2.drc, metal2.drc, metal3.drc -- read directly, not guessed):
-  MIM.1  bottom-plate metal2 <-> other metal2:              >= 1.2um
-  MIM.2  bottom-plate via2 enclosed by metal2:               >= 0.4um
-  MIM.3  fusetop enclosed by (metal2 int. fusetop):          >= 0.6um
-  MIM.4  via2 (on top plate) enclosed by fusetop:            >= 0.4um
-  MIM.5  fusetop <-> via2-that-connects-to-metal2:           >= 0.4um
-  MIM.6  fusetop <-> unrelated fusetop:                      >= 0.6um
-  MIM.7  fusetop must be inside cap_mk:                       0um enc.
-  MIM.8a min fusetop (=cap) area:                             25um^2
-  MIM.9  via2-on-fusetop to via2-on-fusetop spacing:         >= 0.5um
-  MIM.10 via1 must NOT touch metal2/fusetop bottom plate (via2 only)
-  V2.1   via2 size:                                    exactly 0.26um
-  V2.2a  via2 <-> via2 spacing:                              >= 0.26um
-  M2.1/M3.1 metal2/metal3 min width:                          0.28um
-  M2.2a/M3.2a metal2/metal3 min spacing:                      0.28um
+Unit cap: 50fF cap_mim (FuseTop=top plate, Metal4=bottom plate), 5um x 5um
+(2.0 fF/um^2), with top/bottom-plate breakouts on Metal5 (top_metal):
+  - top plate:    bare Metal5/FuseTop core overlap (5x5um, already >>
+                   MT.1's 0.44um / MT.4's 0.5625um^2 minimums under the
+                   generic 11K top-metal rules -- NOT the 30K thick-metal
+                   MT30.x rules, which don't apply to this stack) is itself
+                   the DAC_TOP landing surface, with a Via4 "sea of vias"
+                   inside FuseTop (MIMTM.4/MIMTM.9).
+  - bottom plate: Metal4 slab enclosing FuseTop by MIMTM.3's 0.6um on all
+                   sides, with two symmetric (north + south) Via4 tabs
+                   placed >=0.4um outside FuseTop's edge (MIMTM.5),
+                   enclosed by Metal4 by >=0.4um (MIMTM.2), each landing on
+                   its own small Metal5 pad kept >=0.46um (MT.2a) from the
+                   top plate's own Metal5 core. Splitting the bottom-plate
+                   breakout N+S (rather than the single south-only tab used
+                   in the old 3LM/Option-A cell) keeps the cell symmetric
+                   about both axes for common-centroid tiling, and is cheap
+                   now that Metal5's spacing/width minimums are ~4x looser
+                   than the old 30K MT30.x rules that drove that asymmetry.
+
+Design rules used (from gf180mcuD klayout DRC deck -- rule_decks/mim_b.drc,
+via4.drc, metal4.drc, metaltop.drc -- read directly, not guessed):
+  MIMTM.1  bottom-plate metal4 <-> other unrelated metal4:    >= 1.2um
+  MIMTM.2  bottom-plate via4 enclosed by metal4:               >= 0.4um
+  MIMTM.3  fusetop enclosed by (metal4 int. fusetop):          >= 0.6um
+  MIMTM.4  via4 (on top plate) enclosed by fusetop:            >= 0.4um
+  MIMTM.5  fusetop <-> via4-that-connects-to-metal4:           >= 0.4um
+  MIMTM.6  fusetop <-> unrelated fusetop:                      >= 0.6um
+  MIMTM.7  fusetop must be inside cap_mk:                       0um enc.
+  MIMTM.8a min fusetop (=cap) area:                             25um^2
+  MIMTM.9  via4-on-fusetop to via4-on-fusetop spacing:         >= 0.5um
+  MIMTM.10 via3 must NOT touch metal4/fusetop bottom plate (via4 only)
+  V4.1     via4 size:                                    exactly 0.26um
+  V4.2a    via4 <-> via4 spacing:                              >= 0.26um
+  V4.3b/V4.4a  metal4/metal5 overlap of via4:                  >= 0.01um
+  M4.1     metal4 min width:                                   0.28um
+  M4.2a    metal4 min spacing:                                 0.28um
+  MT.1     metal5 (top_metal, 11K) min width:                  0.44um
+  MT.2a    metal5 (top_metal, 11K) min spacing:                0.46um
+  MT.4     metal5 (top_metal, 11K) min area:                 0.5625um^2
+
+LVS extraction (mimcap_derivations.lvs / mimcap_extraction.lvs /
+mimcap_connections.lvs, MIM_OPTION='B'): P1 (bottom plate) = mim_virtual =
+fusetop.sized(1.06um).and(topmin1_metal.interacting(fusetop)); P2 (top
+plate) = fuse_cap = fusetop.interacting(cap_mk).interacting(mim_l_mk) --
+mim_l_mk is LOAD-BEARING for extraction, not cosmetic, do not drop it.
+connect(topmin1_metal, mim_virtual) / connect(fuse_cap, top_via_cap) /
+connect(top_via_cap, top_metal_cap) confirm the Metal4/Via4/Metal5
+breakout topology built below is exactly what LVS expects for Option B.
 """
 
 import klayout.db as db
 
 LAYER = {
-    "metal2": (36, 0),
-    "metal3": (42, 0),
-    "via2": (38, 0),
+    "metal4": (46, 0),
+    "metal5": (81, 0),
+    "via4": (41, 0),
     "fusetop": (75, 0),
     "cap_mk": (117, 5),
     "mim_l_mk": (117, 10),
 }
 
 # Unit cap geometry (um), core cap centered at local origin.
-#
-# NOTE on metal3 "thick top metal" (MT30.x) rules: variant=A (mim_option=A)
-# forces METAL_LEVEL=3LM, which makes metal3 the process top_metal --
-# subject to MT30.1a/.2/.3/.4 (>=1.8um min width *and* spacing between
-# unrelated top_metal shapes) instead of the generic M3.1/M3.2a (0.28um)
-# rules. That is why the bottom-plate breakout pad below is far larger /
-# further away than the MIM.x rules alone would require: it must clear
-# 1.8um from the top-plate's own metal3 island, and be >=1.8um in both
-# dimensions itself (MT30.1a), and land >=2x2 vias (MT30.8).
-FUSETOP_HALF = 2.5          # 5.0 x 5.0 um -> 25.0 um^2 -> 50fF @ 2.0fF/um^2
-M2_MARGIN = 0.6              # MIM.3 min bottom-plate (metal2) enclosure of fusetop
+FUSETOP_HALF = 2.5           # 5.0 x 5.0 um -> 25.0 um^2 -> 50fF @ 2.0fF/um^2
+M4_MARGIN = 0.6               # MIMTM.3 min bottom-plate (metal4) enclosure of fusetop
 VIA_SIZE = 0.26
-TOPVIA_INSET = 0.4           # MIM.4: via2-on-fusetop enclosed by fusetop
-TOPVIA_PITCH = 0.76          # 0.26 via + 0.5 spacing (MIM.9: sea-of-via-on-top-plate spacing)
+TOPVIA_INSET = 0.4            # MIMTM.4: via4-on-fusetop enclosed by fusetop
+TOPVIA_PITCH = 0.76           # 0.26 via + 0.5 spacing (MIMTM.9 sea-of-via spacing)
 
-BOTVIA_GAP = 0.4             # MIM.5: min gap from fusetop edge to bottom-plate via2
-BOTVIA_ENC = 0.4             # MIM.2: min enclosure of bottom-plate via2 within metal2
-BOTVIA_SPACING = 0.3         # V2.2a min is 0.26; extra margin
-PAD_HALF_W = 1.0             # bottom-plate metal3 pad: 2.0um wide (>= MT30.1a 1.8um)
-PAD_TOP_GAP = 1.9            # metal3-pad-to-top-plate-metal3 spacing (>= MT30.2/3/4 1.8um)
-PAD_HEIGHT = 2.0             # >= MT30.1a 1.8um in the other dimension too
-M2_SOUTH_MARGIN = 0.4        # extra slack beyond the strict MIM.2 minimum
+BOTVIA_GAP = 0.5              # MIMTM.5 min is 0.4um; extra margin
+PAD_GAP = 0.5                 # metal5-pad-to-top-plate-metal5 spacing (>= MT.2a 0.46um)
+PAD_HALF_W = 0.4              # bottom-plate metal5 pad: 0.8um wide (>= MT.1 0.44um)
+PAD_HEIGHT = 0.8              # 0.8x0.8 = 0.64um^2 (>= MT.4 0.5625um^2)
+M4_VIA_ENC = 0.4              # MIMTM.2 min enclosure of bottom-plate via4 within metal4
+M4_Y_MARGIN = 0.1             # extra slack beyond the strict MIMTM.2 minimum
 
-PAD_Y1 = -(FUSETOP_HALF + PAD_TOP_GAP)          # pad north edge
-PAD_Y0 = PAD_Y1 - PAD_HEIGHT                     # pad south edge
-_via_span = 2 * VIA_SIZE + BOTVIA_SPACING
-_pad_mid_y = (PAD_Y1 + PAD_Y0) / 2
-BOTVIA_Y0 = _pad_mid_y - _via_span / 2
-BOTVIA_Y1 = _pad_mid_y + _via_span / 2
-assert (-FUSETOP_HALF) - BOTVIA_Y1 >= BOTVIA_GAP - 1e-9  # MIM.5 gap, fusetop edge to via2
+PAD_Y1 = FUSETOP_HALF + PAD_GAP                  # south pad's inner (north) edge, positive magnitude
+PAD_Y0 = PAD_Y1 + PAD_HEIGHT                      # south pad's outer (south) edge, positive magnitude
+_pad_mid = (PAD_Y1 + PAD_Y0) / 2
+BOTVIA_Y_INNER = _pad_mid - VIA_SIZE / 2          # via edge nearer to fusetop, positive magnitude
+BOTVIA_Y_OUTER = _pad_mid + VIA_SIZE / 2          # via edge farther from fusetop, positive magnitude
+assert BOTVIA_Y_INNER - FUSETOP_HALF >= BOTVIA_GAP - 1e-9   # MIMTM.5 gap, fusetop edge to via4
 
-M2_X_HALF = FUSETOP_HALF + M2_MARGIN
-M2_Y_NORTH = FUSETOP_HALF + M2_MARGIN
-M2_Y_SOUTH = min(PAD_Y0, BOTVIA_Y0 - BOTVIA_ENC) - M2_SOUTH_MARGIN
+M4_X_HALF = FUSETOP_HALF + M4_MARGIN
+M4_Y_HALF = BOTVIA_Y_OUTER + M4_VIA_ENC + M4_Y_MARGIN   # MIMTM.2 enclosure + buffer, symmetric N/S
 
 
 def _mk_layers(layout):
@@ -103,28 +117,30 @@ def add_unit_cap(layout, cell, cx, cy, li):
     # --- FuseTop (top plate, the actual MIM capacitor electrode) ---
     cell.shapes(li["fusetop"]).insert(_box(cx - fh, cy - fh, cx + fh, cy + fh, dbu))
 
-    # --- mim_l_mk marker strip along the fusetop bottom edge ---
+    # --- mim_l_mk marker strip along the fusetop bottom edge (LOAD-BEARING
+    #     for LVS extraction -- fuse_cap requires fusetop.interacting(mim_l_mk)) ---
     cell.shapes(li["mim_l_mk"]).insert(_box(cx - fh, cy - fh, cx + fh, cy - fh + 0.1, dbu))
 
-    # --- Metal2 bottom plate slab: MIM.3 margin on north/east/west, extended
-    #     south far enough to enclose the relocated bottom-plate via2 ---
-    cell.shapes(li["metal2"]).insert(
-        _box(cx - M2_X_HALF, cy + M2_Y_SOUTH, cx + M2_X_HALF, cy + M2_Y_NORTH, dbu)
+    # --- Metal4 bottom plate slab: MIMTM.3 margin enclosing fusetop on all
+    #     sides, extended N/S far enough to enclose the two symmetric
+    #     bottom-plate via4 tabs (MIMTM.2) ---
+    cell.shapes(li["metal4"]).insert(
+        _box(cx - M4_X_HALF, cy - M4_Y_HALF, cx + M4_X_HALF, cy + M4_Y_HALF, dbu)
     )
 
-    # --- cap_mk: superset of fusetop (MIM.7) ---
+    # --- cap_mk: superset of fusetop (MIMTM.7) ---
     cell.shapes(li["cap_mk"]).insert(
-        _box(cx - M2_X_HALF, cy + M2_Y_SOUTH, cx + M2_X_HALF, cy + M2_Y_NORTH, dbu)
+        _box(cx - M4_X_HALF, cy - M4_Y_HALF, cx + M4_X_HALF, cy + M4_Y_HALF, dbu)
     )
 
-    # --- Top plate: Metal3 exactly over the fusetop core. No extra tab needed --
-    #     this bare 5x5 surface (already >> MT30.1a's 1.8um min) is itself the
-    #     DAC_TOP landing pad; adjacent unit cells' top plates merge directly
-    #     into one contiguous mesh in the array (Step 2), so no MT30.2/3/4
-    #     inter-tab spacing is incurred there.
-    cell.shapes(li["metal3"]).insert(_box(cx - fh, cy - fh, cx + fh, cy + fh, dbu))
+    # --- Top plate: Metal5 exactly over the fusetop core. No extra tab
+    #     needed -- this bare 5x5 surface (already >> MT.1/MT.4's 11K
+    #     minimums) is itself the DAC_TOP landing pad; adjacent unit cells'
+    #     top plates merge directly into one contiguous mesh in the array
+    #     (Step 2), so no MT.2a inter-tab spacing is incurred there. ---
+    cell.shapes(li["metal5"]).insert(_box(cx - fh, cy - fh, cx + fh, cy + fh, dbu))
 
-    # --- Top plate via2 "sea of vias" inside fusetop, inset by TOPVIA_INSET (MIM.4) ---
+    # --- Top plate via4 "sea of vias" inside fusetop, inset by TOPVIA_INSET (MIMTM.4) ---
     inset = fh - TOPVIA_INSET
     span = 2 * inset
     n = int(span // TOPVIA_PITCH)
@@ -136,23 +152,27 @@ def add_unit_cap(layout, cell, cx, cy, li):
         for j in range(n):
             vx0 = cx + start + i * TOPVIA_PITCH
             vy0 = cy + start + j * TOPVIA_PITCH
-            cell.shapes(li["via2"]).insert(
+            cell.shapes(li["via4"]).insert(
                 _box(vx0, vy0, vx0 + VIA_SIZE, vy0 + VIA_SIZE, dbu)
             )
 
-    # --- Bottom plate: 2x2 via2 array (MT30.8) south of fusetop, outside by
-    #     BOTVIA_GAP (MIM.5), enclosed by metal2 by BOTVIA_ENC (MIM.2) ---
-    for vx0 in (cx - VIA_SIZE - BOTVIA_SPACING / 2, cx + BOTVIA_SPACING / 2):
-        for vy0 in (cy + BOTVIA_Y0, cy + BOTVIA_Y0 + VIA_SIZE + BOTVIA_SPACING):
-            cell.shapes(li["via2"]).insert(
-                _box(vx0, vy0, vx0 + VIA_SIZE, vy0 + VIA_SIZE, dbu)
-            )
+    # --- Bottom plate: two symmetric (south + north) single-via4 tabs,
+    #     outside fusetop by BOTVIA_GAP (MIMTM.5), each landing on its own
+    #     small Metal5 pad kept PAD_GAP from the top plate's Metal5 (MT.2a) ---
+    for sign in (-1, +1):
+        vx0 = cx - VIA_SIZE / 2
+        # via spans [BOTVIA_Y_INNER, BOTVIA_Y_OUTER] on the +y side, mirrored on -y
+        vy0 = cy + sign * BOTVIA_Y_OUTER if sign < 0 else cy + BOTVIA_Y_INNER
+        cell.shapes(li["via4"]).insert(
+            _box(vx0, vy0, vx0 + VIA_SIZE, vy0 + VIA_SIZE, dbu)
+        )
 
-    # --- Bottom plate: separate Metal3 pad (own island, >=1.8um from the top
-    #     plate's metal3 per MT30.2/3/4, >=1.8um in both dims per MT30.1a) ---
-    cell.shapes(li["metal3"]).insert(
-        _box(cx - PAD_HALF_W, cy + PAD_Y0, cx + PAD_HALF_W, cy + PAD_Y1, dbu)
-    )
+        pad_y_inner = cy + sign * PAD_Y1
+        pad_y_outer = cy + sign * PAD_Y0
+        pad_y0, pad_y1 = sorted((pad_y_inner, pad_y_outer))
+        cell.shapes(li["metal5"]).insert(
+            _box(cx - PAD_HALF_W, pad_y0, cx + PAD_HALF_W, pad_y1, dbu)
+        )
 
 
 def build_unit_cell(topcell_name="dac_cap_unit"):

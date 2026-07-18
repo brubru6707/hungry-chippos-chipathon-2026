@@ -1,42 +1,52 @@
 #!/bin/bash
-# Run gf180mcuD DRC (variant=A, mim_option=A/3LM) on a DAC layout GDS, from
-# inside the iic-osic-tools container. Uses the TERMINAL run_drc.py flow per
-# the project's KLayout-GUI-LVS-is-broken convention (see handoff/README.md);
+# Run gf180mcuD DRC (variant=D: metal_top=11K, mim_option=B, metal_level=
+# 5LM -- the real, signed-off chip stack; matches every comparator DRC/LVS
+# log under comparator/layout/) on a DAC layout GDS, from inside the
+# iic-osic-tools container. Uses the TERMINAL run_drc.py flow per the
+# project's KLayout-GUI-LVS-is-broken convention (see handoff/README.md);
 # NOT the KLayout GUI DRC menu.
 #
-# gf180mcuD bug workaround: the generated main.drc for variant=A (3LM)
-# references metal4_drawn/metal5_drawn/metal4_slot/metal5_slot/via3/via4,
-# none of which exist in a 3-metal-layer stack -- run_drc.py's first pass
-# crashes with "undefined method 'sized' for false:FalseClass". This is a
-# rule-deck bug independent of the design under test (metal_top=30K+mim_
-# option=A always forces METAL_LEVEL=3LM, which has no metal4/5 at all), not
-# something introduced by our geometry. Workaround: let run_drc.py generate
-# main.drc, patch the run-local copy only (never the golden PDK source) to
-# replace those always-undefined identifiers with an empty region
-# (`polygon_layer`), then invoke klayout directly on the patched deck with
-# the same -rd switches run_drc.py would have used.
+# STANDING RULE: variant=D is the only variant used for DAC DRC/LVS from now
+# on. variant=A (3LM/mim_option=A/metal_top=30K) was a mismatch against the
+# real 5LM stack and is not used again (see dac/WORKLOG.md, 2026-07-18
+# "Pre-array sanity check" entry).
 #
-# usage: run_dac_drc.sh <gds_path> <topcell> <run_dir>
+# gf180mcuD 3LM rule-deck bug (HISTORICAL, does NOT apply to variant=D --
+# left here only so this isn't rediscovered from scratch if variant=A is
+# ever needed again for comparison): variant=A's generated main.drc
+# references metal4_drawn/metal5_drawn/metal4_slot/metal5_slot/via3/via4,
+# none of which exist in a 3-metal-layer stack, and run_drc.py's first pass
+# crashes with "undefined method 'sized' for false:FalseClass". Under
+# variant=D (5LM) all of metal4/metal5/via3/via4 are genuinely defined
+# (layers_def.drc's `when '5LM'` branch), so this bug does NOT reproduce --
+# confirmed by a clean, unpatched `run_drc.py --variant=D` run (660 rule
+# categories executed, 0 violations, exit 0, no first-pass crash) on the
+# variant=D-redrawn unit cell. The patch-and-rerun fallback below is kept
+# only as a defensive no-op path (it will not trigger under variant=D) in
+# case a future geometry change resurfaces some other run_drc.py bug.
+#
+# usage: run_dac_drc.sh <gds_path> <topcell> <run_dir> [variant]
 set -euo pipefail
 GDS_PATH="$1"
 TOPCELL="$2"
 RUN_DIR="$3"
+VARIANT="${4:-D}"
 
 mkdir -p "$RUN_DIR"
 cd "$RUN_DIR"
 
 set +e
 python /foss/pdks/gf180mcuD/libs.tech/klayout/tech/drc/run_drc.py \
-  --path="$GDS_PATH" --variant=A --run_dir=. --topcell="$TOPCELL" \
+  --path="$GDS_PATH" --variant="$VARIANT" --run_dir=. --topcell="$TOPCELL" \
   --run_mode=flat > drc_first_pass.log 2>&1
 FIRST_RC=$?
 set -e
 
 if [ $FIRST_RC -ne 0 ] && [ -f main.drc ]; then
-  echo "[run_dac_drc] first pass hit the known 3LM metal4/5 rule-deck bug; patching run-local main.drc" >&2
+  echo "[run_dac_drc] first pass failed (rc=$FIRST_RC); attempting the historical 3LM metal4/5 patch as a defensive fallback -- this is NOT expected to trigger under variant=D" >&2
   sed -i -E 's/\b(metal4_drawn|metal5_drawn|metal4_slot|metal5_slot|via3|via4)\b/polygon_layer/g' main.drc
   klayout -b -r main.drc \
-    -rd thr=2 -rd metal_top=30K -rd mim_option=A -rd metal_level=3LM \
+    -rd thr=2 -rd metal_top=11K -rd mim_option=B -rd metal_level=5LM \
     -rd verbose=false -rd feol=true -rd beol=true -rd offgrid=true \
     -rd conn_drc=true -rd density=false -rd split_deep=false -rd slow_via=false \
     -rd topcell="$TOPCELL" -rd input="$GDS_PATH" \
@@ -44,11 +54,20 @@ if [ $FIRST_RC -ne 0 ] && [ -f main.drc ]; then
     > drc_patched_pass.log 2>&1
 fi
 
-REPORT="$RUN_DIR/${TOPCELL}_main.lyrdb"
+# run_drc.py names its report by GDS basename ({layout_base_name}_{table}.
+# lyrdb, see run_drc.py's report_path), NOT by --topcell -- only the
+# patch-and-rerun fallback above (which sets -rd report= explicitly) uses
+# the topcell-based name. Check both, preferring whichever exists.
+GDS_BASE="$(basename "$GDS_PATH" .gds)"
+REPORT="$RUN_DIR/${GDS_BASE}_main.lyrdb"
 if [ ! -f "$REPORT" ]; then
-  echo "[run_dac_drc] ERROR: no report produced at $REPORT" >&2
+  REPORT="$RUN_DIR/${TOPCELL}_main.lyrdb"
+fi
+if [ ! -f "$REPORT" ]; then
+  echo "[run_dac_drc] ERROR: no report produced at $RUN_DIR/${GDS_BASE}_main.lyrdb or $RUN_DIR/${TOPCELL}_main.lyrdb" >&2
   exit 1
 fi
+echo "[run_dac_drc] report: $REPORT" >&2
 
 python3 -c "
 import klayout.rdb as rdb
