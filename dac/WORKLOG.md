@@ -192,4 +192,64 @@ NEXT STEP: resolve the S/H architecture question (bottom-plate-only vs. reviving
 
 - **Stopping here per instructions.** This entry closes Step 1 only. Step 2 (add the TG top-plate switch, rework bottom-plate control to the revised SAMPLE=1→bN=0 truth table, remove VIN from the bottom-plate switches) is NOT started.
 
-NEXT STEP: Step 2 — implement the sized transmission gate top-plate switch in `dac/schematic/`, wire it between VIN and DAC_TOP (closed on SAMPLE=1), remove the VIN/M1 path from `unit_switch`'s bottom-plate switches, rework per-bit control to `SAMPLE=1: bN=0, bN_bar=1` / `SAMPLE=0: bN=B, bN_bar=NOT B`. Then Step 3 re-verify: connectivity guard, full-range acquisition (0.3/1.65/3.0/3.2V at TT and SS/125C/2.97V), and the Gate-2 major-carry regression.
+## 2026-07-17 — Brief #10: TG top-plate switch integrated — full-range VIN acquisition PASS
+
+- **Branch:** `dac-cap-array`, commit `4029408` ("dac: top-plate sampling via sized TG (4u/8u) — full-range VIN acquisition PASS"). Closes Steps 1-4 of the Brief #9 top-plate-sampling plan.
+
+- **Step 1 — TG cell (`dac/schematic/tgate.sch`/`.sym`, new):** parallel `nfet_03v3` (gate=SAMPLE) + `pfet_03v3` (gate=SAMPLE_N), parameterized `nfet_wid`/`pfet_wid`/`nfet_len`/`pfet_len` like `unit_switch`/`nand2`/`nor2`. Pins `A B SAMPLE SAMPLE_N DVDD DVSS` (A/B both `iopin` — bidirectional switch, not a fixed-direction pass gate). Authored with the established pin-coincident `lab_wire.sym` convention (zero drawn `N` wires); netlisted standalone (`xschem -q -x -n dac/schematic/tgate.sch`) and hand-verified against the coordinate formulas in the Brief #5 entry: `XM1 A SAMPLE B DVSS nfet_03v3`, `XM2 B SAMPLE_N A DVDD pfet_03v3` — correct TG topology, no floats.
+- **Sizing sweep** (`dac/sim/eval_tgate.spice`, standalone ngspice deck, ideal complementary SAMPLE/SAMPLE_N sources driving the TG into a lumped 12.77pF load = 255×50fF array + 20fF comparator placeholder, same load model as the Brief #9 bootstrap eval): swept `nfet_wid`/`pfet_wid` at VIN={0.3,1.65,3.0,3.2}V × corner={TT/27C/3.3V, SS/125C/2.97V}. Worst case across the whole sweep is always VIN=1.65V (mid-rail, where neither device has maximal overdrive) at SS/125C/2.97V.
+  - 4u/8u (nfet/pfet) chosen over 6u/12u specifically to **balance speed vs charge injection** per instructions: 6u/12u settles faster (worst-case 51ns) but injects up to 0.26 LSB at VIN=3.2V; 4u/8u settles in 77ns (still comfortably inside the 50-100ns target) while capping injection at ~0.18 LSB — better margin against the 0.5 LSB budget for the same qualitative acquisition-speed outcome.
+  - **Final sizing: nfet_wid=4u, nfet_len=0.28u, pfet_wid=8u, pfet_len=0.28u.** Ron (fitted from the RC charging time constant, tau=Ron·C) ranges ~294-1098Ω across VIN/corner — worst (highest) Ron at VIN=1.65V/SS/125C/2.97V.
+
+  | VIN | TT/27C/3.3V settle | TT Ron | SS/125C/2.97V settle | SS Ron |
+  |---|---|---|---|---|
+  | 0.3V | 21.2ns | 444Ω | 25.0ns | 527Ω |
+  | 1.65V | 44.5ns | 774Ω | **76.99ns (worst)** | **1098Ω (worst)** |
+  | 3.0V | 54.1ns | 826Ω | 61.1ns | 1054Ω |
+  | 3.2V | 51.4ns | 816Ω | 56.8ns | 1021Ω |
+
+- **Step 2 — integration into `cap_array.sch`:** TG instance `x_tg` wired `A=VIN, B=DAC_TOP, SAMPLE=SAMPLE, SAMPLE_N=SAMPLE_N` (reusing the existing shared `x_sampinv`), `DVDD=VDD`, `DVSS=0`. `unit_switch.sch`/`.sym`: removed `M1` (the old VIN pass-nfet) and its `VIN`/`SAMPLE` pins entirely — bottom plate now only ties to VREF (M2, gate=bN) or GND (M3, gate=bN_bar); `unit_switch` netlists down to 2 transistors, 5 pins (`VOUT bN bN_bar VREF GND`).
+  - **Control-logic simplification (not just a rewire):** with M1 gone there is no more sampling-phase bottom-plate contention to gate against, so the Brief #5 `bN_bar = NOR2(B, SAMPLE)` construction is now *wrong* for the new truth table (`SAMPLE=1: bN_bar=1`, not 0) and was replaced — **not with a new gate, but by reusing the existing NAND2 output directly**: `bN_bar{i} = NAND2(B{i}, SAMPLE_N)` (previously only an intermediate signal feeding `bN` via `inv1`). Truth check: SAMPLE=1 → SAMPLE_N=0 → NAND(B,0)=1 for any B (bottom plate → GND, matches spec) ✓; SAMPLE=0 → SAMPLE_N=1 → NAND(B,1)=NOT B (matches spec) ✓. Since `bN = INV(bN_bar)` always (same `x_andinv{i}` stage as before), `bN` and `bN_bar` are now true complements unconditionally — exactly the simplification the new spec implies. **All 8 `nor2` instances (and their `lab_wire`/`gnd` helpers, 6 lines × 8) were deleted**; `unit_switch`'s `bN_bar` pin is rewired straight to the pre-existing `B{i}NAND` net (a lab-rename only, zero new gates).
+- **Testbench net-name fixups (required, not optional):** `tb_major_carry.sch`'s gate-drive probes (`v(x1.B7_B)`, `v(x1.B6_B)`) referenced the now-deleted `nor2` output nets — renamed to `v(x1.B7NAND)`/`v(x1.B6NAND)` (same electrical signal/polarity as before, just relabeled, per the truth-table equivalence above).
+- **`tb_sample_hold.sch` simulation-setup fix (found via a wrong first-pass number, not assumed):** without `uic`, ngspice's default DC operating-point solve is a **true t=∞ steady state** — since the TG's off-state leakage is now the *only* resistive path to `DAC_TOP` (the caps block DC current to the grounded bottom plates), any finite off-leakage still forces zero net current at DC equilibrium, which pins `V(DAC_TOP)=VIN` exactly *before the transient even starts*, independent of SAMPLE's t=0 value. First-pass numbers showed a suspiciously fast "8ns acquisition settle" that turned out to be the solver re-entering a band it was already inside. Fixed with `.ic v(DAC_TOP)=0` + `tran ... uic` so the transient genuinely exercises the TG's charging path from a cold start (matches the discipline already used in `eval_tgate.spice`).
+
+- **Step 3a — connectivity guard: PASS.** Re-netlisted `tb_major_carry.sch` from repo root; flattened `cap_array` subckt shows `x_tg VIN DAC_TOP SAMPLE SAMPLE_N VDD 0 tgate`, all 8 caps (`XC0-XC7`) still share `DAC_TOP`, every top-level pin (VIN VREF VDD SAMPLE B0-B7 DAC_TOP) on a real net — no floats.
+
+- **Step 3b — full-range acquisition (`tb_sample_hold.sch`, 20-170ns SAMPLE-high window, own-final-value settle convention as Brief #6): ALL PASS, including the previously-failing 3.0V/3.2V cases:**
+
+  | VIN target | corner | acquire settle | v_final | err vs VIN target | verdict |
+  |---|---|---|---|---|---|
+  | 0.3 V | TT/27C/3.3V | 23.90 ns | 0.300000 V | 0.00 mV | PASS |
+  | 0.3 V | SS/125C/2.97V | 34.02 ns | 0.300000 V | 0.00 mV | PASS |
+  | 1.65 V | TT/27C/3.3V | 49.71 ns | 1.650000 V | 0.00 mV | PASS |
+  | 1.65 V | SS/125C/2.97V | 75.24 ns | 1.649980 V | −0.02 mV | PASS |
+  | **3.0 V** | TT/27C/3.3V | 60.39 ns | 3.000000 V | 0.00 mV | **PASS** |
+  | **3.0 V** | SS/125C/2.97V | **78.62 ns (worst)** | 2.999987 V | −0.013 mV | **PASS** |
+  | **3.2 V** | TT/27C/3.3V | 57.43 ns | 3.200000 V | 0.00 mV | **PASS** |
+  | **3.2 V** | SS/125C/2.97V | 73.72 ns | 3.199995 V | −0.005 mV | **PASS** |
+
+  This directly resolves the Brief #6 finding (NMOS-only bottom-plate switch hit a hard ~2.82V ceiling, 28-29 LSB error, never reaching 3.0V/3.2V at all) and the Brief #9 bootstrap-switch finding (same near-rail Vgs-collapse failure relocated to the CLK_INV pump, also never settling above ~0.37V for VIN≥3.0V). Worst-case settle across the whole sweep is 78.62ns — inside the 50-100ns target with ~21ns margin. Hold droop (measured 220n→540n, same 320ns conservative window as Brief #6): all corners ≤0.013 mV, i.e. still practically zero — unaffected by the topology change.
+
+- **Step 3c — charge injection (turn-off transient, v(DAC_TOP) at SAMPLE-fall ±: real integrated circuit, real `x_sampinv`-driven SAMPLE_N, not the idealized sizing-eval sources):**
+
+  | VIN | TT/27C/3.3V | SS/125C/2.97V |
+  |---|---|---|
+  | 0.3 V | −0.28 mV (0.044 LSB) | −0.35 mV (0.055 LSB) |
+  | 1.65 V | +0.23 mV (0.036 LSB) | +0.18 mV (0.028 LSB) |
+  | 3.0 V | +1.15 mV (0.178 LSB) | +0.79 mV (0.122 LSB) |
+  | 3.2 V | +1.16 mV (0.180 LSB) | +0.79 mV (0.122 LSB) |
+
+  Worst case 0.18 LSB (VIN=3.2V, TT) — comfortably inside the 0.5 LSB budget (≥0.32 LSB margin left for every other error source combined) but **not negligible**: it consumes roughly a third of the total error budget at full-scale codes and is the single largest identified error term in this design (vs. ~0.003-0.015 LSB for kT/C noise per Brief #6). **Flagging, not fixing:** candidate for a dummy/compensation switch if INL/DNL characterization (next step) shows it biting; matches the instruction not to over-engineer this now.
+
+- **Step 3d — Gate-2 major-carry regression (`tb_major_carry.sch`, same 0111_1111→1000_0000 stimulus, unmodified spec: settle <40ns, err@40ns <6.45mV):**
+
+  | corner | settle after t0 | err@40ns | margin to 40ns spec | verdict |
+  |---|---|---|---|---|
+  | TT/27C/3.3V | 2.12 ns | 0.000 mV | 37.9 ns | PASS |
+  | SS/125C/2.97V (worst) | 4.22 ns | 0.000 mV | 35.8 ns | PASS |
+
+  `v_final` itself (~2.026V) is naturally different from the pre-TG-era numbers since the architecture is now top-plate sampling, not bottom-plate — expected, not a regression; the acceptance criteria (settle time, err@40ns) are unchanged and both pass with large margin. MSB gate-drive delay (`B7NAND` fall, 10%/5% VDD): 0.73ns/0.93ns (TT) and 0.96ns/1.38ns (SS/125C/2.97V) — both well under the ~4ns informal threshold, consistent with Brief #5's numbers for the equivalent (renamed) signal.
+
+- **Overall verdict: top-plate sampling via a sized TG (4u/8u) resolves the full-range acquisition failure. Gate 2 unaffected. Charge injection is real but well within budget.**
+
+NEXT STEP: INL/DNL sweep over 256 codes on the top-plate-sampling structure (now that full-range VIN acquisition is proven end-to-end); factor the ~0.18 LSB charge-injection error into the linearity budget when interpreting results.
