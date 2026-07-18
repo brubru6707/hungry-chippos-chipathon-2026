@@ -86,7 +86,17 @@ C {code.sym} 0 -560 0 0 {name=s1 only_toplevel=false value="
 .options savecurrents
 .control
 save all
-tran 0.02n 600n
+* Brief #10 top-plate-sampling fix: with the TG now providing a resistive
+* DVDD-free leakage path from DAC_TOP to VIN even while nominally OFF, the
+* no-'uic' DC operating-point solve (true t=inf steady state, where any
+* finite leakage resistance still forces zero current / V(DAC_TOP)=VIN
+* exactly) pre-charges DAC_TOP to VIN_TARGET *before* SAMPLE ever goes
+* high, making the acquisition transient measured below meaningless (it
+* would just be measuring re-entry into a band the solver already started
+* inside). uic + ic v(DAC_TOP)=0 forces a physically meaningful cold start
+* so the SAMPLE-high transient actually exercises the TG's charging path.
+.ic v(DAC_TOP)=0
+tran 0.02n 600n uic
 * Acquisition (SAMPLE high 20n-170n): settle vs the value DAC_TOP actually
 * reaches at end of acquire window (own-final method, same convention as
 * Gate-2). gap_to_vin_target_mV reports the residual Cload-loading gain

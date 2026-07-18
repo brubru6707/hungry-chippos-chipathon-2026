@@ -126,12 +126,13 @@ meas tran t_hi_last WHEN verr=6.45m CROSS=LAST
 meas tran t_lo_last WHEN verr=-6.45m CROSS=LAST
 * value and error exactly at t0+40n
 meas tran v_at40 FIND v(DAC_TOP) AT=740n
-* MSB gate drive: B7 rises at 700n (50ps edge); B7_B must fall through inv1
-* to turn OFF the MSB GND switch. 10%/5% VDD thresholds.
-meas tran t_b7b_f90 WHEN v(x1.B7_B)=0.33 FALL=LAST
-meas tran t_b7b_f95 WHEN v(x1.B7_B)=0.165 FALL=LAST
-* bit6 gate drive: B6_B must rise to turn ON the 26.88u GND switch
-meas tran t_b6b_r90 WHEN v(x1.B6_B)=2.97 RISE=LAST
+* MSB gate drive: B7 rises at 700n (50ps edge); B7NAND (bN_bar, direct
+* NAND2 output post-TG-integration rework) must fall to turn OFF the MSB
+* GND switch. 10%/5% VDD thresholds.
+meas tran t_b7b_f90 WHEN v(x1.B7NAND)=0.33 FALL=LAST
+meas tran t_b7b_f95 WHEN v(x1.B7NAND)=0.165 FALL=LAST
+* bit6 gate drive: B6NAND (bN_bar) must rise to turn ON the 26.88u GND switch
+meas tran t_b6b_r90 WHEN v(x1.B6NAND)=2.97 RISE=LAST
 echo settle_after_t0_hi_ns:
 print (t_hi_last-700e-9)/1e-9
 echo settle_after_t0_lo_ns:
