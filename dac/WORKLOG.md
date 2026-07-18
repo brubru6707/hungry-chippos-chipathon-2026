@@ -457,3 +457,39 @@ NEXT STEP (blocked on a decision, not on more investigation): redraw the DAC-5 u
 - **Commit:** `dac: redraw 50fF cap_mim unit cell for variant=D (5LM, mim_option=B), DRC+LVS clean`.
 
 >>> STOP per task instructions — single-cell checkpoint only. Do NOT start the 255-cell common-centroid array (DAC-6/7) yet. <<<
+
+## 2026-07-18 — DAC-6 Step A: common-centroid 255-unit cap array placement + dummy ring, DRC clean (checkpoint)
+
+- **Branch:** `dac-cap-array`. Modified: `designs/scripts/gen_dac_cap_layout.py` (new `build_cap_array()` and supporting functions, appended — `build_unit_cell()`/single-cell CLI path unchanged). New: `dac/layout/cap_array.gds`. Placement/DRC only — **no routing**, per task instructions (STEP B, top-plate DAC_TOP mesh + bottom-plate bit rails + ground ties, is a separate session).
+
+- **Pitch:** cu_cell's Metal4 bottom-plate slab is drawn exactly at the cell's full bounding box (verified via `klayout.db` bbox query on `cu_cell.gds`: metal4 extent == overall bbox `[-3.1,-4.03]` to `[3.1,4.03]` in both axes), so pitch-minus-cellsize directly sets the bottom-plate-to-bottom-plate gap. The governing rule is **MIMTM.1** ("Minimum MiM bottom plate spacing to the bottom plate metal, whether adjacent MiM or routing metal" — read directly from `mim_b.drc`: `topmin1_metal.separation(mimtm_virtual, transparent, 1.2.um)`), **not** the generic M4.2a (0.28µm) — MIMTM.1 requires **≥1.2µm** and is a purely geometric layer check (not net-aware), so it applies uniformly whether neighboring cells are the same bit or different bits. Used a 1.5µm margin (0.3µm over the 1.2µm minimum): `PITCH_X = 6.2+1.5 = 7.7µm`, `PITCH_Y = 8.06+1.5 = 9.56µm`. At this pitch the top-plate Metal5 cores (5×5µm, well inside the 6.2×8.06µm cell) never approach each other closely enough to trigger MT.2a (0.46µm) either, so there's no accidental Metal5 merge/short risk between an active cell and a neighboring dummy cell even though nets aren't routed/labeled yet at this checkpoint.
+
+- **Common-centroid assignment (`build_pair_assignment()` in `gen_dac_cap_layout.py`, reusable):** the 256 core grid cells (16×16) are treated as 128 point-symmetric pairs (`pair_positions()`: pair index `p=0..127` maps to `(row,col)=(p//16, p%16)` and its 180°-rotated partner `(15-row,15-col)`). **Key property used:** since a pair's two members are exact point reflections about the array center, the centroid of *any* union of whole pairs assigned to one bit is *exactly* the array center, regardless of which pairs or how they're spatially distributed (`mean(p_i, 2C-p_i) = C` for every pair, and this holds under averaging across pairs too) — so B1..B7 get an *exact* zero-deviation centroid by construction, not an approximation.
+  - 127 of the 128 pairs are assigned to B7..B1 (64/32/16/8/4/2/1 pairs = 128/64/32/16/8/4/2 units = 254 units), interspersed via a **bit-reversal permutation** of the pair index (`pair_order_128()`) rather than contiguous blocks — this doesn't change the exact-zero first-order centroid result above, but guards against *non-linear* (radial/quadratic-bowl-shaped) process gradients across the die, which point-symmetric pairing alone does not cancel (a linear gradient *is* cancelled by point symmetry regardless of spread; a radially-symmetric one is not, since it depends on `|pos-center|`). The bit-reversal order's first 64 (of 128) entries are exactly the even-column half of the grid (an alternating-column spread, not a block), refining further at each halving — confirmed by construction, not just claimed.
+  - The **128th (final) pair is picked explicitly** by minimum physical distance to the array's geometric center (`_pair_center_distance()`), *not* by the bit-reversal order's tail (which does not land near the center — first implementation attempt put it in a far corner at `(+57.75,-4.78)µm`, caught by inspecting the printed centroid report before running DRC). One member gets **B0** (the lone LSB unit), the other becomes a balancing dummy — matching the task's "final central-most pair" requirement.
+- **Dummy ring:** 1-cell-wide ring around the 16×16 core (18×18 total grid − 16×16 core = 68 cells), plus the 1 center-pair balancing dummy = **69 dummy instances**. Not yet tied to ground (that's STEP B routing) — placement only.
+
+- **CENTROID GATE — results** (via `report_centroids()`, `grid_xy()`-based mean position per bit vs. array center at the origin):
+
+  | bit | n (units) | centroid (x,y) µm | deviation from center |
+  |---|---|---|---|
+  | B0 | 1 | (−3.85, −4.78) | **6.14 µm** |
+  | B1 | 2 | (0, 0) | 0.0000 µm |
+  | B2 | 4 | (0, 0) | 0.0000 µm |
+  | B3 | 8 | (0, 0) | 0.0000 µm |
+  | B4 | 16 | (0, 0) | 0.0000 µm |
+  | B5 | 32 | (0, 0) | 0.0000 µm |
+  | B6 | 64 | (0, 0) | 0.0000 µm |
+  | B7 | 128 | (0, 0) | 0.0000 µm |
+  | DUMMY | 69 | (+0.056, +0.069) | 0.089 µm |
+
+  B1..B7 are exactly zero (float-precision, by the point-symmetry construction above). B0's 6.14µm offset is the smallest physically achievable on a 16×16 grid (no cell sits exactly at the geometric center — the center falls between 4 grid cells at `(row,col)=(7/8,7/8)`; B0 occupies the closest one) — an expected, acceptable residual for the lowest-weight bit, matching the task brief's expectation.
+
+- **All-identical-cell check:** confirmed via `klayout.db` on the written `cap_array.gds` — layout contains exactly 2 cells (`dac_cap_unit`, `cap_array`), the top cell (`cap_array`) has **zero own shapes** (pure hierarchy) and **324 instances, all referencing `dac_cap_unit`** (255 active bit-assigned + 69 dummy) — no per-position geometry was redrawn anywhere. Array bbox: `[-68.55,-85.29]` to `[68.55,85.29]` µm (137.1 × 170.58 µm), centered at the origin (confirms the placement's symmetry, not just the per-bit centroids).
+
+- **Array-level DRC (`run_dac_drc.sh`, variant=D, placed-but-unrouted `cap_array.gds`):** **0 violations, 660 rule categories executed** (same category count as the single-cell run — same rule deck/variant), full untruncated run (`main DRC Total Run time 1.33s`, `Klayout DRC run is clean`). Report: `dac/layout/drc_run_cap_array/cap_array_main.lyrdb` (not committed, same regenerable-run-directory convention as `drc_run_cu_cell`/`lvs_run_cu_cell`).
+  - **Gotcha (do not re-derive):** `run_dac_drc.sh` takes `$RUN_DIR` and `cd`s into it before invoking `run_drc.py --path="$GDS_PATH"` — if `$GDS_PATH` is passed as a *relative* path (relative to the original cwd), it silently fails to resolve after the `cd` (`ERROR: The input GDS file path ... doesn't exist`). Must pass an **absolute** `$GDS_PATH` (and, for consistency, absolute `$RUN_DIR`) when invoking from a different starting cwd than the unit-cell runs used.
+
+- **Commit:** `dac: common-centroid cap array placement + dummy ring (centroid-verified), DRC clean`. `PROGRESS.md` updated (DAC-6 row).
+
+>>> STOP HERE per task instructions — placement/centroid/DRC checkpoint only. Routing (STEP B: DAC_TOP mesh, B0..B7 bit rails, ground ties for the dummy ring, then array-level DRC+LVS against a caps-only reference) is a separate session. <<<
