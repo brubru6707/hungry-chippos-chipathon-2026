@@ -293,3 +293,33 @@ NEXT STEP: INL/DNL sweep over 256 codes on the top-plate-sampling structure (now
 - **Small mid-code ripple (codes ~130-170, visible in the figures):** ≤0.01 LSB peak-to-peak, well inside spec — settling-residual artifact from simultaneous multi-bit transitions in that range, not a structural defect.
 
 NEXT STEP: Step 2 — capacitor mismatch analysis (the real linearity limit): check for a gf180 `cap_mim` statistical/Monte-Carlo model; if present, MC (N≥100) focused on the major-carry transitions (0x7F→0x80, 0x3F→0x40, 0xBF→0xC0); if absent, an analytical Pelgrom-based cap-matching budget for the 50fF/5µm×5µm unit cap vs the <0.5 LSB @ 8-bit requirement.
+
+## 2026-07-17 — Step 2a/2b: capacitor-mismatch Monte-Carlo INL/DNL analysis (PRIMARY, checkpoint)
+
+- **Branch:** `dac-cap-array`. New file: `designs/scripts/dac_mismatch_mc.py`; figures `dac/docs/figures/mc_dnl_inl_spread.png`, `dac/docs/figures/mc_max_inl_histogram.png`.
+
+- **Step 2a — matching data source:** `gf180mcuD` ships a Monte-Carlo term for `cap_mim` capacitance in `libs.tech/ngspice/sm141064.ngspice`, `.LIB mimcap_statistical` (~line 47750):
+  ```
+  mc_c_cox_2p0fF2 = agauss(0, 0.025, 3)
+  mc_c_cox_2p0fF  = mc_c_cox_2p0fF2 * sw_stat_global * cap_mc_skew
+  ```
+  applied to `c_c0` in every `cap_mim_2f0_*` subckt (`sm141064_mim.ngspice`) — the 2fF/µm² MIM option backing this design's `cap_mim_2f0fF` unit cell (50fF = 2fF/µm² × 5µm×5µm). `agauss(0, sigma, 3)`: sigma=0.025 (2.5%, 1-sigma; the "3" is a 3-sigma clip on the draw, not a sigma multiplier).
+  - **CAVEAT (important, do not re-derive):** this parameter is gated only by `sw_stat_global`. Grepped every `sw_stat_mismatch` reference in `sm141064.ngspice` (the PDK's own doc header at the top of `design.ngspice` defines `sw_stat_global`=die-to-die/lot process variation vs `sw_stat_mismatch`=intra-die local mismatch) — `sw_stat_mismatch` gates MOSFET `delvto`/`mulu0` and resistor `mis_r` terms throughout the deck, but **never appears in any `cap_mim_*` subckt**. So as literally written, `mc_c_cox_2p0fF` is a single draw shared by every `cap_mim` instance in one simulation run — a **global/process-corner-style** parameter, not local intra-die mismatch. No Pelgrom `A_C` coefficient or any other local-mismatch number for `cap_mim` exists anywhere else in this ciel-packaged PDK release (checked all READMEs/docs in the tree).
+  - **Resolution:** used the 2.5% global-variation sigma as a deliberately conservative proxy for the per-unit-cap local sigma(C)/C the task requires — real intra-die mismatch is normally several times smaller than global/lot spread, so this should overstate (not understate) the DAC's mismatch-driven INL/DNL. **sigma(C)/C for one 50fF (5µm×5µm) unit cap = 2.5% (1-sigma).**
+
+- **Step 2b — `designs/scripts/dac_mismatch_mc.py` (new):** analytical Monte Carlo directly on the charge-redistribution transfer function (no per-trial ngspice run — N≥1000 x 64µs transients would be far too slow). Transfer function derived and validated against the nominal sweep: `V(code) = VREF * C_code(code) / (C_total + C_p)`, VIN=0 fixed (matches `tb_inl_dnl.sch`'s DAC-only setup), `C_p`=20fF comparator placeholder, `VREF`=1.65V — closed-form FS span at code 255 = `1.65*12.75/12.77` = 1.6474V, matching the nominal sweep's measured 1.6465V and its "ratio measured/intended = 0.499" flag almost exactly, confirming the model.
+  - Mismatch: each binary cap `C_i` (bit i, weight `N_i=2^i` unit cells) modeled as the sum of `N_i` iid 50fF unit cells, each `~Normal(Cu, (0.025*Cu)^2)` — so `sigma(C_i)/C_i(ideal) = 0.025/sqrt(N_i)`, the standard 1/sqrt(N) averaging-down of a parallel unit-cell array (per task instructions).
+  - **N=5000 runs.** Per-run DNL/INL computed exactly as `extract_dnl_inl.py` does for the nominal sweep (endpoint-line referenced to code 0/255).
+
+  | metric | mean | sigma | worst-case (over 5000 runs) |
+  |---|---|---|---|
+  | max\|DNL\| [LSB] | 0.416 | 0.202 | **1.664** |
+  | max\|INL\| [LSB] | 0.314 | 0.114 | **0.880** |
+
+  - **Worst code:** DNL — code **128 (0x80)**, i.e. the **0x7F→0x80 MSB major carry**, in 50.7% of runs (the single most common worst-DNL location by a wide margin; the next-largest major carries 0x40→ and 0xC0→ show up as the next-tallest spikes in the DNL envelope plot, then the remaining 32/96/160/224 carries, all visible in `mc_dnl_inl_spread.png` — exactly the pattern predicted by the task brief). INL's worst code is much more spread out across runs (top code, 105/0x69, only 1.2% of runs) since INL is a whole-curve integral effect, not a single-transition effect like DNL.
+  - **YIELD (max\|DNL\|<0.5 LSB AND max\|INL\|<0.5 LSB): 71.52%.**
+  - **Figures:** `dac/docs/figures/mc_dnl_inl_spread.png` (DNL/INL vs code, 300 sampled run traces + 95% envelope band, spec lines) and `dac/docs/figures/mc_max_inl_histogram.png` (histogram of max\|INL\| per run, mean/spec lines marked, yield annotated).
+
+- **Read on the result:** with the conservative 2.5%-per-unit-cap sigma sourced from the PDK's global MC parameter, yield is 71.52% — the mean max|DNL| (0.416 LSB) already sits close to the 0.5 LSB spec, and the MSB major carry alone can push DNL past 1 LSB (worst-case 1.664 LSB) in unlucky draws. Because the true local-mismatch sigma is expected to be smaller than this proxy (see 2a caveat), this is a pessimistic bound, not necessarily the real silicon outcome — but as-is it does **not** clear 0.5 LSB with comfortable margin. Cu adequacy verdict and any required unit-cap upsizing to be finalized in Step 2d after the ngspice cross-check (2c, if budget allows).
+
+>>> CHECKPOINT reached — see chat response for full report. Steps 2c/2d not yet started. <<<
