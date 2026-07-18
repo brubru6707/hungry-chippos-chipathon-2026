@@ -38,19 +38,24 @@
 
 ## 3 · Capacitor DAC Block (DAC)
 
-> **Interface note (2026-07-10, from Sam's SAR design doc):** the SAR_LOGIC top-level's bottom row is 8 OR gates (NOR2+INV), one per bit, each driving one DAC switch high/low based on the sequencer + code-register state. DAC-1's schematic should plan for **8 single-ended digital switch-control pins** (one per cap) as the drive interface from the SAR controller — feeds into the INT-2 pin-contract table too.
+> **Interface note (2026-07-10, from Sam's SAR design doc):** the SAR_LOGIC top-level's bottom row is 8 OR gates (NOR2+INV), one per bit, each driving one DAC switch based on the sequencer + code-register state. The DAC exposes **8 single-ended digital switch-control pins** (one per cap) — feeds into the INT-2 pin-contract table too.
+
+> **Relocation note (2026-07-17):** the DAC now lives in a **self-contained top-level `dac/` folder** (`dac/schematic`, `dac/sim`, `dac/layout`), mirroring `comparator/`. The old `designs/libs/core_cap_dac/` and `designs/libs/tb_cap_dac/` scratch copies were deleted after the files were ported and verified. Running notes live in `dac/WORKLOG.md`.
 
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| DAC-1 | Binary-weighted 8-bit cap array schematic (C_u ≥ 50 fF) | Max | 🟡 Draft, unverified | `designs/libs/core_cap_dac/cap_array/cap_array.sch` — first-pass 8-row bottom-plate-switching array, hand-authored outside Xschem reusing Max's `unit_switch` + Emily's `inv1` + PDK `cap_mim_2f0fF`. **Not yet opened/simulated in Xschem — must be visually checked and netlisted before trusting.** See `docs/adc_glossary.md` for the DAC concept explainer. |
-| DAC-2 | Cap array symbol | Max | 🟡 Draft, unverified | `designs/libs/core_cap_dac/cap_array/cap_array.sym` — hand-authored 13-pin symbol (VIN, VREF, VDD, SAMPLE, B0-B7, DAC_TOP); can be regenerated cleanly via Xschem's "generate symbol from schematic" once cap_array.sch is confirmed working |
-| DAC-3 | 256×C_u switching & settling time testbench | Max | 🟢 Complete | `dac/sim/tb_major_carry.sch` — major-carry (0111_1111→1000_0000) Gate-2 settling testbench, connectivity-verified (all 8 caps share `DAC_TOP`, no floating ports). Supersedes the old first-pass `tb_cap_array.sch` (single-bit MSB-only, electrically disconnected — **deleted 2026-07-17**). |
-| DAC-3b *(ported)* | Max's unit-cell switch, relocated from `origin/max` into the `core_cap_dac` naming convention and reused (unmodified) inside `cap_array.sch` | Max | 🟢 Complete (as ported) | `designs/libs/core_cap_dac/unit_switch.sch`/`.sym` — original WIP branch (`origin/max`, last commit 2026-07-11) still has an untouched `tb_unit_capa.sch` if useful for reference. **⚠️ Heads-up:** that branch's stated next step was a *bootstrap* switch — schematic-review feedback explicitly advised against this for an 8-bit DAC ("unnecessarily increases design time without much benefit... a simple sized transmission gate should be a good start," see [Review Feedback](#review-feedback--open-items)). The unit_switch as ported here is already a simple 3-transistor pass-gate switch, not a bootstrap switch, so this concern is addressed for the DAC's own switches. |
-| DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT + PVT corners) | Max | 🟢 **PASS** | `dac/WORKLOG.md` (2026-07-17 entry), `VERIFICATION_PLAN.md` — TT: 1.77 ns. Full PVT sweep (5 process corners × 3 temps × 2 V_DD, 30 combos): worst case SS/125°C/2.97V settles in 2.78 ns, 37.2 ns margin to spec, err@40ns ≈ 0 mV in every corner. |
-| DAC-5 | Unit-cell layout with common-centroid placement (KLayout) | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cu_cell/cu_cell.gds` |
-| DAC-6 | Full array layout with dummy/fringe peripheral caps | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/cap_array.gds` |
-| DAC-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/drc/dac_drc.log` |
-| DAC-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `designs/libs/core_cap_dac/cap_array/lvs/dac_lvs.log` |
+| DAC-1 | Binary-weighted 8-bit cap array schematic (C_u ≥ 50 fF) | Bruno | 🟢 Complete | `dac/schematic/cap_array.sch` — 8-row binary-weighted bottom-plate array (C_u = 50 fF, weights 1–128). **Connectivity-verified in Xschem** (all 8 caps share `DAC_TOP`, no floating ports). ⚠️ The original hand-authored version had **cosmetic-only `lab=` text that netlisted as a fully disconnected array** — real `lab_wire` components were added and the netlist re-verified. Includes per-bit switch sizing (DAC-3b) + SAMPLE-gating (DAC-4b). Input sampling front-end being finalized as top-plate sampling (see SWITCH-4). |
+| DAC-2 | Cap array symbol | Bruno | 🟢 Complete | `dac/schematic/cap_array.sym` — 13-pin (VIN, VREF, VDD, SAMPLE, B0–B7, DAC_TOP). |
+| DAC-3 | 256×C_u switching & settling testbench | Bruno | 🟢 Complete | `dac/sim/tb_major_carry.sch` — major-carry (0111_1111→1000_0000) Gate-2 settling tb, connectivity-verified. Supersedes the old `tb_cap_array.sch` (single-bit, electrically disconnected — **deleted 2026-07-17**). |
+| DAC-3b | Unit-cell switch, ported + per-bit sized | Bruno | 🟢 Complete | `dac/schematic/unit_switch.sch`/`.sym` — simple 3-transistor NMOS pass-gate (no bootstrap), **originally authored by Max on `origin/max`**; ported into `dac/`, per-bit sized (W = 2ⁱ × 0.42 µm), and verified by us. A single unit-sized switch missed MSB settling by ~112× (276 ns); scaling W with cap weight holds τ constant → Gate 2 PASS. |
+| DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT + PVT corners) | Bruno | 🟢 **PASS** | `dac/WORKLOG.md`, `VERIFICATION_PLAN.md` — TT: 1.77 ns. Full PVT sweep (5 process × 3 temp × 2 V_DD = 30 combos); after the SAMPLE-gating fix, worst case **SS/125 °C/2.97 V settles in 3.82 ns (~36 ns margin)**, err@40ns ≈ 0 mV in every corner. |
+| DAC-4b | SAMPLE-gating — remove sampling-phase switch contention | Bruno | 🟢 Complete | `dac/schematic/cap_array.sch` + new `nand2`/`nor2` cells — bit drivers gated by SAMPLE so both switch arms open during sampling. Crowbar current cut from ~4–10 mA to pA; Gate-2 regression still PASS. |
+| DAC-4c | Sample-and-hold characterization (acquisition, hold droop, kT/C) | Bruno | 🟡 In Progress | `dac/sim/tb_sample_hold.sch` — hold droop negligible (~1e-7 mV/conversion); **kT/C noise ≈ 18 µV rms** (C ≈ 12.75 pF), ~360× below 0.5 LSB (Cu is matching-limited, not noise-limited). Acquisition passes at 0.3 V & 1.65 V but plain bottom-plate NMOS **fails above ~2.8 V** → moving to top-plate sampling with a sized TG (see SWITCH-4). |
+| DAC-4d | Support cells | Bruno | 🟡 In Progress | `dac/schematic/{inv1,nand2,nor2}.sch` complete; `tgate` (transmission-gate top-plate sample switch) in progress. `inv1` originally from Emily; `nand2`/`nor2`/`tgate` authored this session. |
+| DAC-5 | Unit-cell layout with common-centroid placement (KLayout) | TBD | ⚪ Not Started | `dac/layout/cu_cell.gds` |
+| DAC-6 | Full array layout with dummy/fringe peripheral caps | TBD | ⚪ Not Started | `dac/layout/cap_array.gds` |
+| DAC-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `dac/layout/drc/dac_drc.log` |
+| DAC-8 | Sub-block LVS clean (Netgen) | TBD | ⚪ Not Started | `dac/layout/lvs/dac_lvs.log` |
 
 ---
 
@@ -71,19 +76,17 @@
 
 ## 5 · Bootstrap Switch / Sample-and-Hold (SWITCH)
 
-> **Previously untracked:** this block was missing from the tracker entirely even though it's owned (per the team's schematic-review slide deck) and merged into `main`. Adding it now so it isn't invisible again.
-
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| SWITCH-1 | Bootstrapped switch schematic for the comparator/SAR sample-and-hold front end (pre-charge + gate-drive to V_DD + V_IN, constant V_GS ≈ 3.3 V) | Emily | 🟢 Complete | `designs/emily_testing/TB_bootstrap_switch.sch` (merged into `main` 2026-07-01) |
-| SWITCH-2 | Bootstrap switch testbench (ideal-inverter clock, transient) | Emily | 🟢 Complete | same file — transient plots confirm V_OUT tracks V_IN with negligible droop, constant gate overdrive each cycle |
-| SWITCH-3 | 3-way NMOS switch submodule (DAC-side: sample / ref / ground) | Mimi *(per team slide; file committed by Emily — confirm ownership)* | 🟢 Complete | `designs/emily_testing/TB_swtich2.sch` — real transistor-level switch (nfet3.3/pfet3.3 + inverter + cap_mim load), tested with temporary fake capacitors, confirmed correct grab of input during sampling + clean flip to ref/ground during the guessing phase. **Correction:** `switch3.sch` (same folder) is NOT this — it's an empty stub (3 voltage sources + a sim-control block, no transistors at all), don't mistake it for working switch content. |
-| SWITCH-4 | Integrate bootstrap/3-way switch into the real DAC cap array (replace fake test caps) | TBD | ⚪ Not Started | superseded for now — `cap_array.sch` (DAC-1, see below) uses Max's `unit_switch` instead, since it's already validated and directly reusable. See the open S/H architecture question in `docs/adc_glossary.md`. |
-| SWITCH-5 | S/H settling simulation with worst-case DAC load + comparator C_in (per reviewer feedback, see below) | TBD | ⚪ Not Started | — |
+| SWITCH-1 | Bootstrapped switch schematic (S/H front end, constant V_GS ≈ 3.3 V) | Emily | 🟢 Complete (concept) | `designs/emily_testing/TB_bootstrap_switch.sch`. **Evaluated by us (2026-07-17)** as the DAC's full-range top-plate sample switch and found unusable as built — its clock-boost inverter (`CLK_INV`) is powered from `VIN` instead of `VDD`, so the bootstrap gate overdrive collapses as VIN→VDD (fails above ~2.8 V). Fine as a demo, but not usable for full-range sampling without a power-rail fix. |
+| SWITCH-2 | Bootstrap switch testbench (ideal-inverter clock, transient) | Emily | 🟢 Complete | same file — tracks V_IN at low/mid input; see SWITCH-1 note for the near-rail limitation. |
+| SWITCH-3 | 3-way NMOS switch submodule (sample / ref / ground) | Mimi *(file committed by Emily — confirm ownership)* | 🟢 Complete | `designs/emily_testing/TB_swtich2.sch`. ⚠️ `switch3.sch` (same folder) is an empty stub — not this. |
+| SWITCH-4 | DAC sample switch — architecture + integration | Bruno | 🟡 In Progress | **Resolved (2026-07-17): top-plate sampling.** One full-range sample switch on `DAC_TOP`; bottom plates just toggle VREF/GND. Implemented as a **sized transmission gate** (`dac/schematic/tgate.sch`, in progress), **not** a bootstrap — the TG's complementary NMOS/PMOS avoid the single-polarity near-rail collapse that killed both the plain NMOS and Emily's bootstrap. |
+| SWITCH-5 | S/H settling sim with worst-case DAC load + comparator C_in | Bruno | 🟡 In Progress | `dac/sim/tb_sample_hold.sch` — loads the full 12.77 pF array + 20 fF comparator cap. Hold droop + kT/C PASS; full-range acquisition (incl. 3.0 V/3.2 V) being verified with the TG top switch. |
 
-**Note on Mimi:** her `mimi-test` branch has no commits beyond what's already in `main` — the 3-way switch her slide credits her with lives in Emily's `emily_testing/` folder. Worth checking with Mimi whether she has separate unpushed work, or whether this was a joint/miscredited item.
+**Note on Mimi:** her `mimi-test` branch has no commits beyond `main` — worth checking whether she has unpushed work or this was a joint/miscredited item.
 
-**Open architecture question:** the team currently has two competing S/H schemes that haven't been reconciled — Emily's bootstrap switch (top-plate sampling) vs. Max's per-bit `unit_switch` (bottom-plate sampling, used directly in the new `cap_array.sch`). Only one should make it into the real chip. See `docs/adc_glossary.md` for the tradeoff.
+**Architecture question — RESOLVED (2026-07-17):** the DAC uses **top-plate sampling with a sized transmission gate** as the single full-range sample switch. Both the bottom-plate-only NMOS scheme and Emily's bootstrap switch fail to acquire near the rail (~2.8 V ceiling), so neither is used for full-range sampling. See `docs/adc_glossary.md`.
 
 ---
 
@@ -113,10 +116,10 @@
 
 | Item | Status |
 |------|--------|
-| Define measurable target specs: Resolution, ENOB, conversion rate, DNL, INL | ⚪ Not defined yet — currently only DNL/INL gates (Gate 3/4) exist; no target ENOB or conversion-rate number is written down anywhere |
-| S/H simulation must load worst-case DAC switch config + comparator input cap, not an ideal/light load | ⚪ Not started (SWITCH-5 above) |
-| DAC capacitor sizing should be justified via kT/C noise budget, not just "C_u ≥ 50 fF" as a guess | ⚪ Not started |
-| Avoid a bootstrap switch for the 8-bit DAC specifically — a sized transmission gate is sufficient and cheaper on schedule | 🔴 At risk — Max's branch's stated next step is a DAC bootstrap switch (see DAC-3b above) |
+| Define measurable target specs: Resolution, ENOB, conversion rate, DNL, INL | 🟡 Partial — full-scale (3.3 V) and 1 LSB (12.9 mV) now fixed and recorded in `VERIFICATION_PLAN.md`; DNL/INL gates (Gate 3/4) exist. Still missing: target ENOB and a conversion-rate/sample-rate number (`PROGRESS.md` says "Not defined yet"). |
+| S/H simulation must load worst-case DAC switch config + comparator input cap, not an ideal/light load | 🟡 In Progress — `dac/sim/tb_sample_hold.sch` loads the full 12.77 pF array + 20 fF comparator cap; hold droop + kT/C pass, full-range acquisition being verified (SWITCH-5). |
+| DAC capacitor sizing should be justified via kT/C noise budget, not just "C_u ≥ 50 fF" as a guess | 🟢 Done — kT/C ≈ 18 µV rms for C ≈ 12.75 pF, ~360× below 0.5 LSB. C_u is matching-limited, not noise-limited. |
+| Avoid a bootstrap switch for the 8-bit DAC specifically — a sized transmission gate is sufficient and cheaper on schedule | 🟢 Addressed — array switches are per-bit sized NMOS pass-gates; the single full-range sample switch is a sized transmission gate. No bootstrap anywhere. Emily's bootstrap was evaluated and rejected. |
 | Comparator offset should be reduced via proper buffer/latch sizing (gm/Id-annotated), not brute-force area scaling | 🟢 Addressed — COMP-5 already treats offset as a calibratable DC shift, no upsizing done |
 | Foundry mismatch data assumes perfect common-centroid layout; current comparator layout will have worse real offset than MC predicts | ⚪ Not accounted for in COMP layout yet |
 | Keep an overall project tracker (this file) up to date across all blocks | 🟡 In progress — this update adds the previously-missing SWITCH and COMP-ALT blocks |
