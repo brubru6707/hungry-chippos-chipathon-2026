@@ -50,8 +50,9 @@
 | DAC-3b | Unit-cell switch, ported + per-bit sized | Bruno | 🟢 Complete | `dac/schematic/unit_switch.sch`/`.sym` — simple 3-transistor NMOS pass-gate (no bootstrap), **originally authored by Max on `origin/max`**; ported into `dac/`, per-bit sized (W = 2ⁱ × 0.42 µm), and verified by us. A single unit-sized switch missed MSB settling by ~112× (276 ns); scaling W with cap weight holds τ constant → Gate 2 PASS. |
 | DAC-4 | **Gate 2** — 0.5 LSB settling within 40 ns (TT + PVT corners) | Bruno | 🟢 **PASS** | `dac/WORKLOG.md`, `VERIFICATION_PLAN.md` — TT: 1.77 ns. Full PVT sweep (5 process × 3 temp × 2 V_DD = 30 combos); after the SAMPLE-gating fix, worst case **SS/125 °C/2.97 V settles in 3.82 ns (~36 ns margin)**, err@40ns ≈ 0 mV in every corner. |
 | DAC-4b | SAMPLE-gating — remove sampling-phase switch contention | Bruno | 🟢 Complete | `dac/schematic/cap_array.sch` + new `nand2`/`nor2` cells — bit drivers gated by SAMPLE so both switch arms open during sampling. Crowbar current cut from ~4–10 mA to pA; Gate-2 regression still PASS. |
-| DAC-4c | Sample-and-hold characterization (acquisition, hold droop, kT/C) | Bruno | 🟡 In Progress | `dac/sim/tb_sample_hold.sch` — hold droop negligible (~1e-7 mV/conversion); **kT/C noise ≈ 18 µV rms** (C ≈ 12.75 pF), ~360× below 0.5 LSB (Cu is matching-limited, not noise-limited). Acquisition passes at 0.3 V & 1.65 V but plain bottom-plate NMOS **fails above ~2.8 V** → moving to top-plate sampling with a sized TG (see SWITCH-4). |
-| DAC-4d | Support cells | Bruno | 🟡 In Progress | `dac/schematic/{inv1,nand2,nor2}.sch` complete; `tgate` (transmission-gate top-plate sample switch) in progress. `inv1` originally from Emily; `nand2`/`nor2`/`tgate` authored this session. |
+| DAC-4c | Sample-and-hold characterization (acquisition, hold droop, kT/C) | Bruno | 🟢 Complete | `dac/sim/tb_sample_hold.sch`, `dac/WORKLOG.md` — full-range acquisition now PASSES with the TG top switch (3.0 V settles 78.6 ns worst-corner, 3.2 V 73.7 ns, sub-mV error). Hold droop negligible; kT/C ≈ 18 µV rms. Testbench needed a `.ic`/`uic` fix (was pre-charging DAC_TOP via a DC-op-point artifact). |
+| DAC-4d | Support cells + top-plate sample switch | Bruno | 🟢 Complete | `dac/schematic/{inv1,nand2,nor2,tgate}.sch` — TG top-plate switch sized nfet 4 µm / pfet 8 µm (L = 0.28 µm), Ron ≈ 294–1098 Ω. Sizing chosen to cap charge injection at 0.18 LSB (vs 0.26 LSB for a faster 6/12 µm option). |
+| DAC-9 | 256-code nominal INL/DNL transfer sweep (DAC-only, TT) | Bruno | 🟢 Complete | `dac/sim/tb_inl_dnl.sch`, `designs/scripts/extract_dnl_inl.py`, `dac/docs/figures/{dnl,inl}_vs_code.png` — one 64 µs stepped transient, fixed VIN=0 sample input. Nominal (perfectly-matched schematic caps): max\|DNL\|=0.007 LSB (code 161), max\|INL\|=0.008 LSB endpoint / 0.006 LSB best-fit — monotonic, no missing codes. **Measured FS span = 1.6465 V ≈ VREF (1.65 V), not the 3.3 V rail** — the bottom-plate reference is VREF, so the DAC's native full-scale is gain-mismatched ~2× vs the 3.3 V spec (flagged, not a linearity defect). Cap-mismatch (the real linearity limit) is Step 2, not yet run. |
 | DAC-5 | Unit-cell layout with common-centroid placement (KLayout) | TBD | ⚪ Not Started | `dac/layout/cu_cell.gds` |
 | DAC-6 | Full array layout with dummy/fringe peripheral caps | TBD | ⚪ Not Started | `dac/layout/cap_array.gds` |
 | DAC-7 | Sub-block DRC clean | TBD | ⚪ Not Started | `dac/layout/drc/dac_drc.log` |
@@ -81,12 +82,12 @@
 | SWITCH-1 | Bootstrapped switch schematic (S/H front end, constant V_GS ≈ 3.3 V) | Emily | 🟢 Complete (concept) | `designs/emily_testing/TB_bootstrap_switch.sch`. **Evaluated by us (2026-07-17)** as the DAC's full-range top-plate sample switch and found unusable as built — its clock-boost inverter (`CLK_INV`) is powered from `VIN` instead of `VDD`, so the bootstrap gate overdrive collapses as VIN→VDD (fails above ~2.8 V). Fine as a demo, but not usable for full-range sampling without a power-rail fix. |
 | SWITCH-2 | Bootstrap switch testbench (ideal-inverter clock, transient) | Emily | 🟢 Complete | same file — tracks V_IN at low/mid input; see SWITCH-1 note for the near-rail limitation. |
 | SWITCH-3 | 3-way NMOS switch submodule (sample / ref / ground) | Mimi *(file committed by Emily — confirm ownership)* | 🟢 Complete | `designs/emily_testing/TB_swtich2.sch`. ⚠️ `switch3.sch` (same folder) is an empty stub — not this. |
-| SWITCH-4 | DAC sample switch — architecture + integration | Bruno | 🟡 In Progress | **Resolved (2026-07-17): top-plate sampling.** One full-range sample switch on `DAC_TOP`; bottom plates just toggle VREF/GND. Implemented as a **sized transmission gate** (`dac/schematic/tgate.sch`, in progress), **not** a bootstrap — the TG's complementary NMOS/PMOS avoid the single-polarity near-rail collapse that killed both the plain NMOS and Emily's bootstrap. |
-| SWITCH-5 | S/H settling sim with worst-case DAC load + comparator C_in | Bruno | 🟡 In Progress | `dac/sim/tb_sample_hold.sch` — loads the full 12.77 pF array + 20 fF comparator cap. Hold droop + kT/C PASS; full-range acquisition (incl. 3.0 V/3.2 V) being verified with the TG top switch. |
+| SWITCH-4 | DAC sample switch — architecture + integration | Bruno | 🟢 Complete | **Top-plate sampling** integrated (commit 4029408): single full-range **sized transmission gate** (nfet 4 µm / pfet 8 µm) on `DAC_TOP`, gated by `SAMPLE`/`SAMPLE_N`; bottom plates toggle VREF/GND. Connectivity verified (8 caps on `DAC_TOP`, no floats). |
+| SWITCH-5 | S/H settling sim with worst-case DAC load + comparator C_in | Bruno | 🟢 Complete | `dac/sim/tb_sample_hold.sch` — full 12.77 pF array + 20 fF comparator cap. Full-range acquisition PASS (0.3 / 1.65 / 3.0 / 3.2 V), worst-corner error <0.02 mV. Charge injection ≤0.18 LSB — largest single error term, watch in INL/DNL. |
 
 **Note on Mimi:** her `mimi-test` branch has no commits beyond `main` — worth checking whether she has unpushed work or this was a joint/miscredited item.
 
-**Architecture question — RESOLVED (2026-07-17):** the DAC uses **top-plate sampling with a sized transmission gate** as the single full-range sample switch. Both the bottom-plate-only NMOS scheme and Emily's bootstrap switch fail to acquire near the rail (~2.8 V ceiling), so neither is used for full-range sampling. See `docs/adc_glossary.md`.
+**Architecture question — RESOLVED + VERIFIED (2026-07-17):** the DAC uses **top-plate sampling with a sized transmission gate** as the single full-range sample switch. Silicon-realistic worst-load simulation now passes full-range acquisition; the bottom-plate-only NMOS scheme and Emily's bootstrap switch both failed near the rail (~2.8 V ceiling), so neither is used for full-range sampling. See `docs/adc_glossary.md`.
 
 ---
 
@@ -102,7 +103,7 @@
 
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
-| REP-1 | Python script: parse ngspice `.raw` → DNL/INL | Bruno | ⚪ Not Started | `designs/scripts/extract_dnl_inl.py` |
+| REP-1 | Python script: parse ngspice `.raw` → DNL/INL | Bruno | 🟢 Complete | `designs/scripts/extract_dnl_inl.py` — reads the `tb_inl_dnl.sch` transient CSV, reports FS span, DNL, INL (endpoint + best-fit), monotonicity/missing-code checks, writes the DNL/INL-vs-code figures. |
 | REP-2 | Python script: FFT spectrum → ENOB / SNDR | Bruno | ⚪ Not Started | `designs/scripts/calc_enob.py` |
 | REP-3 | Master simulation runner script | Bruno | ⚪ Not Started | `designs/scripts/run_all_sims.sh` |
 | REP-4 | Reproducibility environment doc | Bruno | ⚪ Not Started | `REPRODUCIBILITY.md` |
@@ -117,7 +118,7 @@
 | Item | Status |
 |------|--------|
 | Define measurable target specs: Resolution, ENOB, conversion rate, DNL, INL | 🟡 Partial — full-scale (3.3 V) and 1 LSB (12.9 mV) now fixed and recorded in `VERIFICATION_PLAN.md`; DNL/INL gates (Gate 3/4) exist. Still missing: target ENOB and a conversion-rate/sample-rate number (`PROGRESS.md` says "Not defined yet"). |
-| S/H simulation must load worst-case DAC switch config + comparator input cap, not an ideal/light load | 🟡 In Progress — `dac/sim/tb_sample_hold.sch` loads the full 12.77 pF array + 20 fF comparator cap; hold droop + kT/C pass, full-range acquisition being verified (SWITCH-5). |
+| S/H simulation must load worst-case DAC switch config + comparator input cap, not an ideal/light load | 🟢 Done — `tb_sample_hold.sch` loads the full 12.77 pF array + 20 fF comparator cap; full-range acquisition PASS, worst-corner error <0.02 mV. |
 | DAC capacitor sizing should be justified via kT/C noise budget, not just "C_u ≥ 50 fF" as a guess | 🟢 Done — kT/C ≈ 18 µV rms for C ≈ 12.75 pF, ~360× below 0.5 LSB. C_u is matching-limited, not noise-limited. |
 | Avoid a bootstrap switch for the 8-bit DAC specifically — a sized transmission gate is sufficient and cheaper on schedule | 🟢 Addressed — array switches are per-bit sized NMOS pass-gates; the single full-range sample switch is a sized transmission gate. No bootstrap anywhere. Emily's bootstrap was evaluated and rejected. |
 | Comparator offset should be reduced via proper buffer/latch sizing (gm/Id-annotated), not brute-force area scaling | 🟢 Addressed — COMP-5 already treats offset as a calibratable DC shift, no upsizing done |
@@ -132,6 +133,6 @@
 |------|-----------|-------|--------|
 | Gate 1 | σ_offset characterized + delay < 2 ns @ TT (MC N≥100) | Comparator | 🟡 |
 | Gate 2 | DAC settling ≤ 0.5 LSB within 40 ns @ TT | Cap DAC | 🟢 PASS (TT + full PVT sweep, worst case 2.78 ns / 37.2 ns margin — see `VERIFICATION_PLAN.md`) |
-| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | ⚪ |
+| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🟡 DAC-only nominal sweep PASS (max\|DNL\|=0.007 LSB, max\|INL\|=0.008 LSB, see DAC-9) — real linearity limit is cap mismatch (Step 2, not yet run) and full ADC-level (with comparator + sequencing) integration is still ⚪ |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
 | Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |

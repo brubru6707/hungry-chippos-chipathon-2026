@@ -3,6 +3,9 @@
 # Ignore all spice simulation results
 *.raw
 
+# Ignore raw transient dumps (wrdata CSVs) -- regenerate from the testbench
+dac/sim/*_tran.csv
+
 # Ignore all log files
 *.log
 
