@@ -1,0 +1,92 @@
+* Top-plate switch device evaluation: Emily's bootstrap switch
+* (designs/emily_testing/TB_bootstrap_switch.sch + switch3.sch) driving the
+* REAL DAC_TOP load, as required before deciding the Step 2 top-plate
+* sampling integration (see dac/WORKLOG.md, Brief #9 checkpoint).
+*
+* This is a raw ngspice deck, not an xschem .sch, because
+* TB_bootstrap_switch.sch is authored as a monolithic testbench (embedded
+* VIN/VCLK/VDD sources wired directly to internal nodes, no ipin/opin ports)
+* -- there is no reusable subckt to instantiate from xschem as-is. The
+* device-level netlist below (subckt bootstrap_sw) was extracted verbatim
+* from xschem's own flattened output
+* (/headless/.xschem/simulations/TB_bootstrap_switch.spice, generated via
+* `cd /foss/designs && xschem -q -x -n designs/emily_testing/TB_bootstrap_switch.sch`)
+* and wrapped in ports (VIN VOUT CLK VDD DVSS) so it could be loaded with the
+* real cap_array capacitance instead of the original's tiny 2fF test cap.
+*
+* REAL LOAD MODEL: during SAMPLE, the new topology (WORKLOG Brief #9 spec)
+* drives every bottom plate to GND, so from DAC_TOP's perspective each of the
+* 8 binary-weighted caps sits simply from DAC_TOP to GND. Total load is
+* therefore a single lumped 255*50fF + 20fF(comparator placeholder) = 12.77pF
+* capacitor -- equivalent to the real cap_array for this switch-only eval,
+* without needing the full control-logic subckt.
+*
+* IMPORTANT CORRECTNESS NOTE (found the hard way -- see worklog): the CLK_INV
+* inverter (x1 in Emily's file) is powered from VIN, not VDD (DVDD=VIN). This
+* looks like a bug on first read and an earlier pass "fixed" it to DVDD=VDD --
+* that fix actually BREAKS bootstrapping entirely (VBS never leaves ~0V, the
+* switch never turns on at any VIN). The VIN-referenced supply is load-bearing
+* for this topology; do not "fix" it if reusing this subckt elsewhere.
+*
+* VIN_DC is swept 0.3 / 1.65 / 3.0 / 3.2 V by text substitution on this file
+* (same method as the PVT corner sweep in the 2026-07-17 Gate-2 worklog
+* entry), one ngspice -b run per value.
+
+.param mim_corner_1p0fF=1 mim_corner_1p5fF=1 mim_corner_2p0fF=1
+.param mc_c_cox_1p0fF=0 mc_c_cox_1p5fF=0 mc_c_cox_2p0fF=0
+.param var_vth=0 var_k=0
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.options savecurrents
+
+.subckt inv1 DVDD vin vout DVSS
+XM1 vout vin DVDD DVDD pfet_03v3 L=0.3u W=1.7u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 vout vin DVSS DVSS nfet_03v3 L=0.3u W=0.85u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+.subckt bootstrap_sw VIN VOUT CLK VDD DVSS
+XM1 net2 VDD VBS DVSS nfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 DVSS CLK net2 DVSS nfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 DVSS CLK net3 DVSS nfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM5 VIN VBS net1 DVSS nfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM6 VOUT VBS VIN DVSS nfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM7 VDD VBS Vc VDD pfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM8 VBS CLK_INV Vc Vc pfet_03v3 L=0.28u W=0.22u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XC2 Vc net1 cap_mim_2f0fF c_width=10u c_length=10u
+Xinv VIN CLK CLK_INV DVSS inv1
+.ends
+
+V_VDD VDD 0 3.3
+* CLK: HOLD (switch open) 0-200n, then SAMPLE (switch closed) for 4.8us so
+* even a slow-settling switch has time to show its true final value.
+V_CLK CLK 0 pulse(3.3 0 200n 1n 1n 4.8u 10u)
+.param VIN_DC=1.65
+V_VIN VIN 0 dc VIN_DC
+
+Xsw VIN VOUT CLK VDD 0 bootstrap_sw
+Cload VOUT 0 12.77p
+
+.control
+save all
+tran 1n 5.2u
+meas tran v_final FIND v(VOUT) AT=5.19u
+let target = VIN_DC
+let err_final_mv = (v_final - target)*1000
+meas tran t_settle_hi WHEN v(VOUT)=(target-0.00645) CROSS=LAST
+meas tran v_before_open FIND v(VOUT) AT=4.999u
+meas tran v_after_open FIND v(VOUT) AT=5.005u
+let dv_inject_mv = (v_after_open - v_before_open)*1000
+print v_final err_final_mv t_settle_hi dv_inject_mv
+.endc
+.GLOBAL VDD
+.end
