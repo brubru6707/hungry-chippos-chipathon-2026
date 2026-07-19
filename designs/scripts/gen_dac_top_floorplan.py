@@ -78,6 +78,11 @@ SAMPLE_TRUNK_Y = -105.0
 TG_PINS = {
     "sample_n": (88.33, -7.471, 2), "sample": (106.33, -8.08, 2),
     "vin": (97.00, -8.271, 3), "dac_top": (105.79, -8.98, 4),
+    # DVDD is the pfet nwell-tap pin: a narrow M2 strip, bbox
+    # (89.425, 3.805)..(89.815, 9.650) at top level (extracted, not
+    # assumed).  The label itself sits on the M1 purpose but the
+    # accessible copper at that point is the M2 strip.
+    "dvdd": (89.62, 9.40, 2),
 }
 INV1_PINS = {
     "vdd": (111.77, 21.79, 2), "gnd": (111.79, 11.518, 2),
@@ -278,6 +283,29 @@ def route_sample_n_tg_tap(top, layers, vias):
     _wire(top, m2, sx, sy, SAMPLE_STACK_X, sy)
     _via_stack(top, layers, vias, SAMPLE_STACK_X, sy, 2, 4)
     _wire(top, m4, SAMPLE_STACK_X, sy, SAMPLE_STACK_X, SAMPLE_TRUNK_Y)
+
+
+def route_tg_dvdd(top, layers, vias):
+    """TG pfet nwell-tap (DVDD) -> VDD M5 spine.
+
+    The tap pin is a 0.39um-wide M2 strip whose top edge is the tgate cell
+    edge (y=9.65).  The trunk stays on the pin's own layer (M2), leaving
+    the cell straight up at the pin's center x -- the only tgate M2 within
+    1um of the pin is the pin strip itself (probed, see WORKLOG).  The
+    M2->M5 riser waits until y=16, clear of the cell, then mirrors
+    route_supply's discipline: 0.4um via stack + 2um M5 pour + 2um M5 bar
+    to the spine.  x=89.62 is an empty corridor: right of cap_array
+    (bbox ends 69.19), left of the SAMPLE/SAMPLE_N/DAC_TOP lanes
+    (x>=109), and no other M5 exists between the pour and the spine.
+    """
+    m2, m5 = layers[2], layers[5]
+    px, py, _ = TG_PINS["dvdd"]
+    riser_y = 16.0
+    _wire(top, m2, px, py, px, riser_y)
+    _via_stack(top, layers, vias, px, riser_y, 2, 5)
+    half = SUPPLY_POUR_W / 2
+    top.shapes(m5).insert(_box(px - half, riser_y - half, px + half, riser_y + half))
+    _wire(top, m5, px, riser_y, px, VDD_SPINE_Y, SUPPLY_POUR_W)
 
 
 def route_globals(top, layers, vias):
@@ -494,6 +522,7 @@ def main():
     route_sample_n_tg_tap(top, layers, vias)
     _wire(top, layers[4], SAMPLE_STACK_X, SAMPLE_TRUNK_Y, DETOUR_X_0, SAMPLE_TRUNK_Y)
     route_globals(top, layers, vias)
+    route_tg_dvdd(top, layers, vias)
 
     # Bit 7 uses its own M4 dogleg; the other bits use the established
     # RAIL_Y-18 jog assignment.

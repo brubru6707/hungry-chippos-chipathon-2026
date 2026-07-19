@@ -40,6 +40,8 @@ RAIL_X = -62.85
 TG = {
     "sample_n": ((88.33, -7.471), 2), "sample": ((106.33, -8.08), 2),
     "vin": ((97.00, -8.271), 3), "dac_top": ((105.79, -8.98), 4),
+    # pfet nwell-tap pin: narrow M2 strip (89.425,3.805)..(89.815,9.650).
+    "dvdd": ((89.62, 9.40), 2),
 }
 INV1 = {
     "vdd": ((111.77, 21.79), 2), "gnd": ((111.79, 11.518), 2),
@@ -179,6 +181,7 @@ global_checks = [
     ("TG DAC_TOP terminal", TG["dac_top"], "DAC_TOP M5 mesh", DAC_TOP_MESH),
     ("inv1 VDD", INV1["vdd"], "VDD backbone", VDD_BACKBONE),
     ("inv1 0", INV1["gnd"], "GND backbone", GND_BACKBONE),
+    ("TG DVDD nwell-tap", TG["dvdd"], "VDD backbone", VDD_BACKBONE),
 ]
 for name_a, (pt_a, la), name_b, (pt_b, lb) in global_checks:
     ca, cb = comp_of(*pt_a, la), comp_of(*pt_b, lb)
