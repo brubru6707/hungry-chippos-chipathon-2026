@@ -41,6 +41,18 @@ top = layout.top_cell()
 
 METAL = {1: (34, 0), 2: (36, 0), 3: (42, 0), 4: (46, 0), 5: (81, 0)}
 VIA = {1: (35, 0), 2: (38, 0), 3: (40, 0), 4: (41, 0)}  # via{n} joins metal{n}<->metal{n+1}
+# A via4 cut inside FuseTop is the MIM top-plate contact, not an M4--M5
+# interconnect.  The Metal4 bottom electrode geometrically lies under that
+# plate, so treating such cuts as ordinary vias would short every bottom
+# rail to the DAC_TOP M5 mesh in this geometry-only model.
+FUSETOP = (75, 0)
+# A cut is a connection only when it is actually enclosed by both of its
+# adjacent metals.  In particular, do *not* infer a connection merely from
+# an upper metal polygon passing above a lower-metal route.  10 nm is the
+# smallest relevant generic enclosure in the 5LM deck and is deliberately
+# below every route pad used by this generator (0.40 um pads on 0.26 um
+# cuts); the PDK DRC remains the authority for the full rule set.
+MIN_CUT_ENC_UM = 0.01
 
 
 def region(layer_num, datatype):
@@ -52,6 +64,7 @@ def region(layer_num, datatype):
 
 metal_regions = {m: region(*ld) for m, ld in METAL.items()}
 via_regions = {v: region(*ld) for v, ld in VIA.items()}
+fusetop_region = region(*FUSETOP)
 
 parent = {}
 
@@ -74,14 +87,23 @@ for m in polys:
     for i in range(len(polys[m])):
         parent[(m, i)] = (m, i)
 
+def enclosed_hits(cut, metal_polys):
+    """Return polygons that legally enclose *cut*, not ones it merely touches."""
+    cut_region = db.Region(cut)
+    inset = int(round(MIN_CUT_ENC_UM / DBU))
+    return [i for i, poly in enumerate(metal_polys)
+            if cut_region.inside(db.Region(poly).sized(-inset))]
+
+
 for v, vr in via_regions.items():
     low, high = v, v + 1
     if low not in polys or high not in polys:
         continue
     for cut in vr.each_merged():
-        cut_region = db.Region(cut)
-        low_hits = [i for i, p in enumerate(polys[low]) if not cut_region.and_(db.Region(p)).is_empty()]
-        high_hits = [i for i, p in enumerate(polys[high]) if not cut_region.and_(db.Region(p)).is_empty()]
+        if v == 4 and not db.Region(cut).and_(fusetop_region).is_empty():
+            continue
+        low_hits = enclosed_hits(cut, polys[low])
+        high_hits = enclosed_hits(cut, polys[high])
         for li in low_hits:
             for hi in high_hits:
                 union((low, li), (high, hi))
@@ -93,6 +115,21 @@ def comp_of(x_um, y_um, metal_level):
         if p.inside(pt):
             return find((metal_level, i))
     return None
+
+
+if "--pristine-cap-array" in sys.argv:
+    # The routed array's eight M2 backbone rows are accessible through its
+    # center at x=0.  This mode intentionally has no top-level routing or
+    # labels in scope: it is the regression for the cap-array false merge.
+    rail_components = {f"B{bit}": comp_of(0.0, RAIL_Y[bit], 2)
+                       for bit in range(8)}
+    print("=== PRISTINE CAP_ARRAY RAIL DISTINCTNESS ===")
+    for name, comp in rail_components.items():
+        print(f"  {name} rail @ (0.0, {RAIL_Y[int(name[1:])]:.2f}) M2: comp={comp}")
+    valid = all(comp is not None for comp in rail_components.values())
+    distinct = len(set(rail_components.values())) == 8
+    print("  8 distinct rail components: " + ("PASS" if valid and distinct else "FAIL"))
+    sys.exit(0 if valid and distinct else 1)
 
 
 # ---------------------------------------------------------------------

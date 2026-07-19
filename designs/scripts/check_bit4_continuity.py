@@ -21,6 +21,12 @@ top = layout.top_cell()
 
 METAL = {1: (34, 0), 2: (36, 0), 3: (42, 0), 4: (46, 0), 5: (81, 0)}
 VIA = {1: (35, 0), 2: (38, 0), 3: (40, 0), 4: (41, 0)}  # via{n} joins metal{n}<->metal{n+1}
+# Via4 cuts inside FuseTop are MIM top-plate contacts, not M4--M5 vias.
+FUSETOP = (75, 0)
+# A cut is conductive only when both adjacent metals enclose it.  Bare
+# overlap between unrelated metal layers (notably the M5 DAC_TOP mesh above
+# M2 rails) is not a via and must never join geometric components.
+MIN_CUT_ENC_UM = 0.01
 
 def region(layer_num, datatype):
     li = layout.layer(layer_num, datatype)
@@ -30,6 +36,7 @@ def region(layer_num, datatype):
 
 metal_regions = {m: region(*ld) for m, ld in METAL.items()}
 via_regions = {v: region(*ld) for v, ld in VIA.items()}
+fusetop_region = region(*FUSETOP)
 
 # Union-Find over (metal_level, polygon_index) nodes.
 parent = {}
@@ -48,14 +55,22 @@ for m in polys:
     for i in range(len(polys[m])):
         parent[(m, i)] = (m, i)
 
+def enclosed_hits(cut, metal_polys):
+    cut_region = db.Region(cut)
+    inset = int(round(MIN_CUT_ENC_UM / DBU))
+    return [i for i, poly in enumerate(metal_polys)
+            if cut_region.inside(db.Region(poly).sized(-inset))]
+
+
 for v, vr in via_regions.items():
     low, high = v, v + 1
     if low not in polys or high not in polys:
         continue
     for cut in vr.each_merged():
-        cut_region = db.Region(cut)
-        low_hits = [i for i, p in enumerate(polys[low]) if not cut_region.and_(db.Region(p)).is_empty()]
-        high_hits = [i for i, p in enumerate(polys[high]) if not cut_region.and_(db.Region(p)).is_empty()]
+        if v == 4 and not db.Region(cut).and_(fusetop_region).is_empty():
+            continue
+        low_hits = enclosed_hits(cut, polys[low])
+        high_hits = enclosed_hits(cut, polys[high])
         for li in low_hits:
             for hi in high_hits:
                 union((low, li), (high, hi))
