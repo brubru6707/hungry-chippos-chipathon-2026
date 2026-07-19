@@ -73,3 +73,35 @@ sign-off delay pass.
 Sim gotchas honored: no `save all` (explicit save list), no `.ic`-in-control
 (precharge phase from t=0 op with CK=0 makes ICs unnecessary), tools run in
 the container.
+
+## 2026-07-19 — delay corners + metastability + Vcm window (schematic-level, targets for extracted sign-off)
+
+Tb **parameterized**: `tb_comp_delay_param.spice.template` +
+`tb_comp_vcm_sweep.spice.template`, driven by `run_comp_delay_sweeps.sh`
+(sed-generates `gen_tb_<tag>.spice`, runs in container). Vcm, the CK trigger
+threshold and the VOUT target threshold are all **VDD/2 of the corner in
+use** — no more hardcoded 1.65 V (SS runs at VDD=2.97 → 1.485 V). Tolerances
+tightened (`reltol=1e-4 vntol=1nV`) so µV overdrives aren't swallowed by the
+default 1 µV vntol. TT rerun reproduces the 201.9 ps baseline exactly.
+
+All numbers in `comparator/sim/comp_delay_corner_summary.txt` (per-run files
+`comp_delay_<tag>.txt` / `comp_vcm_<tag>.txt`). Headlines, od = 0.5 LSB:
+
+- **Corners:** TT/27/3.3 = 201.9 ps; **SS/125/2.97 = 362.1 ps (binding)**;
+  FF/−40/3.63 = 124.9 ps; SS/125/3.3 = 308.7 ps (so temp+process ≈ 107 ps,
+  VDD droop ≈ 53 ps). All ≪ 2 ns spec, correct polarity everywhere.
+- **Metastability (SS/125/2.97):** delay *saturates* at ~370.6 ps as od → 0;
+  measured flat from 1 mV down to 0.1 µV (solver floor). overdrive@1ns /
+  @2ns **not reachable** — even an offset-cancelled input (σ=36.9 mV sample
+  nearly nulling the signal) resolves in ~371 ps. Metastability is not the
+  schematic-level hazard; margin 5.4× at the floor.
+- **Vcm window (SS/125/2.97):** spec-compliant for **Vcm ≥ 0.85 V** up to at
+  least VDD−0.3; slow-but-correct 0.7–0.8 V; hard fail (no decision) ≤ 0.6 V
+  — quantifies the known low-rail Vcm issue. Mid-rail SAR operating point
+  (VDD/2) sits comfortably inside with 362 ps.
+- **Worst case for extracted sign-off:** SS / 125 °C / 2.97 V, Vcm = VDD/2,
+  effective od ≤ 0.1 mV → ~370.6 ps schematic. Extracted pass must beat 2 ns
+  there (recall: extraction must come from the LVS-clean GDS, *not* the
+  stale shorted `strongarm_extracted.cir`).
+
+No schematic touched.

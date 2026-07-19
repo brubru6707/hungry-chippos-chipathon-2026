@@ -47,3 +47,6 @@ context/
 Tutorials/
 
 *.gds.backup
+
+# Generated ngspice decks (regenerate via run_comp_delay_sweeps.sh)
+comparator/sim/gen_tb_*.spice
