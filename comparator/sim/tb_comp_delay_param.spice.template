@@ -5,9 +5,11 @@
 * gen_tb_<tag>.spice copy. Vcm = CK trig threshold = VOUT target
 * threshold = VDD/2 (@VTH@) for the corner in use - never hardcode 1.65V.
 *
-* DUT subckt is a 1:1 copy of comparator/schematic/strongarm.spice
-* (X-prefixed: GF180MCU ngspice models are subckt-based; M-prefix is
-* LVS-only and will not simulate). No schematic touched.
+* DUT is the 2026-07-19 LVS-clean, device-level layout extraction.  Its
+* X-prefixed devices instantiate the GF180MCU subckt models; the raw LVS
+* M-prefixed deck is intentionally not used for simulation.  No schematic
+* touched.  This extraction has no interconnect R/C, so this is explicitly
+* a device-level post-layout connectivity sign-off, not an RC-extracted run.
 *
 * Delay: CK rising through VDD/2 -> losing output (VOUT1, since
 * VIN1 = Vcm + od > VIN2 = Vcm) falling through VDD/2. Outputs
@@ -24,19 +26,7 @@
 * default vntol (1uV) when probing the metastability limit
 .options reltol=1e-4 vntol=1e-9 abstol=1e-14
 
-.subckt strongarm VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
-XM1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1
-XM2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
-XM3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
-XM4 net3 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
-XM5 net1 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
-XM6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
-XM7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
-XM8 net1 VIN2 net2 VSS nfet_03v3 L=0.28u W=2u nf=1
-XM9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1
-XM10 net3 VIN1 net2 VSS nfet_03v3 L=0.28u W=2u nf=1
-XM11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1
-.ends
+.include ../layout/strongarm_extracted_clean.spice
 
 X1 VDD CK OUT2 OUT1 VIN1 VIN2 0 strongarm
 

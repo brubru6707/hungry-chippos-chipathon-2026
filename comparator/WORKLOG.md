@@ -128,3 +128,24 @@ LVS substrate. The fresh run is retained at
   AS/AD/PS/PD annotations that GF180's subckt models do not accept. The stale
   `layout/strongarm_extracted.cir` remains unused because it contains the
   historical VOUT2|VSS short.
+
+## 2026-07-19 — post-layout decision-delay sign-off (device-level extraction)
+
+The parameterized delay template now instantiates the fresh clean extracted
+deck with the unchanged 10 fF/output load. CK, Vcm, and the output threshold
+were all held at VDD/2 for each corner; only `v(ck)`, `v(out1)`, and
+`v(out2)` were saved. Results are measured CK rising VDD/2 → losing VOUT1
+falling VDD/2:
+
+| condition | overdrive | extracted t_clk→Q | schematic reference | delta |
+|---|---:|---:|---:|---:|
+| SS / 125 C / 2.97 V, Vcm=1.485 V | 0.5 LSB (6.457 mV) | **362.078 ps** | 362.1 ps | −0.022 ps |
+| SS / 125 C / 2.97 V, Vcm=1.485 V | 0.1 mV | **370.455 ps** | 370.5 ps | −0.045 ps |
+| TT (`typical`) / 27 C / 3.3 V, Vcm=1.65 V | 0.5 LSB (6.457 mV) | **201.855 ps** | 201.9 ps | −0.045 ps |
+
+All runs resolve with VOUT1 low and VOUT2 high at 14 ns. The binding
+near-zero SS result is 370.455 ps, a 5.40x margin to the 2 ns requirement:
+**Gate-1 delay is PASS.** The essentially zero measured penalty is expected
+because `run_lvs.py` produces an LVS device-level deck without parasitic C or
+R; this is not a full-RC PEX claim. Comparator offset acceptability remains a
+separate Gate-1 consideration.
