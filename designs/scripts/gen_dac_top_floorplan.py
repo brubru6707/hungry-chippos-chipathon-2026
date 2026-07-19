@@ -107,32 +107,39 @@ def route_bit_template(top, layers, vias, bit, rail_y, points):
     _wire(top, m2, nand_a[0], -16.0, nand_a[0], nand_a[1])
     _via_stack(top, layers, vias, nand_a[0], nand_a[1], 1, 2)
 
+    # B4's own M2 trunk (above) spans x=-230..-255.66 at y=-16 -- i.e. the
+    # full width of the NAND2 pin row (A/B/Y all fall inside that x range).
+    # Any other net threading vertically past y=-16 anywhere under that row
+    # would short against B4 if it stayed on M2. Route SAMPLE_N->B and
+    # NAND_Y->driver-gate entirely on M3 instead (a real, fully-via'd
+    # layer, not the old floating-M2-stub bug) so they pass underneath/
+    # through that row on a different layer than B4's trunk.
     sample_n = points["sample_n"]
     nand_b = points["nand_b"]
     sample_stack_x = 84.0
     _wire(top, m2, sample_n[0], sample_n[1], sample_stack_x, sample_n[1])
     _via_stack(top, layers, vias, sample_stack_x, sample_n[1], 2, 3)
     _wire(top, m3, sample_stack_x, sample_n[1], sample_stack_x, -105.0)
-    _wire(top, m2, sample_stack_x, -105.0, nand_b[0], -105.0)
+    _wire(top, m3, sample_stack_x, -105.0, nand_b[0], -105.0)
     _wire(top, m3, nand_b[0], -105.0, nand_b[0], nand_b[1])
     _via_stack(top, layers, vias, nand_b[0], nand_b[1], 1, 3)
 
-    # NAND output to driver gate: a local low-metal route below bit 4.
+    # NAND output to driver gate: stays on M3 throughout (see above) so its
+    # y=-18 crossing under the NAND2 row doesn't run into B4's M2 trunk.
     nand_y = points["nand_y"]
     drv_gate = points["drv_gate"]
     _via_stack(top, layers, vias, nand_y[0], nand_y[1], 1, 3)
     _wire(top, m3, nand_y[0], nand_y[1], nand_y[0], -18.0)
-    _wire(top, m2, nand_y[0], -18.0, drv_gate[0], -18.0)
+    _wire(top, m3, nand_y[0], -18.0, drv_gate[0], -18.0)
     _wire(top, m3, drv_gate[0], -18.0, drv_gate[0], drv_gate[1])
 
-    # Driver VOUT is Metal3.  The B4 backbone is Metal2, so the M3 leg must
-    # finish in a real M2-to-M3 landing stack on the existing backbone.
+    # Driver VOUT is Metal3 and already crosses y=0 (box spans y=-11.11 to
+    # 14.99).  Draw the M3 trunk directly at y=0, starting inside the VOUT
+    # strip's own x-span so it overlaps (same layer, no via needed there),
+    # then a single M3<->M2 Via2 landing on the B4 rail.
     drv_out = points["drv_out"]
     rail_x, rail_y = points["rail"]
-    _via_stack(top, layers, vias, drv_out[0], drv_out[1], 2, 3)
-    _wire(top, m3, drv_out[0], drv_out[1], drv_out[0], 17.0)
-    _wire(top, m2, drv_out[0], 17.0, rail_x, 17.0)
-    _wire(top, m3, rail_x, 17.0, rail_x, rail_y)
+    _wire(top, m3, drv_out[0], 0.0, rail_x, 0.0)
     _via_stack(top, layers, vias, rail_x, rail_y, 2, 3)
 
 

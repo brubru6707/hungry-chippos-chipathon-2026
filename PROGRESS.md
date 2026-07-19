@@ -143,4 +143,4 @@
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
 | Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |
 
-**DAC physical integration (2026-07-19):** bit-4 pin-geometry checkpoint reached. B4 label→NAND2<4> A is extraction-confirmed; the remaining SAMPLE_N→B, NAND Y→driver, and driver VOUT→B4-rail chains are still open in flat extraction. Variant-D DRC remains 0/660. This is not a Gate-5 pass.
+**DAC physical integration (2026-07-19):** bit-4 routing template complete — all 4 nets (B4→NAND A, SAMPLE_N→NAND B, NAND Y→driver input, driver VOUT→B4 rail) are continuity-verified as single connected components in a from-scratch flat geometric check (`designs/scripts/check_bit4_continuity.py`/`check_bit4_supply.py`), plus VDD/GND reach to both cells. Variant-D DRC remains 0/660. This is a template/checkpoint for one bit, not yet a full-block pass — bits 0,1,2,3,5,6,7 still need the same routing replicated, then full-block DRC+LVS against a real reference netlist. This is not yet a Gate-5 pass.
