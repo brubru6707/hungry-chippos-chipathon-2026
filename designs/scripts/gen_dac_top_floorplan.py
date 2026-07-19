@@ -88,6 +88,13 @@ JOG_OFFSET = -18.0
 # collision-free against the other 6 bits' tracks) avoids that; see
 # dac/WORKLOG.md for the verification method.
 DETOUR_X_0 = -290.0
+# Bit 7's m=2 driver puts its gate below the shared SAMPLE_N M4 trunk.  Its
+# NAND-Y connection therefore leaves the NAND row on M3 to the right of its
+# own SAMPLE_N tap, drops below the trunk, and comes back to the gate on M4.
+# This lane clears B7's M3 raw-B access (which ends at x=-266) and all local
+# driver/NAND supply stacks.
+NANDY_DOGLEG_X_7 = -264.0
+NANDY_DOGLEG_Y_7 = -110.0
 SUPPLY_POUR_W = 2.0
 NAND_VDD_M5_OFF, NAND_GND_M5_OFF = -9.0, -15.0
 # The driver VDD riser must stay on the driver side of its own column.
@@ -229,6 +236,30 @@ def route_nand_y_jog(top, layers, vias, bit, rail_y):
     _via_stack(top, layers, vias, gate[0], gate[1], 3, 4)
 
 
+def route_nand_y_dogleg_7(top, layers, vias, rail_y):
+    """Bit-7 NAND Y -> m=2-driver gate using the dedicated M4 dogleg.
+
+    A conventional RAIL_Y-18 horizontal jog would cross all of bits 1--6's
+    SAMPLE_N M4 tap stubs.  The initial escape is M3 across the NAND-pin row
+    so it also passes under bit 7's own M4 SAMPLE_N stub.  It changes to M4
+    only after clearing that stub.  It drops on M3 at x=NANDY_DOGLEG_X_7,
+    changes to M4 below the SAMPLE_N trunk, then crosses back on the
+    isolated y=-110 lane and rises directly into the M3 gate pin.
+    """
+    bit = 7
+    nx, dxv = NAND2_X(bit), DRIVER_X(bit)
+    nand_y = (nx + NAND2_PINS["y"][0], rail_y + NAND2_PINS["y"][1])
+    gate = (dxv + DRV_PINS[bit]["gate"][0], rail_y + DRV_PINS[bit]["gate"][1])
+    m3, m4 = layers[3], layers[4]
+    _via_stack(top, layers, vias, nand_y[0], nand_y[1], 1, 3)
+    _wire(top, m3, nand_y[0], nand_y[1], NANDY_DOGLEG_X_7, nand_y[1])
+    _wire(top, m3, NANDY_DOGLEG_X_7, nand_y[1], NANDY_DOGLEG_X_7, NANDY_DOGLEG_Y_7)
+    _via_stack(top, layers, vias, NANDY_DOGLEG_X_7, NANDY_DOGLEG_Y_7, 3, 4)
+    _wire(top, m4, NANDY_DOGLEG_X_7, NANDY_DOGLEG_Y_7, gate[0], NANDY_DOGLEG_Y_7)
+    _wire(top, m4, gate[0], NANDY_DOGLEG_Y_7, gate[0], gate[1])
+    _via_stack(top, layers, vias, gate[0], gate[1], 3, 4)
+
+
 def route_sample_n_source(top, layers, vias):
     """One-time descent from the SAMPLE_N/inv1 output pin down to the
     shared M4 trunk.  Drawn once, outside the per-bit loop -- every bit's
@@ -286,7 +317,10 @@ def route_bit(top, layers, vias, bit, detour_sample_n=False):
     route_supply(top, layers, vias, bit, rail_y)
     route_b_label(top, layers, vias, bit, rail_y)
     route_sample_n_tap(top, layers, vias, bit, rail_y, detour=detour_sample_n)
-    route_nand_y_jog(top, layers, vias, bit, rail_y)
+    if bit == 7:
+        route_nand_y_dogleg_7(top, layers, vias, rail_y)
+    else:
+        route_nand_y_jog(top, layers, vias, bit, rail_y)
     route_vout_rail(top, layers, vias, bit, rail_y)
 
 
@@ -354,9 +388,10 @@ def main():
     # exactly `0`, not GND/DVSS.
     # Left edge extended from -292 to -300: bit6's nand_gnd M5 drop lands
     # at NAND2_X(6)+NAND_GND_M5_OFF = -295, just past the original -292
-    # edge (bit7's own drops, if routed later, will need -307).
-    top.shapes(li_m5).insert(box(-300.0, 121.0, 112.0, 127.0))
-    top.shapes(li_m5).insert(box(-300.0, -131.0, 112.0, -125.0))
+    # edge.  Bit 7's NAND GND drop is at x=-307, so both spines extend to
+    # -310 and connect every planned supply drop directly.
+    top.shapes(li_m5).insert(box(-310.0, 121.0, 112.0, 127.0))
+    top.shapes(li_m5).insert(box(-310.0, -131.0, 112.0, -125.0))
     label("VDD", -280.0, 124.0, li_m5lbl)
     label("0", -280.0, -128.0, li_m5lbl)
 
@@ -394,11 +429,9 @@ def main():
     route_sample_n_source(top, layers, vias)
     _wire(top, layers[4], SAMPLE_STACK_X, SAMPLE_TRUNK_Y, DETOUR_X_0, SAMPLE_TRUNK_Y)
 
-    # Bits routed this checkpoint: 0-6 (4 was the pre-existing template;
-    # 0,1,2,3,5,6 are new).  Bit 7's exceptionally large (m=2) driver needs
-    # its own dogleg beyond this pass's verified track assignment -- see
-    # dac/WORKLOG.md for what remains.
-    for bit in (0, 1, 2, 3, 4, 5, 6):
+    # Bit 7 uses its own M4 dogleg; the other bits use the established
+    # RAIL_Y-18 jog assignment.
+    for bit in range(8):
         route_bit(top, layers, vias, bit, detour_sample_n=(bit == 0))
 
     layout.write(OUT)

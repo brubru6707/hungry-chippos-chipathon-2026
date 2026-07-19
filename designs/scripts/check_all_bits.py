@@ -18,7 +18,7 @@ GDS = sys.argv[1] if len(sys.argv) > 1 else \
     "/foss/designs/dac/layout/dac_top_floorplan.gds"
 DBU = 0.001
 
-ROUTED_BITS = [0, 1, 2, 3, 4, 5, 6]  # bit 7 deferred, not routed this pass
+ROUTED_BITS = list(range(8))
 
 RAIL_Y = {0: 57.36, 1: -57.36, 2: -38.24, 3: -19.12, 4: 0.00,
           5: 19.12, 6: 76.48, 7: -76.48}
