@@ -194,6 +194,20 @@ def _m2_wire(top, dbu, x0, y0, x1, y1, li_m2, hw=0.16):
     )
 
 
+def _m1_wire(top, dbu, x0, y0, x1, y1, li_m1, hw=0.12):
+    """Straight M1 route (0.24 um wide, above M1.1's 0.23 um minimum).
+
+    NAND2's native M1 contact pads are on a tight fixed pitch.  The added
+    connectivity stubs therefore use the narrow legal width, leaving at
+    least M1.2a clearance to the adjacent rail, input, and Y-pad metal.
+    """
+    def um(v):
+        return int(round(v / dbu))
+    top.shapes(li_m1).insert(
+        db.Box(um(min(x0, x1) - hw), um(min(y0, y1) - hw), um(max(x0, x1) + hw), um(max(y0, y1) + hw))
+    )
+
+
 def _add_label(top, dbu, x, y, text, li_m1lbl):
     top.shapes(li_m1lbl).insert(db.Text(text, int(round(x / dbu)), int(round(y / dbu))))
 
@@ -222,6 +236,19 @@ def _m3_wire(top, dbu, x0, y0, x1, y1, li_m3, hw=0.16):
     top.shapes(li_m3).insert(
         db.Box(um(min(x0, x1) - hw), um(min(y0, y1) - hw), um(max(x0, x1) + hw), um(max(y0, y1) + hw))
     )
+
+
+def _via3_hop(top, dbu, x, y, li_via3, li_m4):
+    """Promote an existing M3 landing to M4 for an otherwise crossing net."""
+    vh, ph = 0.13, 0.195
+    def um(v): return int(round(v / dbu))
+    top.shapes(li_via3).insert(db.Box(um(x-vh), um(y-vh), um(x+vh), um(y+vh)))
+    top.shapes(li_m4).insert(db.Box(um(x-ph), um(y-ph), um(x+ph), um(y+ph)))
+
+
+def _m4_wire(top, dbu, x0, y0, x1, y1, li_m4, hw=0.16):
+    def um(v): return int(round(v / dbu))
+    top.shapes(li_m4).insert(db.Box(um(min(x0,x1)-hw), um(min(y0,y1)-hw), um(max(x0,x1)+hw), um(max(y0,y1)+hw)))
 
 
 def _connect_shelf_m3(top, dbu, points, shelf_y, trunk_x, li_m1, li_via1, li_m2, li_via2, li_m3):
@@ -479,7 +506,49 @@ def build_driver_cell(
     return top
 
 
-def build_nand2_cell(layout, cell_name, pfet_w=1.7, nfet_w=1.7, l_gate=0.3):
+def build_tgate_cell(layout, cell_name="tgate", nfet_w=4.0, pfet_w=8.0, l_gate=0.28):
+    """Complementary VIN--DAC_TOP transmission gate, matching tgate.sch."""
+    top = layout.create_cell(cell_name)
+    dbu = layout.dbu
+    li_m1, li_m1lbl = layout.layer(34, 0), layout.layer(34, 10)
+    li_v1, li_m2, li_v2, li_v3, li_m3, li_m4 = (layout.layer(35, 0), layout.layer(36, 0),
+        layout.layer(38, 0), layout.layer(40, 0), layout.layer(42, 0), layout.layer(46, 0))
+    pp = _fet_params(pfet_w, l_gate, ["ps", "pd"], ["pg"], "pvdd")
+    np = _fet_params(nfet_w, l_gate, ["ns", "nd"], ["ng"], "ngnd")
+    _add_pcell(layout, top, "pfet", pp, db.Trans())
+    # A deliberately wide horizontal separation makes the two independent
+    # switch legs easy to verify and leaves M3/M4 as true crossing layers.
+    _add_pcell(layout, top, "nfet", np, db.Trans(db.Vector(int(round(18.0/dbu)), int(round(-6.0/dbu)))))
+    top.flatten(1)
+    p, n = _labels(top, li_m1lbl, "p"), _labels(top, li_m1lbl, "n")
+    pmin, pmax = top.bbox().bottom*dbu, top.bbox().top*dbu
+    nmin = min(v[1] for v in n.values())
+    # Supplies and complementary gates stay local on M2.
+    _connect_net_m2_one_side(top, dbu, [p["pvdd"]], pmax+0.8, p["pvdd"][0], "DVDD", li_m1, li_v1, li_m2, li_m1lbl)
+    _connect_net_m2_one_side(top, dbu, [n["ngnd"]], nmin-0.8, n["ngnd"][0], "DVSS", li_m1, li_v1, li_m2, li_m1lbl)
+    _connect_net_m2_one_side(top, dbu, [p["pg"]], pmin-0.8, p["pg"][0], "SAMPLE_N", li_m1, li_v1, li_m2, li_m1lbl)
+    _connect_net_m2_one_side(top, dbu, [n["ng"]], nmin-1.6, n["ng"][0], "SAMPLE", li_m1, li_v1, li_m2, li_m1lbl)
+    # A=VIN uses M3; B=DAC_TOP is promoted to M4, so the two terminal
+    # connections cannot form a same-layer crossing.
+    a_y, a_x = pmin-1.6, 9.0
+    _connect_shelf_m3(top, dbu, [p["ps"]], a_y, a_x, li_m1, li_v1, li_m2, li_v2, li_m3)
+    _connect_shelf_m3(top, dbu, [n["nd"]], a_y, a_x, li_m1, li_v1, li_m2, li_v2, li_m3)
+    _m3_wire(top, dbu, a_x, p["ps"][1], a_x, n["nd"][1], li_m3)
+    _add_label(top, dbu, a_x, a_y, "VIN", li_m1lbl)
+    for x, y in (p["pd"], n["ns"]):
+        _via_transition(top, dbu, x, y, li_m1, li_v1, li_m2)
+        _via2_hop(top, dbu, x, y, li_v2, li_m3)
+        _via3_hop(top, dbu, x, y, li_v3, li_m4)
+    b_y, b_x = nmin-2.5, 11.0
+    _m4_wire(top, dbu, p["pd"][0], p["pd"][1], p["pd"][0], b_y, li_m4)
+    _m4_wire(top, dbu, n["ns"][0], n["ns"][1], n["ns"][0], b_y, li_m4)
+    _m4_wire(top, dbu, p["pd"][0], b_y, n["ns"][0], b_y, li_m4)
+    _add_label(top, dbu, n["ns"][0], b_y, "DAC_TOP", li_m1lbl)
+    snap_to_grid(top)
+    return top
+
+
+def _build_nand2_shelf_legacy(layout, cell_name, pfet_w=1.7, nfet_w=1.7, l_gate=0.3):
     """2-input NAND matching dac/schematic/nand2.sch: 2 parallel PMOS
     (source=DVDD, drain=y, gates=a/b), 2 series NMOS (top: drain=y,
     gate=a, source=mid; bottom: drain=mid, gate=b, source=DVSS). Series
@@ -618,12 +687,101 @@ def build_nand2_cell(layout, cell_name, pfet_w=1.7, nfet_w=1.7, l_gate=0.3):
     return top
 
 
+def build_nand2_cell(layout, cell_name, pfet_w=1.7, nfet_w=1.7, l_gate=0.3):
+    """Fresh, planar NAND2: two aligned CMOS columns using only POLY/M1.
+
+    This intentionally does not reuse the old three-row M2/M3 shelf router.
+    The two continuous poly stripes are A and B; M1 is used only for the
+    supply rails, PMOS/NMOS output tie, and the isolated NMOS series node.
+    """
+    top = layout.create_cell(cell_name)
+    dbu = layout.dbu
+    li_poly = layout.layer(30, 0)
+    li_m1 = layout.layer(34, 0)
+    li_m1lbl = layout.layer(34, 10)
+
+    # Two columns make the gate poly stripes physically continuous through
+    # both active rows.  The PCell supplies the GF180-compliant active,
+    # contacts, wells, and body taps; this cell only supplies connectivity.
+    p_a = _fet_params(pfet_w, l_gate, ["ps_a", "pd_a"], ["pg_a"], "pvdd_a")
+    p_b = _fet_params(pfet_w, l_gate, ["ps_b", "pd_b"], ["pg_b"], "pvdd_b")
+    n_a = _fet_params(nfet_w, l_gate, ["ns_a", "nd_a"], ["ng_a"], "ngnd_a")
+    n_b = _fet_params(nfet_w, l_gate, ["ns_b", "nd_b"], ["ng_b"], "ngnd_b")
+    # The NAND2 row has no fixed-width constraint.  Keep the A/B columns
+    # comfortably apart so the Y trunk has room outside the input taps.
+    column_pitch, nmos_y = 12.0, -8.0
+    _add_pcell(layout, top, "pfet", p_a, db.Trans())
+    _add_pcell(layout, top, "pfet", p_b, db.Trans(db.Vector(int(round(column_pitch / dbu)), 0)))
+    _add_pcell(layout, top, "nfet", n_a, db.Trans(db.Vector(0, int(round(nmos_y / dbu)))))
+    _add_pcell(layout, top, "nfet", n_b, db.Trans(db.Vector(int(round(column_pitch / dbu)), int(round(nmos_y / dbu)))))
+    top.flatten(1)
+    p, n = _labels(top, li_m1lbl, "p"), _labels(top, li_m1lbl, "n")
+
+    # Gate rows are supplied by the PCells.  Extend their underlying POLY,
+    # not M1, so A/B can cross the M1 series/output routes without a contact.
+    # A single M1 label at each top gate is the external pin; the stripe joins
+    # it to the corresponding bottom gate.
+    for tag, label in (("a", "a"), ("b", "b")):
+        x = p[f"pg_{tag}"][0]
+        y_top, y_bot = p[f"pg_{tag}"][1] + 0.35, n[f"ng_{tag}"][1] - 0.35
+        hw = 0.15
+        top.shapes(li_poly).insert(db.Box(
+            int(round((x - hw) / dbu)), int(round(y_bot / dbu)),
+            int(round((x + hw) / dbu)), int(round(y_top / dbu)),
+        ))
+        _add_label(top, dbu, p[f"pg_{tag}"][0], p[f"pg_{tag}"][1], label, li_m1lbl)
+
+    # M1-only power rails.  The PMOS outer diffusions and nwell taps are VDD;
+    # only the left NMOS outer diffusion and both p-sub taps are GND.
+    vdd_y, gnd_y = 3.00, -10.75
+    _m1_wire(top, dbu, p["ps_a"][0], vdd_y, p["pvdd_b"][0], vdd_y, li_m1)
+    for key in ("ps_a", "pvdd_a", "ps_b", "pvdd_b"):
+        _m1_wire(top, dbu, p[key][0], p[key][1], p[key][0], vdd_y, li_m1)
+    _add_label(top, dbu, p["ps_a"][0], vdd_y, "DVDD", li_m1lbl)
+
+    gnd_x, gnd_join_y = -2.0, -9.60
+    _m1_wire(top, dbu, gnd_x, gnd_y, n["ngnd_b"][0], gnd_y, li_m1)
+    for key in ("ns_a", "ngnd_a", "ngnd_b"):
+        _m1_wire(top, dbu, n[key][0], n[key][1], n[key][0], gnd_join_y, li_m1)
+        _m1_wire(top, dbu, n[key][0], gnd_join_y, gnd_x, gnd_join_y, li_m1)
+    _m1_wire(top, dbu, gnd_x, gnd_join_y, gnd_x, gnd_y, li_m1)
+    _add_label(top, dbu, gnd_x, gnd_y, "DVSS", li_m1lbl)
+
+    # NMOS series connection is deliberately a local, label-free M1 strip.
+    # It is isolated from A/B (POLY) and y (right-hand M1 trunk).
+    mid_y = -4.80
+    _m1_wire(top, dbu, n["nd_a"][0], n["nd_a"][1], n["nd_a"][0], mid_y, li_m1)
+    _m1_wire(top, dbu, n["ns_b"][0], n["ns_b"][1], n["ns_b"][0], mid_y, li_m1)
+    _m1_wire(top, dbu, n["nd_a"][0], mid_y, n["ns_b"][0], mid_y, li_m1)
+
+    # y touches exactly the two PMOS drains plus the right-hand NMOS
+    # diffusion.  Its trunk is right of the B poly stripe, avoiding it.
+    y_x, y_top, y_bot = 15.0, -1.60, -5.60
+    for key in ("pd_a", "pd_b"):
+        _m1_wire(top, dbu, p[key][0], p[key][1], p[key][0], y_top, li_m1)
+        _m1_wire(top, dbu, p[key][0], y_top, y_x, y_top, li_m1)
+    _m1_wire(top, dbu, n["nd_b"][0], n["nd_b"][1], n["nd_b"][0], y_bot, li_m1)
+    _m1_wire(top, dbu, n["nd_b"][0], y_bot, y_x, y_bot, li_m1)
+    _m1_wire(top, dbu, y_x, y_bot, y_x, y_top, li_m1)
+    _add_label(top, dbu, y_x, y_top, "y", li_m1lbl)
+
+    snap_to_grid(top)
+    return top
+
+
 def main():
     layout = db.Layout()
     layout.dbu = 0.001
 
-    build_driver_cell(layout, "unit_switch_bit0", nfet_w=0.42, pfet_w=0.84, pfet_count=1)
-    build_driver_cell(layout, "unit_switch_bit7", nfet_w=53.76, pfet_w=53.76, pfet_count=2)
+    # Bit 7 is the sole split-PMOS case; bits 0--6 are single physical
+    # devices with the exact schematic W/L values.
+    driver_specs = (
+        (0, 0.42, 0.84, 1), (1, 0.84, 1.68, 1), (2, 1.68, 3.36, 1),
+        (3, 3.36, 6.72, 1), (4, 6.72, 13.44, 1), (5, 13.44, 26.88, 1),
+        (6, 26.88, 53.76, 1), (7, 53.76, 53.76, 2),
+    )
+    for bit, nfet_w, pfet_w, pfet_count in driver_specs:
+        build_driver_cell(layout, f"unit_switch_bit{bit}", nfet_w=nfet_w, pfet_w=pfet_w, pfet_count=pfet_count)
 
     options = db.SaveLayoutOptions()
     options.write_context_info = False
@@ -637,6 +795,7 @@ def main():
         vdd_net="DVDD", gnd_net="DVSS", gate_net="vin", out_net="vout",
     )
     build_nand2_cell(logic_layout, "nand2")
+    build_tgate_cell(logic_layout, "tgate")
     logic_layout.write("/foss/designs/dac/layout/dac_logic_checkpoint.gds", options)
     print("wrote dac/layout/dac_logic_checkpoint.gds with topcells:", [c.name for c in logic_layout.each_cell()])
 

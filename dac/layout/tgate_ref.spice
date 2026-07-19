@@ -1,0 +1,5 @@
+* Native-element LVS reference for top-plate sampling transmission gate.
+.subckt tgate VIN DAC_TOP SAMPLE SAMPLE_N DVDD DVSS
+M1 VIN SAMPLE DAC_TOP DVSS nfet_03v3 L=0.28u W=4u nf=1
+M2 DAC_TOP SAMPLE_N VIN DVDD pfet_03v3 L=0.28u W=8u nf=1
+.ends
