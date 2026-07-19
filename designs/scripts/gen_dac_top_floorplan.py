@@ -73,7 +73,18 @@ DRV_PINS = {
 RAIL_X = -62.85
 SAMPLE_STACK_X = 84.0
 SAMPLE_TRUNK_Y = -105.0
-SAMPLE_N_PT = (88.33, -7.471)
+# All global-pin coordinates are top-level coordinates, extracted from the
+# source GDS labels after placement (not inferred from the schematic).
+TG_PINS = {
+    "sample_n": (88.33, -7.471, 2), "sample": (106.33, -8.08, 2),
+    "vin": (97.00, -8.271, 3), "dac_top": (105.79, -8.98, 4),
+}
+INV1_PINS = {
+    "vdd": (111.77, 21.79, 2), "gnd": (111.79, 11.518, 2),
+    "vin": (110.47, 12.218, 3), "vout": (114.94, 12.918, 3),
+}
+# Legal exposed DAC_TOP Metal5 mesh point, inside the cap-array core.
+DAC_TOP_M5_LANDING = (0.0, 0.0, 5)
 B_LABEL_DX, B_LABEL_DY = 26.0, -16.0
 # Raw-B tracks are keyed to their bit's own label row, but offset away from
 # the row itself: the M2->M5 supply stack at the preceding NAND VDD drop has
@@ -260,20 +271,74 @@ def route_nand_y_dogleg_7(top, layers, vias, rail_y):
     _via_stack(top, layers, vias, gate[0], gate[1], 3, 4)
 
 
-def route_sample_n_source(top, layers, vias):
-    """One-time descent from the SAMPLE_N/inv1 output pin down to the
-    shared M4 trunk.  Drawn once, outside the per-bit loop -- every bit's
-    route_sample_n_tap only draws its OWN branch off the trunk.  The M2->M4
-    via stack lands at SAMPLE_STACK_X (84.0), not at the pin's own x
-    (88.33): that x is inside/adjacent to the inv1 cell's own M3/M4
-    footprint, and a via stack landing there is too close to it (M3.2a/
-    M4.2a spacing violations) -- a short M2 jog first, matching bit4's
-    original approach, sidesteps that entirely."""
+def route_sample_n_tg_tap(top, layers, vias):
+    """Bring the TG PFET gate onto the established shared SAMPLE_N trunk."""
     m2, m4 = layers[2], layers[4]
-    sx, sy = SAMPLE_N_PT
+    sx, sy, _ = TG_PINS["sample_n"]
     _wire(top, m2, sx, sy, SAMPLE_STACK_X, sy)
     _via_stack(top, layers, vias, SAMPLE_STACK_X, sy, 2, 4)
     _wire(top, m4, SAMPLE_STACK_X, sy, SAMPLE_STACK_X, SAMPLE_TRUNK_Y)
+
+
+def route_globals(top, layers, vias):
+    """Route SAMPLE/SAMPLE_N generation, inv1 supplies, VIN, and DAC_TOP.
+
+    Every long global has its own corridor: SAMPLE is M3 at x=109, SAMPLE_N
+    is M4 at x=120, VIN remains at TG's direct M3 access, and DAC_TOP leaves
+    TG on M4 before changing to M5 outside the cap-array bbox.
+    """
+    m2, m3, m4, m5 = (layers[n] for n in range(2, 6))
+    sample_x, sample_y, _ = TG_PINS["sample"]
+    inv_in_x, inv_in_y, _ = INV1_PINS["vin"]
+    inv_out_x, inv_out_y, _ = INV1_PINS["vout"]
+
+    # SAMPLE (TG NFET gate) -> inv1 input.  The M2 jog exits the TG before
+    # the M3 rise, then the final M3 segment lands directly inside inv1's M3
+    # input access.
+    sample_lane_x = 109.0
+    _wire(top, m2, sample_x, sample_y, sample_lane_x, sample_y)
+    _via_stack(top, layers, vias, sample_lane_x, sample_y, 2, 3)
+    _wire(top, m3, sample_lane_x, sample_y, sample_lane_x, inv_in_y)
+    _wire(top, m3, sample_lane_x, inv_in_y, inv_in_x, inv_in_y)
+
+    # inv1 output -> the existing M4 SAMPLE_N trunk.  This is deliberately
+    # separate from SAMPLE's M3 lane and joins the trunk only on M4.
+    sample_n_lane_x = 120.0
+    _via_stack(top, layers, vias, inv_out_x, inv_out_y, 3, 4)
+    _wire(top, m4, inv_out_x, inv_out_y, sample_n_lane_x, inv_out_y)
+    _wire(top, m4, sample_n_lane_x, inv_out_y, sample_n_lane_x, SAMPLE_TRUNK_Y)
+    _wire(top, m4, sample_n_lane_x, SAMPLE_TRUNK_Y, SAMPLE_STACK_X, SAMPLE_TRUNK_Y)
+
+    # inv1 supply drops use the open right-hand M2/M5 corridor.
+    for name, spine_y, supply_x in (("vdd", VDD_SPINE_Y, 126.0),
+                                    ("gnd", GND_SPINE_Y, 132.0)):
+        px, py, level = INV1_PINS[name]
+        # Escape the dense inv1 M2 access immediately onto M3; a horizontal
+        # M2 run from the 0 pin is too close to the cell's neighbouring M2.
+        _via_stack(top, layers, vias, px, py, level, 3)
+        _wire(top, m3, px, py, supply_x, py)
+        _via_stack(top, layers, vias, supply_x, py, 3, 5)
+        # Begin beyond the 0.4um M5 via pad so it does not leave a narrow
+        # M5 tail below the minimum top-metal width.
+        start_y = py - VIA_PAD / 2 if spine_y > py else py + VIA_PAD / 2
+        _wire(top, m5, supply_x, start_y, supply_x, spine_y, SUPPLY_POUR_W)
+        _wire(top, m5, supply_x, spine_y, 112.0, spine_y, SUPPLY_POUR_W)
+
+    # VIN's label is placed directly on TG's M3 signal terminal.  DAC_TOP
+    # exits TG on M4, changes to M5 outside cap_array (right bbox=69.19um),
+    # then lands on its continuous top-plate mesh.
+    dac_x, dac_y, _ = TG_PINS["dac_top"]
+    # Change to M5 on TG's right side, before the leftward path could cross
+    # the existing SAMPLE_N M4 descent at x=84.
+    dac_handoff_x = 110.0
+    _wire(top, m4, dac_x, dac_y, dac_handoff_x, dac_y)
+    _via_stack(top, layers, vias, dac_handoff_x, dac_y, 4, 5)
+    # Move on M5 to a mesh row that is clear of the cap array's isolated
+    # bottom-plate M5 pads, then enter the continuous DAC_TOP top mesh.
+    dac_mesh_y = DAC_TOP_M5_LANDING[1]
+    _wire(top, m5, dac_handoff_x, dac_y - VIA_PAD / 2, dac_handoff_x, dac_mesh_y)
+    _wire(top, m5, dac_handoff_x + VIA_PAD / 2, dac_mesh_y,
+          DAC_TOP_M5_LANDING[0], dac_mesh_y)
 
 
 def route_vout_rail(top, layers, vias, bit, rail_y):
@@ -422,12 +487,13 @@ def main():
     }
 
     # SAMPLE_N shared trunk: one continuous M4 bar at SAMPLE_TRUNK_Y,
-    # spanning from the source descent (SAMPLE_STACK_X) out to DETOUR_X_0
+    # spanning from the TG tap (SAMPLE_STACK_X) out to DETOUR_X_0
     # (left of every routed bit's own nand_b tap column) so every bit's
     # vertical stub -- drawn individually in route_sample_n_tap -- lands
     # on the same wire instead of 7 disconnected stubs.
-    route_sample_n_source(top, layers, vias)
+    route_sample_n_tg_tap(top, layers, vias)
     _wire(top, layers[4], SAMPLE_STACK_X, SAMPLE_TRUNK_Y, DETOUR_X_0, SAMPLE_TRUNK_Y)
+    route_globals(top, layers, vias)
 
     # Bit 7 uses its own M4 dogleg; the other bits use the established
     # RAIL_Y-18 jog assignment.

@@ -35,6 +35,20 @@ DRV_GND_DY = {0: -6.052, 1: -6.472, 2: -7.312, 3: -8.992, 4: -12.352,
               5: -19.072, 6: -32.512, 7: -59.392}
 RAIL_X = -62.85
 
+# Extracted top-level pin accesses for the placed inv1/TG instances.  The
+# third tuple member is the actual access metal, not a label-purpose guess.
+TG = {
+    "sample_n": ((88.33, -7.471), 2), "sample": ((106.33, -8.08), 2),
+    "vin": ((97.00, -8.271), 3), "dac_top": ((105.79, -8.98), 4),
+}
+INV1 = {
+    "vdd": ((111.77, 21.79), 2), "gnd": ((111.79, 11.518), 2),
+    "vin": ((110.47, 12.218), 3), "vout": ((114.94, 12.918), 3),
+}
+SAMPLE_LABEL = TG["sample"]
+VIN_LABEL = TG["vin"]
+DAC_TOP_MESH = ((0.0, 0.0), 5)
+
 layout = db.Layout()
 layout.read(GDS)
 top = layout.top_cell()
@@ -151,18 +165,34 @@ def bit_points(bit):
     }
 
 
-SAMPLE_N_PIN = ((88.33, -7.471), 2)
 VDD_BACKBONE = ((-280.0, 124.0), 5)
 GND_BACKBONE = ((-280.0, -128.0), 5)
 
 all_pass = True
 
-print("=== CONTINUITY (each bit's 4 signal nets + supply) ===")
+print("=== GLOBAL CONTINUITY ===")
+global_checks = [
+    ("SAMPLE label", SAMPLE_LABEL, "inv1 input", INV1["vin"]),
+    ("SAMPLE label", SAMPLE_LABEL, "TG NFET gate", TG["sample"]),
+    ("inv1 output", INV1["vout"], "TG PFET gate", TG["sample_n"]),
+    ("VIN label", VIN_LABEL, "TG VIN terminal", TG["vin"]),
+    ("TG DAC_TOP terminal", TG["dac_top"], "DAC_TOP M5 mesh", DAC_TOP_MESH),
+    ("inv1 VDD", INV1["vdd"], "VDD backbone", VDD_BACKBONE),
+    ("inv1 0", INV1["gnd"], "GND backbone", GND_BACKBONE),
+]
+for name_a, (pt_a, la), name_b, (pt_b, lb) in global_checks:
+    ca, cb = comp_of(*pt_a, la), comp_of(*pt_b, lb)
+    ok = ca is not None and ca == cb
+    all_pass &= ok
+    status = "PASS" if ok else "FAIL (separate/missing)"
+    print(f"  {name_a} {pt_a}@M{la} <-> {name_b} {pt_b}@M{lb}: {status}")
+
+print("\n=== PER-BIT CONTINUITY (each bit's 4 signal nets + supply) ===")
 for bit in ROUTED_BITS:
     pts = bit_points(bit)
     checks = [
         (f"B{bit} label", pts["B_label"], f"NAND2<{bit}> A pin", pts["nand_a"]),
-        ("SAMPLE_N pin", SAMPLE_N_PIN, f"NAND2<{bit}> B pin", pts["nand_b"]),
+        ("inv1 output", INV1["vout"], f"NAND2<{bit}> B pin", pts["nand_b"]),
         (f"NAND2<{bit}> Y pin", pts["nand_y"], f"driver<{bit}> gate pin", pts["gate"]),
         (f"driver<{bit}> VOUT pin", pts["drv_out"], f"B{bit} rail landing", pts["rail"]),
         (f"nand_vdd<{bit}>", pts["nand_vdd"], "VDD backbone", VDD_BACKBONE),
@@ -186,7 +216,10 @@ for bit in ROUTED_BITS:
     nets[f"B{bit}"] = comp_of(*pts["B_label"][0], pts["B_label"][1])
     nets[f"NANDY{bit}"] = comp_of(*pts["nand_y"][0], pts["nand_y"][1])
     nets[f"RAIL{bit}"] = comp_of(*pts["drv_out"][0], pts["drv_out"][1])
-nets["SAMPLE_N"] = comp_of(*SAMPLE_N_PIN[0], SAMPLE_N_PIN[1])
+nets["SAMPLE"] = comp_of(*SAMPLE_LABEL[0], SAMPLE_LABEL[1])
+nets["SAMPLE_N"] = comp_of(*INV1["vout"][0], INV1["vout"][1])
+nets["VIN"] = comp_of(*VIN_LABEL[0], VIN_LABEL[1])
+nets["DAC_TOP"] = comp_of(*TG["dac_top"][0], TG["dac_top"][1])
 nets["VDD"] = comp_of(*VDD_BACKBONE[0], VDD_BACKBONE[1])
 nets["GND"] = comp_of(*GND_BACKBONE[0], GND_BACKBONE[1])
 
@@ -207,7 +240,8 @@ if shorts:
     for a, b_ in shorts:
         print(f"    {a} <-> {b_}")
 else:
-    print(f"  All {len(names)} nets ({', '.join(names)}) are pairwise distinct components. PASS")
+    print(f"  All {len(names)} nets / {len(names) * (len(names) - 1) // 2} pairs "
+          f"({', '.join(names)}) are pairwise distinct components. PASS")
 
 print()
 print("ALL PASS" if all_pass else "SOME CHECKS FAILED")
