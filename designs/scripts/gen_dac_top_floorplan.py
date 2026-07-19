@@ -75,6 +75,11 @@ SAMPLE_STACK_X = 84.0
 SAMPLE_TRUNK_Y = -105.0
 SAMPLE_N_PT = (88.33, -7.471)
 B_LABEL_DX, B_LABEL_DY = 26.0, -16.0
+# Raw-B tracks are keyed to their bit's own label row, but offset away from
+# the row itself: the M2->M5 supply stack at the preceding NAND VDD drop has
+# pads on M3 too.  A +5 um per-bit lane clears that stack while preserving
+# each bit's unique channel row.
+B_TRACK_Y = lambda bit: RAIL_Y[f"B{bit}"] + B_LABEL_DY + 5.0
 JOG_OFFSET = -18.0
 # Bit 0's SAMPLE_N tap uniquely needs to reach the highest y of any bit
 # (RAIL_Y[B0]=57.36, the top rail row) and its straight-line path would
@@ -85,7 +90,13 @@ JOG_OFFSET = -18.0
 DETOUR_X_0 = -290.0
 SUPPLY_POUR_W = 2.0
 NAND_VDD_M5_OFF, NAND_GND_M5_OFF = -9.0, -15.0
-DRV_VDD_M5_OFF, DRV_GND_M5_OFF = -9.0, -15.0
+# The driver VDD riser must stay on the driver side of its own column.
+# A -9 um VDD offset aliases the next bit's VOUT x-coordinate (for bits
+# 3--5), so its M2->M5 stack lands in that neighbour's output strap and
+# shorts B4/B5/B6 rails to VDD.  Its positive, per-bit-indexed tracks remain
+# separated by the 12 um column pitch and clear every VOUT access.  GND's
+# original left-side track is already distinct and remains there.
+DRV_VDD_M5_OFF, DRV_GND_M5_OFF = 6.0, -15.0
 VDD_SPINE_Y, GND_SPINE_Y = 124.0, -128.0
 
 
@@ -152,18 +163,20 @@ def route_supply(top, layers, vias, bit, rail_y):
 
 def route_b_label(top, layers, vias, bit, rail_y):
     """B<bit> (raw digital input, placed in the open channel just past the
-    nand2 body) -> NAND2 A.  Kept on Metal2: nand2 has zero M2 content
-    anywhere in its footprint, so this is clear of every bit's nand2 body
-    regardless of the 12um placement pitch, and it never reaches into the
-    driver zone (a separate, non-overlapping x-range)."""
-    m1, m2 = layers[1], layers[2]
+    nand2 body) -> NAND2 A.  Its shared-channel trunk stays on the
+    bit-unique M3 label lane, with direct via stacks only at the M2 label
+    and M1 NAND pin.  M2 is reserved for the supply drops and must not be
+    used for this cross-channel run."""
+    m3 = layers[3]
     nx = NAND2_X(bit)
     nand_a = (nx + NAND2_PINS["a"][0], rail_y + NAND2_PINS["a"][1])
     b_label = (nx + B_LABEL_DX, rail_y + B_LABEL_DY)
+    track_y = B_TRACK_Y(bit)
     _via_stack(top, layers, vias, b_label[0], b_label[1], 2, 3)
-    _wire(top, m2, b_label[0], b_label[1], nand_a[0], b_label[1])
-    _wire(top, m2, nand_a[0], b_label[1], nand_a[0], nand_a[1])
-    _via_stack(top, layers, vias, nand_a[0], nand_a[1], 1, 2)
+    _wire(top, m3, b_label[0], b_label[1], b_label[0], track_y)
+    _wire(top, m3, b_label[0], track_y, nand_a[0], track_y)
+    _wire(top, m3, nand_a[0], track_y, nand_a[0], nand_a[1])
+    _via_stack(top, layers, vias, nand_a[0], nand_a[1], 1, 3)
     return b_label
 
 
