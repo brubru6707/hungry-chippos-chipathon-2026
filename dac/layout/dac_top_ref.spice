@@ -17,13 +17,13 @@
 * SAMPLE_N, so this reference encodes the as-built order: outer nfet
 * gate = SAMPLE_N, inner nfet gate = B<n>.
 *
-* Dummy handling: 69 dummy caps appended on a single shared DUMMYRING
-* net (both plates), matching the as-built layout where all 69 dummies
-* merge into one net that is NOT connected to the labelled "0" spine
-* (layout net $6 in the 2026-07-19 first compare). NOTE: DAC-6 intent
-* was dummies tied to GND -- the isolated ring is flagged as a real
-* pre-tapeout fix; when the layout ring is strapped to ground, change
-* DUMMYRING back to 0 here. Active 255 + dummy 69 = 324 caps.
+* Dummy handling: 69 dummy caps appended, both plates on the global "0"
+* ground (the DAC-6 intent). The as-built layout ties all 69 dummies into
+* one M3 ring frame which is strapped to the "0" spine at top level
+* (route_dummy_ring_gnd in gen_dac_top_floorplan.py, 2026-07-19; the
+* earlier first-compare state had the ring floating as isolated net $6
+* and modelled it here as a dedicated DUMMYRING net -- now restored to 0).
+* Active 255 + dummy 69 = 324 caps.
 .subckt dac_top_floorplan VIN VDD SAMPLE B0 B1 B2 B3 B4 B5 B6 B7 DAC_TOP
 * --- bit 0: nand2 (a=B0, b=SAMPLE_N, y=B0NAND) + driver + 1 caps
 MNP0A B0NAND B0 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
@@ -342,74 +342,74 @@ MIP SAMPLE_N SAMPLE VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
 MIN SAMPLE_N SAMPLE 0 0 nfet_03v3 L=0.3u W=0.85u nf=1
 MTN VIN SAMPLE DAC_TOP 0 nfet_03v3 L=0.28u W=4u nf=1
 MTP DAC_TOP SAMPLE_N VIN VDD pfet_03v3 L=0.28u W=8u nf=1
-* --- 69 dummy caps, isolated common ring net (see header)
-C256 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C257 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C258 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C259 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C260 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C261 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C262 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C263 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C264 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C265 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C266 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C267 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C268 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C269 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C270 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C271 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C272 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C273 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C274 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C275 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C276 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C277 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C278 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C279 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C280 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C281 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C282 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C283 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C284 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C285 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C286 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C287 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C288 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C289 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C290 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C291 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C292 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C293 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C294 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C295 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C296 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C297 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C298 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C299 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C300 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C301 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C302 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C303 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C304 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C305 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C306 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C307 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C308 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C309 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C310 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C311 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C312 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C313 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C314 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C315 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C316 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C317 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C318 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C319 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C320 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C321 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C322 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C323 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
-C324 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+* --- 69 dummy caps, both plates grounded (see header)
+C256 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C257 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C258 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C259 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C260 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C261 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C262 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C263 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C264 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C265 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C266 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C267 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C268 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C269 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C270 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C271 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C272 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C273 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C274 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C275 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C276 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C277 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C278 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C279 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C280 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C281 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C282 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C283 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C284 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C285 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C286 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C287 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C288 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C289 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C290 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C291 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C292 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C293 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C294 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C295 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C296 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C297 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C298 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C299 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C300 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C301 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C302 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C303 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C304 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C305 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C306 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C307 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C308 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C309 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C310 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C311 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C312 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C313 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C314 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C315 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C316 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C317 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C318 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C319 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C320 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C321 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C322 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C323 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C324 0 0 cap_mim_2f0fF W=5e-6 L=5e-6 M=1
 .ends dac_top_floorplan

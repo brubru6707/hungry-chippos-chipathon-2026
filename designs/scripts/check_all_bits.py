@@ -182,6 +182,8 @@ global_checks = [
     ("inv1 VDD", INV1["vdd"], "VDD backbone", VDD_BACKBONE),
     ("inv1 0", INV1["gnd"], "GND backbone", GND_BACKBONE),
     ("TG DVDD nwell-tap", TG["dvdd"], "VDD backbone", VDD_BACKBONE),
+    # South bar of cap_array's dummy-ring M3 GND frame (probed centerline).
+    ("dummy ring frame", ((0.0, -85.79), 3), "GND backbone", GND_BACKBONE),
 ]
 for name_a, (pt_a, la), name_b, (pt_b, lb) in global_checks:
     ca, cb = comp_of(*pt_a, la), comp_of(*pt_b, lb)

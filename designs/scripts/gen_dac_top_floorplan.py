@@ -308,6 +308,28 @@ def route_tg_dvdd(top, layers, vias):
     _wire(top, m5, px, riser_y, px, VDD_SPINE_Y, SUPPLY_POUR_W)
 
 
+def route_dummy_ring_gnd(top, layers, vias):
+    """Dummy-ring M3 GND frame -> "0" M5 spine.
+
+    cap_array's own dummy-tie structure (see gen_dac_cap_layout.py's
+    _route_dummy_gnd) already merges all 69 dummy caps' plates into one M3
+    perimeter frame whose south bar centerline is y=-85.79 (probed:
+    the frame IS the outermost M3, bbox == the cell bbox) -- it was simply
+    never strapped to the top-level ground.  The strap is a same-layer M3
+    trunk leaving the south bar straight down at x=0 (the corridor
+    x in [-2,2] below the frame is empty on M2..M5 inside cap_array, and
+    no top-level route occupies it; the SAMPLE_N M4 trunk at y=-105 is
+    crossed on a different layer with no via), then a single direct
+    M3->M5 via stack landing INSIDE the 6um-tall "0" spine bar, whose own
+    metal provides the top-metal enclosure.
+    """
+    m3 = layers[3]
+    ring_x, ring_south_y = 0.0, -85.79
+    land_y = -128.0
+    _wire(top, m3, ring_x, ring_south_y, ring_x, land_y)
+    _via_stack(top, layers, vias, ring_x, land_y, 3, 5)
+
+
 def route_globals(top, layers, vias):
     """Route SAMPLE/SAMPLE_N generation, inv1 supplies, VIN, and DAC_TOP.
 
@@ -523,6 +545,7 @@ def main():
     _wire(top, layers[4], SAMPLE_STACK_X, SAMPLE_TRUNK_Y, DETOUR_X_0, SAMPLE_TRUNK_Y)
     route_globals(top, layers, vias)
     route_tg_dvdd(top, layers, vias)
+    route_dummy_ring_gnd(top, layers, vias)
 
     # Bit 7 uses its own M4 dogleg; the other bits use the established
     # RAIL_Y-18 jog assignment.
