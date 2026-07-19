@@ -142,3 +142,5 @@
 | Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🟢 DAC-only nominal sweep PASS post VREF=VDD rework (FS span=3293mV=99.8% of 3.3V, max\|DNL\|=0.002 LSB, max\|INL\|=0.004 LSB, see DAC-9); cap-mismatch (the real linearity limit) also **PASSES at Cu=50fF (≥99.9997% yield, corrected local-mismatch model, see DAC-9b — LSB-based conclusion unaffected by the rework)** — no upsizing needed, common-centroid layout (DAC-5) still required for systematic-gradient cancellation. Full ADC-level (with comparator + sequencing) integration still ⚪ |
 | Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
 | Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |
+
+**DAC physical integration (2026-07-19):** bit-4 pin-geometry checkpoint reached. B4 label→NAND2<4> A is extraction-confirmed; the remaining SAMPLE_N→B, NAND Y→driver, and driver VOUT→B4-rail chains are still open in flat extraction. Variant-D DRC remains 0/660. This is not a Gate-5 pass.
