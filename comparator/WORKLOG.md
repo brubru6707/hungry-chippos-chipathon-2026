@@ -105,3 +105,26 @@ All numbers in `comparator/sim/comp_delay_corner_summary.txt` (per-run files
   stale shorted `strongarm_extracted.cir`).
 
 No schematic touched.
+
+## 2026-07-19 — fresh LVS-clean StrongARM extraction (checkpoint)
+
+Re-extracted from
+`layout/backups/strongarm_LVS_CLEAN_2026-07-10_10h44m1783694640.gds` with the
+documented `run_lvs.py` terminal flow, variant D, flat mode, and `VSS` as the
+LVS substrate. The fresh run is retained at
+`layout/klayout_lvs_run_postlayout_20260719/`.
+
+- **LVS:** `INFO : Congratulations! Netlists match.`
+- **Connectivity:** VOUT2 and VSS are distinct in the raw extracted deck;
+  no `VOUT2|VSS` merged net appears.
+- **Devices:** 11 MOSFETs (6 PFET + 5 NFET), matching the schematic.
+- **Extraction content:** device-level connectivity/geometry only; no
+  extracted interconnect capacitance or resistance. Therefore subsequent
+  delay values are device-level post-layout/LVS-clean measurements, not
+  full-RC-extracted timing.
+- **Simulation deck:** `layout/strongarm_extracted_clean.spice` is the
+  checked-in, X-prefixed simulation conversion of the raw KLayout deck;
+  it preserves extracted W/L and topology while omitting KLayout MOS-only
+  AS/AD/PS/PD annotations that GF180's subckt models do not accept. The stale
+  `layout/strongarm_extracted.cir` remains unused because it contains the
+  historical VOUT2|VSS short.
