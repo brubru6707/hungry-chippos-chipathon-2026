@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Placement-only hierarchical floorplan for the 8-bit DAC.
+"""Hierarchical floorplan for the 8-bit DAC.
 
-This deliberately creates no interconnect geometry: it only instantiates the
+This instantiates the
 already DRC/LVS-clean cap array, NAND2s, sized bottom-plate drivers, SAMPLE_N
 inverter, and top-plate TG.  The rail-coordinate constants are derived from
 gen_dac_cap_layout.py's routed Metal2 backbone plan.
@@ -72,6 +72,24 @@ def main():
     # leaving a direct SAMPLE_N channel to the TG and a broad VIN corridor.
     add(top, tgate, 88.0, 0.0)
     add(top, inv1, 112.0, 18.0)
+
+    # Deliberately keep the first top-level routing checkpoint restricted to
+    # a *labelled* pair of wide M5 supply rails.  The child cells' supply
+    # access points are not all on a common edge (and the large bit-7 driver
+    # overlaps several nominal row channels), so connecting them safely needs
+    # a routing-aware pass rather than naive vertical drops that would create
+    # unverified M2/M3 shorts.  These rails form the reserved low-R backbone
+    # for that pass and make the global net names explicit in the GDS.
+    li_m5 = layout.layer(81, 0)
+    li_m1lbl = layout.layer(34, 10)
+    def box(x0, y0, x1, y1):
+        return db.Box(int(round(x0 / DBU)), int(round(y0 / DBU)),
+                      int(round(x1 / DBU)), int(round(y1 / DBU)))
+    top.shapes(li_m5).insert(box(-292.0, 121.0, 112.0, 127.0))
+    top.shapes(li_m5).insert(box(-292.0, -131.0, 112.0, -125.0))
+    top.shapes(li_m1lbl).insert(db.Text("VDD", int(round(-280.0 / DBU)), int(round(124.0 / DBU))))
+    # The schematic global ground-net spelling is exactly `0`.
+    top.shapes(li_m1lbl).insert(db.Text("0", int(round(-280.0 / DBU)), int(round(-128.0 / DBU))))
 
     layout.write(OUT)
     b = top.bbox()

@@ -59,6 +59,7 @@
 | DAC-7 | Sub-block DRC clean | TBD | 🟢 Complete | `run_dac_drc.sh` on routed `cap_array.gds`, variant=D: **0 violations**, 660 rule categories, full untruncated run. |
 | DAC-8 | Sub-block LVS clean (caps-only) | TBD | 🟢 Complete | `run_dac_lvs.sh`, variant=D, against `dac/layout/cap_array_caps_only_ref.spice` (native C-element reference): **Netlists match**, 324 layout and 324 reference devices. Full array+switch LVS remains deferred until switch layout. |
 | DAC-10 | Full DAC floorplan + placement (pre-routing) | Bruno | 🟢 Complete | `dac/layout/dac_top_floorplan.gds`, `designs/scripts/gen_dac_top_floorplan.py` — hierarchical cap-array core, 8 NAND2/driver columns y-aligned to their Metal2 bit-rail exits, and right-side SAMPLE_N inverter/TG placement. **No routing yet.** Variant-D placement DRC: **0 violations / 660 rule categories**; full-block LVS deferred until routing. |
+| DAC-10a | Top-level power-routing checkpoint | Bruno | 🟡 In Progress | `dac/layout/dac_top_floorplan.gds` — 6um-wide labelled M5 VDD and global-ground (`0`) backbones placed across the full block; Variant-D DRC **0 violations / 660 categories**. Drops to cells and all signal routing remain pending; no LVS run. |
 
 ---
 
