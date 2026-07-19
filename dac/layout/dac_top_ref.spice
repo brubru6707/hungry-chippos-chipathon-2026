@@ -1,0 +1,415 @@
+* Full-block native-element LVS reference for dac_top_floorplan,
+* derived from dac/schematic/cap_array.sch (8x nand2 + 8x unit_switch
+* drivers + inv1 + tgate + binary-weighted cap_mim array).
+* Device cards copied verbatim from the cell-level LVS-proven refs:
+*   nand2_ref.spice, unit_switch_bit0/1_6/7_ref.spice, inv1_ref.spice,
+*   tgate_ref.spice, cap_array_caps_only_ref.spice.
+* Native M/C elements are MANDATORY (X-subckt calls silently drop to
+* 0 devices in gf180mcu.lvs -- see run_dac_lvs.sh header).
+* Cap bottom plates connect to the internal driver-VOUT rails RAIL<n>,
+* NOT the digital B<n> ports. Ground is the schematic global "0".
+*
+* NAND nfet stack order (2026-07-19 first-compare finding): the physical
+* nand2 cell gates the GROUND-side series nfet with pin A and the Y-side
+* nfet with pin B (see lvs_run_nand2_clean/nand2_lvs.cir M$3/M$4) -- the
+* mirror of nand2_ref.spice. Logically identical (NAND is input-
+* symmetric) but LVS cannot permute the fixed top-level nets B<n>/
+* SAMPLE_N, so this reference encodes the as-built order: outer nfet
+* gate = SAMPLE_N, inner nfet gate = B<n>.
+*
+* Dummy handling: 69 dummy caps appended on a single shared DUMMYRING
+* net (both plates), matching the as-built layout where all 69 dummies
+* merge into one net that is NOT connected to the labelled "0" spine
+* (layout net $6 in the 2026-07-19 first compare). NOTE: DAC-6 intent
+* was dummies tied to GND -- the isolated ring is flagged as a real
+* pre-tapeout fix; when the layout ring is strapped to ground, change
+* DUMMYRING back to 0 here. Active 255 + dummy 69 = 324 caps.
+.subckt dac_top_floorplan VIN VDD SAMPLE B0 B1 B2 B3 B4 B5 B6 B7 DAC_TOP
+* --- bit 0: nand2 (a=B0, b=SAMPLE_N, y=B0NAND) + driver + 1 caps
+MNP0A B0NAND B0 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP0B B0NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN0B B0NAND SAMPLE_N NMID0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN0A NMID0 B0 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP0 RAIL0 B0NAND VDD VDD pfet_03v3 L=0.28u W=0.84u nf=1
+MDN0 RAIL0 B0NAND 0 0 nfet_03v3 L=0.28u W=0.42u nf=1
+* --- bit 1: nand2 (a=B1, b=SAMPLE_N, y=B1NAND) + driver + 2 caps
+MNP1A B1NAND B1 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP1B B1NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN1B B1NAND SAMPLE_N NMID1 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN1A NMID1 B1 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP1 RAIL1 B1NAND VDD VDD pfet_03v3 L=0.28u W=1.68u nf=1
+MDN1 RAIL1 B1NAND 0 0 nfet_03v3 L=0.28u W=0.84u nf=1
+* --- bit 2: nand2 (a=B2, b=SAMPLE_N, y=B2NAND) + driver + 4 caps
+MNP2A B2NAND B2 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP2B B2NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN2B B2NAND SAMPLE_N NMID2 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN2A NMID2 B2 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP2 RAIL2 B2NAND VDD VDD pfet_03v3 L=0.28u W=3.36u nf=1
+MDN2 RAIL2 B2NAND 0 0 nfet_03v3 L=0.28u W=1.68u nf=1
+* --- bit 3: nand2 (a=B3, b=SAMPLE_N, y=B3NAND) + driver + 8 caps
+MNP3A B3NAND B3 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP3B B3NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN3B B3NAND SAMPLE_N NMID3 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN3A NMID3 B3 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP3 RAIL3 B3NAND VDD VDD pfet_03v3 L=0.28u W=6.72u nf=1
+MDN3 RAIL3 B3NAND 0 0 nfet_03v3 L=0.28u W=3.36u nf=1
+* --- bit 4: nand2 (a=B4, b=SAMPLE_N, y=B4NAND) + driver + 16 caps
+MNP4A B4NAND B4 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP4B B4NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN4B B4NAND SAMPLE_N NMID4 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN4A NMID4 B4 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP4 RAIL4 B4NAND VDD VDD pfet_03v3 L=0.28u W=13.44u nf=1
+MDN4 RAIL4 B4NAND 0 0 nfet_03v3 L=0.28u W=6.72u nf=1
+* --- bit 5: nand2 (a=B5, b=SAMPLE_N, y=B5NAND) + driver + 32 caps
+MNP5A B5NAND B5 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP5B B5NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN5B B5NAND SAMPLE_N NMID5 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN5A NMID5 B5 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP5 RAIL5 B5NAND VDD VDD pfet_03v3 L=0.28u W=26.88u nf=1
+MDN5 RAIL5 B5NAND 0 0 nfet_03v3 L=0.28u W=13.44u nf=1
+* --- bit 6: nand2 (a=B6, b=SAMPLE_N, y=B6NAND) + driver + 64 caps
+MNP6A B6NAND B6 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP6B B6NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN6B B6NAND SAMPLE_N NMID6 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN6A NMID6 B6 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP6 RAIL6 B6NAND VDD VDD pfet_03v3 L=0.28u W=53.76u nf=1
+MDN6 RAIL6 B6NAND 0 0 nfet_03v3 L=0.28u W=26.88u nf=1
+* --- bit 7: nand2 (a=B7, b=SAMPLE_N, y=B7NAND) + driver + 128 caps
+MNP7A B7NAND B7 VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNP7B B7NAND SAMPLE_N VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MNN7B B7NAND SAMPLE_N NMID7 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MNN7A NMID7 B7 0 0 nfet_03v3 L=0.3u W=1.7u nf=1
+MDP7A RAIL7 B7NAND VDD VDD pfet_03v3 L=0.28u W=53.76u nf=1
+MDP7B RAIL7 B7NAND VDD VDD pfet_03v3 L=0.28u W=53.76u nf=1
+MDN7 RAIL7 B7NAND 0 0 nfet_03v3 L=0.28u W=53.76u nf=1
+C1 RAIL0 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C2 RAIL1 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C3 RAIL1 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C4 RAIL2 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C5 RAIL2 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C6 RAIL2 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C7 RAIL2 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C8 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C9 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C10 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C11 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C12 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C13 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C14 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C15 RAIL3 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C16 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C17 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C18 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C19 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C20 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C21 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C22 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C23 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C24 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C25 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C26 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C27 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C28 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C29 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C30 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C31 RAIL4 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C32 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C33 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C34 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C35 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C36 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C37 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C38 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C39 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C40 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C41 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C42 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C43 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C44 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C45 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C46 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C47 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C48 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C49 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C50 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C51 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C52 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C53 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C54 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C55 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C56 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C57 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C58 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C59 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C60 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C61 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C62 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C63 RAIL5 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C64 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C65 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C66 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C67 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C68 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C69 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C70 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C71 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C72 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C73 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C74 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C75 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C76 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C77 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C78 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C79 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C80 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C81 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C82 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C83 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C84 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C85 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C86 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C87 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C88 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C89 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C90 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C91 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C92 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C93 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C94 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C95 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C96 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C97 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C98 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C99 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C100 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C101 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C102 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C103 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C104 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C105 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C106 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C107 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C108 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C109 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C110 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C111 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C112 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C113 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C114 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C115 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C116 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C117 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C118 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C119 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C120 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C121 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C122 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C123 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C124 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C125 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C126 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C127 RAIL6 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C128 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C129 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C130 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C131 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C132 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C133 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C134 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C135 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C136 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C137 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C138 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C139 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C140 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C141 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C142 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C143 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C144 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C145 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C146 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C147 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C148 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C149 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C150 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C151 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C152 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C153 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C154 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C155 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C156 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C157 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C158 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C159 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C160 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C161 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C162 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C163 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C164 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C165 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C166 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C167 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C168 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C169 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C170 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C171 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C172 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C173 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C174 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C175 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C176 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C177 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C178 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C179 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C180 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C181 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C182 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C183 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C184 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C185 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C186 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C187 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C188 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C189 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C190 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C191 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C192 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C193 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C194 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C195 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C196 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C197 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C198 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C199 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C200 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C201 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C202 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C203 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C204 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C205 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C206 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C207 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C208 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C209 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C210 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C211 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C212 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C213 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C214 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C215 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C216 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C217 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C218 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C219 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C220 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C221 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C222 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C223 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C224 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C225 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C226 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C227 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C228 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C229 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C230 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C231 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C232 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C233 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C234 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C235 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C236 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C237 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C238 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C239 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C240 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C241 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C242 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C243 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C244 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C245 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C246 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C247 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C248 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C249 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C250 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C251 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C252 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C253 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C254 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C255 RAIL7 DAC_TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+* --- globals: inv1 (SAMPLE -> SAMPLE_N) + top-plate tgate
+MIP SAMPLE_N SAMPLE VDD VDD pfet_03v3 L=0.3u W=1.7u nf=1
+MIN SAMPLE_N SAMPLE 0 0 nfet_03v3 L=0.3u W=0.85u nf=1
+MTN VIN SAMPLE DAC_TOP 0 nfet_03v3 L=0.28u W=4u nf=1
+MTP DAC_TOP SAMPLE_N VIN VDD pfet_03v3 L=0.28u W=8u nf=1
+* --- 69 dummy caps, isolated common ring net (see header)
+C256 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C257 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C258 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C259 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C260 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C261 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C262 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C263 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C264 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C265 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C266 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C267 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C268 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C269 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C270 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C271 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C272 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C273 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C274 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C275 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C276 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C277 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C278 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C279 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C280 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C281 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C282 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C283 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C284 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C285 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C286 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C287 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C288 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C289 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C290 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C291 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C292 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C293 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C294 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C295 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C296 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C297 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C298 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C299 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C300 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C301 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C302 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C303 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C304 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C305 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C306 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C307 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C308 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C309 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C310 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C311 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C312 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C313 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C314 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C315 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C316 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C317 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C318 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C319 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C320 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C321 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C322 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C323 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+C324 DUMMYRING DUMMYRING cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+.ends dac_top_floorplan
