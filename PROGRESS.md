@@ -58,6 +58,7 @@
 | DAC-6 | Full array layout with dummy/fringe peripheral caps | TBD | 🟢 Complete | `dac/layout/cap_array.gds` — routed 255-unit common-centroid array with all active top plates on the balanced Metal5 `DAC_TOP` mesh; B0–B7 bottom-plate rails; and both plates of all 69 dummies tied to GND. |
 | DAC-7 | Sub-block DRC clean | TBD | 🟢 Complete | `run_dac_drc.sh` on routed `cap_array.gds`, variant=D: **0 violations**, 660 rule categories, full untruncated run. |
 | DAC-8 | Sub-block LVS clean (caps-only) | TBD | 🟢 Complete | `run_dac_lvs.sh`, variant=D, against `dac/layout/cap_array_caps_only_ref.spice` (native C-element reference): **Netlists match**, 324 layout and 324 reference devices. Full array+switch LVS remains deferred until switch layout. |
+| DAC-10 | Full DAC floorplan + placement (pre-routing) | Bruno | 🟢 Complete | `dac/layout/dac_top_floorplan.gds`, `designs/scripts/gen_dac_top_floorplan.py` — hierarchical cap-array core, 8 NAND2/driver columns y-aligned to their Metal2 bit-rail exits, and right-side SAMPLE_N inverter/TG placement. **No routing yet.** Variant-D placement DRC: **0 violations / 660 rule categories**; full-block LVS deferred until routing. |
 
 ---
 
