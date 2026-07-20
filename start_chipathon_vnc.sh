@@ -31,17 +31,10 @@
 # - Added: -e flag to bash to stop on error
 # ========================================================================
 
-<<<<<<< Updated upstream
 # DESIGNS = host path that gets mounted to /foss/designs inside the container.
 # Honor a pre-existing value (shell export or .env), default to the repo root
 # so /foss/designs maps to the root of this repo rather than the designs/ subdir.
 export DESIGNS="${DESIGNS:-$(pwd)}"
-=======
-# Set the DESIGNS environment variable to the 'designs' subdirectory of the current directory.
-# Respect a DESIGNS value provided in the environment (e.g. on the command line);
-# only fall back to ./designs when none is set.
-export DESIGNS="${DESIGNS:-$(pwd)/designs}"
->>>>>>> Stashed changes
 ENVFILE=".env"
 
 if [ -f "${ENVFILE}" ]; then
