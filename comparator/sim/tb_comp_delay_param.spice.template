@@ -1,0 +1,63 @@
+* ============================================================
+* StrongARM comparator - decision delay t_clk->Q vs overdrive
+* PARAMETERIZED template - do NOT run directly; run_comp_delay_sweeps.sh
+* substitutes @CORNER@ @TEMP@ @VDD@ @VTH@ @TAG@ @ODLIST@ and writes a
+* gen_tb_<tag>.spice copy. Vcm = CK trig threshold = VOUT target
+* threshold = VDD/2 (@VTH@) for the corner in use - never hardcode 1.65V.
+*
+* DUT is the 2026-07-19 LVS-clean, device-level layout extraction.  Its
+* X-prefixed devices instantiate the GF180MCU subckt models; the raw LVS
+* M-prefixed deck is intentionally not used for simulation.  No schematic
+* touched.  This extraction has no interconnect R/C, so this is explicitly
+* a device-level post-layout connectivity sign-off, not an RC-extracted run.
+*
+* Delay: CK rising through VDD/2 -> losing output (VOUT1, since
+* VIN1 = Vcm + od > VIN2 = Vcm) falling through VDD/2. Outputs
+* precharge to VDD while CK=0; decision on CK rising edge at t=5n.
+* ============================================================
+
+.temp @TEMP@
+.param sw_stat_global=0
+.param sw_stat_mismatch=0
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice @CORNER@
+
+* tightened tolerances: sub-mV/uV overdrives must not drown in the
+* default vntol (1uV) when probing the metastability limit
+.options reltol=1e-4 vntol=1e-9 abstol=1e-14
+
+.include ../layout/strongarm_extracted_clean.spice
+
+X1 VDD CK OUT2 OUT1 VIN1 VIN2 0 strongarm
+
+* Nominal SAR-logic input load (conservative fallback; actual gate
+* inputs are ~1-2 fF each)
+CL1 OUT1 0 10f
+CL2 OUT2 0 10f
+
+VVDD  VDD  0 @VDD@
+VVIN1 VIN1 0 @VTH@
+VVIN2 VIN2 0 @VTH@
+* CK low 0..5n = precharge (outputs reset to VDD), rising edge at 5n
+VCK   CK   0 PULSE(0 @VDD@ 5n 200p 200p 10n 20n)
+
+.control
+* do NOT save all - memory blowup; only what the measures need
+save v(ck) v(out1) v(out2)
+echo * corner=@CORNER@ temp=@TEMP@ vdd=@VDD@ vcm=@VTH@ vth=@VTH@ > comp_delay_@TAG@.txt
+echo od_V  t_clk2q_s  vout1_at_14n  vout2_at_14n >> comp_delay_@TAG@.txt
+foreach od @ODLIST@
+  let vv = @VTH@ + $od
+  alter @vvin1[dc] = $&vv
+  tran 1p 16n
+  * pre-set to -1 so a failed measure (no decision) is visible, not fatal
+  let t_clk2q = -1
+  meas tran t_clk2q trig v(ck) val=@VTH@ rise=1 targ v(out1) val=@VTH@ fall=1
+  meas tran vo1_end find v(out1) at=14n
+  meas tran vo2_end find v(out2) at=14n
+  echo $od  $&t_clk2q  $&vo1_end  $&vo2_end >> comp_delay_@TAG@.txt
+  destroy $curplot
+end
+echo results written to comp_delay_@TAG@.txt
+.endc
+.end

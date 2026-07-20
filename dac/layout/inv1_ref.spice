@@ -1,0 +1,6 @@
+* Native SPICE LVS reference for inv1 (SAMPLE_N inverter, dac/schematic/inv1.sch).
+* Pin order matches inv1.sch's ipin/opin/iopin declarations: vin vout DVDD DVSS.
+.subckt inv1 vin vout DVDD DVSS
+M1 vout vin DVDD DVDD pfet_03v3 L=0.3u W=1.7u nf=1
+M2 vout vin DVSS DVSS nfet_03v3 L=0.3u W=0.85u nf=1
+.ends

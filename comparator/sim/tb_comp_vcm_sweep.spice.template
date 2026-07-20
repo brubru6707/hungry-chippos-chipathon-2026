@@ -1,0 +1,61 @@
+* ============================================================
+* StrongARM comparator - Vcm operating window at fixed overdrive
+* PARAMETERIZED template - run_comp_delay_sweeps.sh substitutes
+* @CORNER@ @TEMP@ @VDD@ @VTH@ @TAG@ @OD@ @VCMLIST@ and writes a
+* gen_tb_<tag>.spice copy. Output decision threshold = VDD/2 (@VTH@).
+* VIN1 = Vcm + od, VIN2 = Vcm; correct polarity = VOUT1 falls.
+* Documents the known full-rail Vcm issue (see WORKLOG / COMP-5).
+* DUT subckt: 1:1 X-prefixed copy of strongarm.spice; no schematic touched.
+* ============================================================
+
+.temp @TEMP@
+.param sw_stat_global=0
+.param sw_stat_mismatch=0
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice @CORNER@
+
+.options reltol=1e-4 vntol=1e-9 abstol=1e-14
+
+.subckt strongarm VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
+XM1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM4 net3 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM5 net1 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM8 net1 VIN2 net2 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM10 net3 VIN1 net2 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1
+.ends
+
+X1 VDD CK OUT2 OUT1 VIN1 VIN2 0 strongarm
+CL1 OUT1 0 10f
+CL2 OUT2 0 10f
+
+VVDD  VDD  0 @VDD@
+VVIN1 VIN1 0 @VTH@
+VVIN2 VIN2 0 @VTH@
+VCK   CK   0 PULSE(0 @VDD@ 5n 200p 200p 10n 20n)
+
+.control
+save v(ck) v(out1) v(out2)
+echo * corner=@CORNER@ temp=@TEMP@ vdd=@VDD@ od=@OD@ vth=@VTH@ > comp_vcm_@TAG@.txt
+echo vcm_V  t_clk2q_s  vout1_at_14n  vout2_at_14n >> comp_vcm_@TAG@.txt
+foreach vcm @VCMLIST@
+  let v1 = $vcm + @OD@
+  alter @vvin1[dc] = $&v1
+  alter @vvin2[dc] = $vcm
+  tran 1p 16n
+  * -1 = losing output never crossed VDD/2 (no/failed decision)
+  let t_clk2q = -1
+  meas tran t_clk2q trig v(ck) val=@VTH@ rise=1 targ v(out1) val=@VTH@ fall=1
+  meas tran vo1_end find v(out1) at=14n
+  meas tran vo2_end find v(out2) at=14n
+  echo $vcm  $&t_clk2q  $&vo1_end  $&vo2_end >> comp_vcm_@TAG@.txt
+  destroy $curplot
+end
+echo results written to comp_vcm_@TAG@.txt
+.endc
+.end

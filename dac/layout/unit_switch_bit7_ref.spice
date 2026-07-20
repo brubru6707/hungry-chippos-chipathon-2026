@@ -1,0 +1,12 @@
+* Native SPICE LVS reference for unit_switch_bit7 (MSB checkpoint driver
+* cell -- proves pfet_m=2 layout construction). Per unit_switch.sch's
+* header comment, the MSB's PMOS needs 107.52u total width, over the
+* 100.001u single-device binning ceiling, so it's realized as pfet_m=2:
+* two parallel W=53.76u PMOS devices, matching this project's established
+* "m" convention (dac/layout/cap_array_caps_only_ref.spice: N separate
+* parallel native elements, not a single M= SPICE parameter).
+.subckt unit_switch_bit7 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=53.76u nf=1
+M2 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=53.76u nf=1
+M3 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=53.76u nf=1
+.ends

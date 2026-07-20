@@ -1,0 +1,10 @@
+* Native SPICE LVS reference for nand2 (per-bit SAMPLE-gating control logic,
+* dac/schematic/nand2.sch). Pin order matches nand2.sch's ipin/opin/iopin
+* declarations: a b y DVDD DVSS. "mid" is the internal series-NMOS node
+* (not a cell port, matches nand2.sch's internal lab_wire net).
+.subckt nand2 a b y DVDD DVSS
+M1 y a DVDD DVDD pfet_03v3 L=0.3u W=1.7u nf=1
+M2 y b DVDD DVDD pfet_03v3 L=0.3u W=1.7u nf=1
+M3 y a mid DVSS nfet_03v3 L=0.3u W=1.7u nf=1
+M4 mid b DVSS DVSS nfet_03v3 L=0.3u W=1.7u nf=1
+.ends

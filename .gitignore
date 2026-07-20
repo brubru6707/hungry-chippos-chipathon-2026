@@ -47,3 +47,11 @@ context/
 Tutorials/
 
 *.gds.backup
+
+# Generated ngspice decks (regenerate via run_comp_delay_sweeps.sh)
+comparator/sim/gen_tb_*.spice
+
+# DRC/LVS run directories (regenerate via the respective run scripts)
+dac/layout/drc_run_*/
+dac/layout/lvs_run_*/
+comparator/layout/klayout_lvs_run_*/

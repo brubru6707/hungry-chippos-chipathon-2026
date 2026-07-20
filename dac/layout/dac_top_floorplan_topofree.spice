@@ -1,0 +1,3 @@
+* Temporary topology-free reference used only to obtain the PDK flat extraction.
+.subckt dac_top_floorplan VIN VDD SAMPLE B0 B1 B2 B3 B4 B5 B6 B7 DAC_TOP
+.ends dac_top_floorplan
