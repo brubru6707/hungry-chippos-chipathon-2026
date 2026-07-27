@@ -91,5 +91,5 @@ echo MC N=$&mc_runs good=$&ngood mean=$&mu sigma=$&sig > /foss/designs/comparato
 print offset_results >> /foss/designs/comparator/comp2_mc_report.txt
 .endc
 "}
-C {comparator_2stage.sym} 210 -160 0 0 {name=x1}
 C {lab_pin.sym} 60 -190 0 0 {name=p7 sig_type=std_logic lab=CKL}
+C {comparator/schematic/comparator_2stage.sym} 210 -160 0 0 {name=x2}
