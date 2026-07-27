@@ -5,7 +5,6 @@ V {}
 S {}
 F {}
 E {}
-C {preamp_dyn.sym} 190 -180 0 0 {name=x1}
 C {title.sym} 40 -40 0 0 {name=l1 author="Luc Bastien"}
 C {gnd.sym} 340 -150 0 0 {name=l2 lab=0}
 C {lab_pin.sym} 340 -170 2 0 {name=p1 sig_type=std_logic lab=DIP1}
@@ -41,3 +40,4 @@ C {code_shown.sym} 550 -590 0 0 {name=MODELS only_toplevel=false value="
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
 "
 }
+C {comparator/schematic/preamp_dyn.sym} 190 -180 0 0 {name=x2}

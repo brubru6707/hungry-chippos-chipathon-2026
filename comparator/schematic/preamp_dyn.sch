@@ -40,8 +40,8 @@ N 100 -180 170 -180 {lab=VDD}
 C {symbols/nfet_03v3.sym} -190 50 0 0 {name=M1P
 L=1u
 W=4u
-nf=16
-m=1
+nf=1
+m=16
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
 pd="'2*int((nf+1)/2) * (W/nf + 0.18u)'"
 as="'int((nf+2)/2) * W/nf * 0.18u'"
@@ -49,13 +49,12 @@ ps="'2*int((nf+2)/2) * (W/nf + 0.18u)'"
 nrd="'0.18u / W'" nrs="'0.18u / W'"
 sa=0 sb=0 sd=0
 model=nfet_03v3
-spiceprefix=X
-}
+spiceprefix=X}
 C {symbols/nfet_03v3.sym} -20 200 0 0 {name=MT1
 L=0.4u
 W=2u
-nf=5
-m=1
+nf=1
+m=5
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
 pd="'2*int((nf+1)/2) * (W/nf + 0.18u)'"
 as="'int((nf+2)/2) * W/nf * 0.18u'"
@@ -63,13 +62,12 @@ ps="'2*int((nf+2)/2) * (W/nf + 0.18u)'"
 nrd="'0.18u / W'" nrs="'0.18u / W'"
 sa=0 sb=0 sd=0
 model=nfet_03v3
-spiceprefix=X
-}
+spiceprefix=X}
 C {symbols/nfet_03v3.sym} 190 50 0 1 {name=M2P
 L=1u
 W=4u
-nf=16
-m=1
+nf=1
+m=16
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
 pd="'2*int((nf+1)/2) * (W/nf + 0.18u)'"
 as="'int((nf+2)/2) * W/nf * 0.18u'"
@@ -105,8 +103,7 @@ ps="'2*int((nf+2)/2) * (W/nf + 0.18u)'"
 nrd="'0.18u / W'" nrs="'0.18u / W'"
 sa=0 sb=0 sd=0
 model=pfet_03v3
-spiceprefix=X
-}
+spiceprefix=X}
 C {ipin.sym} -270 50 0 0 {name=p1 lab=VIN1}
 C {ipin.sym} 270 50 2 0 {name=p2 lab=VIN2}
 C {iopin.sym} 210 -230 0 0 {name=p4 lab=VDD}
