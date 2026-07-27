@@ -1,0 +1,56 @@
+# StrongARM decision delay - corner + metastability + Vcm sweeps
+# Schematic-level (X-prefixed 1:1 copy of strongarm.spice), 10 fF/output load.
+# Generated 2026-07-19 by run_comp_delay_sweeps.sh (parameterized tb:
+# Vcm = CK trig threshold = VOUT target threshold = VDD/2 per corner).
+# Spec target: t_clk->Q < 2 ns. LSB = 12.914 mV; 0.5 LSB = 6.457 mV.
+
+## STEP 1 - corners @ od = 0.5 LSB = 6.457 mV, Vcm = VDD/2
+# corner  temp_C  VDD_V  VDD/2_thresh_V  t_clk2q      polarity
+  TT      27      3.30   1.650           201.9 ps     correct
+  SS      125     2.97   1.485           362.1 ps     correct   <-- WORST
+  FF      -40     3.63   1.815           124.9 ps     correct
+  SS      125     3.30   1.650           308.7 ps     correct   (temp/process split)
+# Split: TT->SS+125C at 3.3V costs ~107 ps; VDD 3.3->2.97 adds ~53 ps more.
+
+## STEP 2 - overdrive sweep @ SS/125C/2.97V (worst corner), Vcm = 1.485 V
+# od_V      t_clk2q
+  6.457e-3  362.1 ps
+  1.0e-3    369.2 ps
+  0.5e-3    369.9 ps
+  0.2e-3    370.3 ps
+  0.1e-3    370.5 ps
+  10e-6     370.6 ps
+  1e-6      370.6 ps   (identical to 0.1e-6: solver resolution floor)
+  0.1e-6    370.6 ps
+# Delay SATURATES at ~370.6 ps - it does not log-diverge over any resolvable
+# overdrive. overdrive@1ns and overdrive@2ns: NOT REACHABLE above the 0.1 uV
+# numerical floor (reltol=1e-4, vntol=1nV); margin to the 2 ns spec is 5.4x
+# even at 0.1 uV effective overdrive. Against sigma_offset = 36.9 mV: a
+# mismatch sample that nearly cancels the input (effective od -> ~0) still
+# resolves in ~371 ps at the worst corner - metastability is not the
+# schematic-level delay hazard. (True metastable window exists only below
+# 0.1 uV differential - negligible probability per decision.)
+
+## STEP 3 - Vcm window @ SS/125C/2.97V, od = 6.457 mV (VOUT thresh 1.485 V)
+# vcm_V   t_clk2q     vout1@14n  verdict
+  0.30    no decision  3.03 V    FAIL (outputs stay precharged)
+  0.45    no decision  3.00 V    FAIL
+  0.60    no decision  2.01 V    FAIL (partial sag, latch never resolves)
+  0.65    7.67 ns      1.31 V    FAIL (crosses VDD/2 but hovers - no clean 0)
+  0.70    4.67 ns      0.53 V    MARGINAL (slow, level not settled)
+  0.80    2.37 ns      ~0 V      SLOW (clean resolve, exceeds 2 ns spec)
+  0.85    1.79 ns      ~0 V      PASS
+  0.90    1.40 ns      ~0 V      PASS
+  1.05    0.80 ns      ~0 V      PASS
+  1.20    0.55 ns      ~0 V      PASS
+  1.485   0.362 ns     ~0 V      PASS (= VDD/2, SAR operating point)
+  1.65    0.314 ns     ~0 V      PASS
+  ...monotonically faster...
+  2.67    0.239 ns     ~0 V      PASS (top of sweep, VDD-0.3)
+# Operating window at worst corner: Vcm >= 0.85 V (spec-compliant) up to at
+# least VDD-0.3; hard failure below ~0.65 V - this is the known full-rail
+# (low-rail) Vcm issue. Correct polarity in every resolving run.
+
+## WORST CASE for extracted sign-off
+# SS / 125C / VDD=2.97V, Vcm = VDD/2 = 1.485V, effective overdrive <= 0.1 mV
+# (offset-cancelled). Schematic-level delay there: ~370.6 ps (5.4x margin).

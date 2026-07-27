@@ -1,0 +1,22 @@
+* StrongARM device-level netlist re-extracted 2026-07-19 from
+* backups/strongarm_LVS_CLEAN_2026-07-10_10h44m1783694640.gds.
+* Source LVS deck: klayout_lvs_run_postlayout_20260719/strongarm_lvs.cir.
+* LVS: match, 11 MOS devices, VOUT2 and VSS distinct.  This is device-level
+* LVS extraction only: it contains no extracted interconnect R or C.
+* Device prefix converted M -> X for the GF180 subcircuit models.  The
+* KLayout-only AS/AD/PS/PD annotations are intentionally omitted because the
+* model subcircuits expose geometry W/L/NF, not MOS-instance parasitic terms.
+
+.subckt strongarm VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
+X1  VDD   VOUT2 VOUT1 VDD pfet_03v3 L=0.28u W=0.42u nf=1
+X2  VDD   CK    net3  VDD pfet_03v3 L=0.28u W=0.42u nf=1
+X3  VDD   CK    net1  VDD pfet_03v3 L=0.28u W=0.42u nf=1
+X4  VDD   CK    VOUT2 VDD pfet_03v3 L=0.28u W=0.42u nf=1
+X5  VDD   VOUT1 VOUT2 VDD pfet_03v3 L=0.28u W=0.42u nf=1
+X6  VOUT1 CK    VDD   VDD pfet_03v3 L=0.28u W=0.42u nf=1
+X7  net2  CK    VSS   VSS nfet_03v3 L=0.28u W=2u nf=1
+X8  net1  VIN2  net2  VSS nfet_03v3 L=0.28u W=2u nf=1
+X9  net2  VIN1  net3  VSS nfet_03v3 L=0.28u W=2u nf=1
+X10 VOUT2 VOUT1 net1  VSS nfet_03v3 L=0.28u W=2u nf=1
+X11 VOUT1 VOUT2 net3  VSS nfet_03v3 L=0.28u W=2u nf=1
+.ends strongarm

@@ -1,0 +1,59 @@
+* Transmission-gate top-plate switch sizing/eval (Brief #10, Step 1).
+* Standalone device-level deck (not xschem-netlisted testbench) so
+* nfet_wid/pfet_wid can be swept quickly by text substitution, same
+* technique as eval_bootstrap_switch.spice and the earlier PVT sweeps
+* (see dac/WORKLOG.md). tgate subckt below is copied verbatim from
+* xschem's own flattened netlist of dac/schematic/tgate.sch
+* (`cd /foss/designs && xschem -q -x -n dac/schematic/tgate.sch`,
+* output at /headless/.xschem/simulations/tgate.spice) with nfet_wid/
+* nfet_len/pfet_wid/pfet_len promoted to .param so ngspice -b can run
+* it directly without xschem's subckt-param passing.
+*
+* Load: single lumped 255*50fF + 20fF(comparator placeholder) = 12.77pF
+* from the B node (DAC_TOP side) to ground -- valid stand-in for the
+* real cap_array with the new bottom-plates-to-GND-during-sample scheme
+* (same justification as eval_bootstrap_switch.spice).
+*
+* SAMPLE/SAMPLE_N driven by ideal complementary PWL sources (0.5ns
+* edges) -- this is a device-only eval of the switch itself, not the
+* driving inverter; the driving inverter (x_sampinv, already in
+* cap_array.sch) will be exercised for real once integrated in Step 2.
+
+.param mim_corner_1p0fF=1 mim_corner_1p5fF=1 mim_corner_2p0fF=1
+.param mc_c_cox_1p0fF=0 mc_c_cox_1p5fF=0 mc_c_cox_2p0fF=0
+.param var_vth=0 var_k=0
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.options savecurrents
+
+.param nfet_wid=4u
+.param pfet_wid=8u
+.param nfet_len=0.28u
+.param pfet_len=0.28u
+
+.subckt tgate A B SAMPLE SAMPLE_N DVDD DVSS
+XM1 A SAMPLE B DVSS nfet_03v3 L='nfet_len' W='nfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 B SAMPLE_N A DVDD pfet_03v3 L='pfet_len' W='pfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u'
++ pd='2*int((nf+1)/2) * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+V_VDD VDD 0 3.3
+.param VIN_DC=3.0
+V_VIN A 0 dc VIN_DC
+* HOLD (switch open) 0-20n, then SAMPLE (switch closed) for 200n.
+V_SAMPLE SAMPLE 0 pulse(0 3.3 20n 0.5n 0.5n 200n 500n)
+V_SAMPLEN SAMPLE_N 0 pulse(3.3 0 20n 0.5n 0.5n 200n 500n)
+
+Xsw A B SAMPLE SAMPLE_N VDD 0 tgate
+Cload B 0 12.77p
+.ic v(B)=0
+
+.control
+save all
+tran 10p 220n uic
+wrdata /tmp/tgate_tran.csv v(B) v(A) v(SAMPLE)
+.endc
+.GLOBAL VDD
+.end
