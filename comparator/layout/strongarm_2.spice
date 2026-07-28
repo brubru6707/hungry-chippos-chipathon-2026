@@ -1,15 +1,15 @@
 ** sch_path: /foss/designs/comparator/schematic/strongarm_2.sch
 .subckt strongarm_2 VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
 *.PININFO VOUT1:O VOUT2:O VIN1:I VIN2:I CK:I VDD:B VSS:B
-M1 VOUT2 VOUT1 net1 net1 nfet_03v3 L=0.28u W=0.22u nf=1
-M2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.22u nf=1
+M1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1
+M2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
 M3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
 M4 net3 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
 M5 net1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
 M6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
-M7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.22u nf=1
-M8 net1 VIN2 net2 net2 nfet_03v3 L=1u W=8u nf=1
-M9 VOUT1 VOUT2 net3 net3 nfet_03v3 L=0.28u W=0.22u nf=1
-M10 net3 VIN1 net2 net2 nfet_03v3 L=1u W=8u nf=1
-M11 net2 CK VSS net2 nfet_03v3 L=0.28u W=0.22u nf=1
+M7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+M8 net1 VIN2 net2 VSS nfet_03v3 L=1u W=8u nf=1
+M9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1
+M10 net3 VIN1 net2 VSS nfet_03v3 L=1u W=8u nf=1
+M11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1
 .ends

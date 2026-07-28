@@ -5,5 +5,4 @@ M1P DIP1 VIN1 TAIL VSS nfet_03v3 L=1u W=4u nf=1 m=16
 MT1 TAIL CK VSS VSS nfet_03v3 L=0.4u W=2u nf=1 m=5
 M2P DIP2 VIN2 TAIL VSS nfet_03v3 L=1u W=4u nf=1 m=16
 MP1 DIP1 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1
-MP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1
-.ends
+MP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u

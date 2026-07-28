@@ -1,4 +1,4 @@
-* Extracted by KLayout with GF180MCU LVS runset on : 27/07/2026 21:17
+* Extracted by KLayout with GF180MCU LVS runset on : 28/07/2026 16:48
 
 .SUBCKT preamp_dyn CK DIP1 DIP2 VIN1 VIN2 VDD VSS
 M$1 DIP2 VIN2 \$3 VSS nfet_03v3 L=1U W=64U AS=18.04P AD=18.04P PS=77.02U

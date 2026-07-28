@@ -30,18 +30,6 @@ N -130 -20 90 -70 {lab=VOUT1}
 N -90 -70 130 -20 {lab=VOUT2}
 N -580 -70 -550 -70 {lab=CK}
 N 0 310 0 360 {lab=#net2}
-N -240 110 -130 110 {lab=#net3}
-N -240 110 -240 140 {lab=#net3}
-N -240 140 -130 140 {lab=#net3}
-N -130 280 -20 280 {lab=#net2}
-N -20 250 -20 280 {lab=#net2}
-N -130 250 -20 250 {lab=#net2}
-N 20 250 130 250 {lab=#net2}
-N 20 250 20 280 {lab=#net2}
-N 20 280 130 280 {lab=#net2}
-N 130 140 240 140 {lab=#net1}
-N 240 110 240 140 {lab=#net1}
-N 130 110 240 110 {lab=#net1}
 N -200 -70 -130 -70 {lab=VDD}
 N -200 -100 -200 -70 {lab=VDD}
 N -200 -100 -130 -100 {lab=VDD}
@@ -56,9 +44,7 @@ N 290 -100 360 -100 {lab=VDD}
 N 450 -70 520 -70 {lab=VDD}
 N 450 -100 450 -70 {lab=VDD}
 N 450 -100 520 -100 {lab=VDD}
-N 0 390 70 390 {lab=#net2}
-N 70 360 70 390 {lab=#net2}
-N 0 360 70 360 {lab=#net2}
+N 0 390 70 390 {lab=VSS}
 N -510 -150 550 -150 {lab=VDD}
 N -360 -100 -290 -100 {lab=VDD}
 N -290 -100 -290 -70 {lab=VDD}
@@ -88,9 +74,11 @@ N -580 -200 660 -200 {lab=CK}
 N -580 -200 -580 -70 {lab=CK}
 N -540 -150 -510 -150 {lab=VDD}
 N 290 -100 290 -70 {lab=VDD}
+N 70 390 70 420 {lab=VSS}
+N -0 420 70 420 {lab=VSS}
 C {symbols/nfet_03v3.sym} 110 110 0 0 {name=M1
 L=0.28u
-W=0.22u
+W=2u
 nf=1
 m=1
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
@@ -104,7 +92,7 @@ spiceprefix=X
 }
 C {symbols/pfet_03v3.sym} -110 -70 0 1 {name=M2
 L=0.28u
-W=0.22u
+W=0.42u
 nf=1
 m=1
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
@@ -174,7 +162,7 @@ spiceprefix=X
 }
 C {symbols/pfet_03v3.sym} 110 -70 0 0 {name=M7
 L=0.28u
-W=0.22u
+W=0.42u
 nf=1
 m=1
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
@@ -202,7 +190,7 @@ spiceprefix=X
 }
 C {symbols/nfet_03v3.sym} -110 110 0 1 {name=M9
 L=0.28u
-W=0.22u
+W=2u
 nf=1
 m=1
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
@@ -230,7 +218,7 @@ spiceprefix=X
 }
 C {symbols/nfet_03v3.sym} -20 390 0 0 {name=M11
 L=0.28u
-W=0.22u
+W=2u
 nf=1
 m=1
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
@@ -249,3 +237,7 @@ C {ipin.sym} 220 250 0 1 {name=p9 lab=VIN2}
 C {ipin.sym} -580 -70 0 0 {name=CK lab=CK}
 C {iopin.sym} 550 -150 0 0 {name=p1 lab=VDD}
 C {iopin.sym} 0 420 1 0 {name=p6 lab=VSS}
+C {lab_pin.sym} -130 110 0 0 {name=p4 sig_type=std_logic lab=VSS}
+C {lab_pin.sym} 130 110 2 0 {name=p5 sig_type=std_logic lab=VSS}
+C {lab_pin.sym} 130 250 0 0 {name=p7 sig_type=std_logic lab=VSS}
+C {lab_pin.sym} -130 250 2 0 {name=p10 sig_type=std_logic lab=VSS}
