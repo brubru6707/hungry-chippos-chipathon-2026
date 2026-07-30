@@ -1,0 +1,5 @@
+* Native-element LVS reference for SAR tg (sar_logic/sar_designs/tg.sch, post W/L fix)
+.subckt tg CTRL VSS A B VDD CTRL_B
+M1 A CTRL_B B VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 A CTRL B VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
