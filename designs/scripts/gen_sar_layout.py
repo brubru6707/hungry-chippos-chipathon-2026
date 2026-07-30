@@ -284,14 +284,270 @@ def build_nor2(layout, cell_name="nor2", pfet_w=2.0, nfet_w=0.5):
 def main():
     layout = db.Layout()
     layout.dbu = 0.001
-    build_inv(layout)
-    build_tg(layout)
-    build_nand2(layout)
-    build_nor2(layout)
+    cells = {
+        "inv": build_inv(layout),
+        "tg": build_tg(layout),
+        "nand2": build_nand2(layout),
+        "nor2": build_nor2(layout),
+    }
+    build_dff(layout, cells, "set")
+    build_dff(layout, cells, "rst")
     options = db.SaveLayoutOptions()
     options.write_context_info = False
     layout.write("/foss/designs/sar_logic/layout/sar_cells.gds", options)
     print("wrote sar_logic/layout/sar_cells.gds with topcells:", [c.name for c in layout.each_cell()])
+
+
+
+
+# ======================================================================
+# Step 2: DFF assembly -- leaf cells in a row + M2-track/M3-drop channel
+# ======================================================================
+
+from gen_dac_switch_layout import (  # noqa: E402
+    _m2_wire,
+    _m3_wire,
+    _via2_hop,
+    _via_transition,
+)
+
+PIN_NAMES = {
+    "inv": ("VDD", "VSS", "vin", "vout"),
+    "tg": ("VDD", "VSS", "A", "B", "CTRL", "CTRL_B"),
+    "nand2": ("VDD", "VSS", "A", "B", "Z"),
+    "nor2": ("VDD", "VSS", "A", "B", "Z"),
+}
+CELL_GAP = 1.2    # leaf-bbox gap in the row (also > NW.2a's 0.6um same-potential nwell rule)
+TRACK_PITCH = 0.65  # M2 track pitch: 0.195 (landing-pad hw) + 0.16 (wire hw)
+                    # + 0.28 (M2.2a) = 0.635 -- a drop's track-landing pad
+                    # must clear the NEIGHBORING track's wire, not just
+                    # wire-to-wire (which 0.6 would satisfy)
+DROP_PITCH = 0.8   # min x pitch between M3 drop verticals
+
+# Pins that sit on a leaf device's native gate-contact pad. The native pad is
+# only ~0.26um wide with S/D contact-column M1 ~0.44um away on BOTH sides, so
+# the standard 0.46um _via_transition landing violates M1.2a (0.31um) there.
+# V1.3a needs zero M1 overlap of via1, and V1.3c's end-of-line overlap only
+# applies along the narrow direction's ends -- so a 0.26um-wide by 0.60um-tall
+# landing (matching the native pad width, extending along the gate) is legal
+# on both counts while keeping exactly 0.31um to the neighbors.
+GATE_PINS = {
+    ("inv", "vin"), ("tg", "CTRL"), ("tg", "CTRL_B"),
+    ("nand2", "A"), ("nand2", "B"), ("nor2", "A"), ("nor2", "B"),
+}
+
+
+def _cell_pins(cell, names):
+    """Pin-label positions (um) of `cell`, filtered to `names`."""
+    layout = cell.layout()
+    li = layout.layer(34, 10)
+    dbu = layout.dbu
+    out = {}
+    for shp in cell.shapes(li).each():
+        if shp.is_text() and shp.text.string in names:
+            out[shp.text.string] = (shp.text.x * dbu, shp.text.y * dbu)
+    return out
+
+
+def _place_row(layout, top, cells, insts):
+    """Place leaf instances left-to-right, bbox tops aligned at y=0.
+    insts: list of (inst_name, cell_name, {leaf_pin: net}).
+    Returns (pin_list, row_right): pin_list = [(net, x, y), ...]."""
+    dbu = layout.dbu
+    x_cursor = 0.0
+    pin_list = []
+    supply_pins = {}
+    for _iname, cname, pinmap in insts:
+        cell = cells[cname]
+        bb = cell.bbox()
+        x_off = x_cursor - bb.left * dbu
+        y_off = -bb.top * dbu
+        top.insert(db.CellInstArray(
+            cell.cell_index(),
+            db.Trans(db.Vector(int(round(x_off / dbu)), int(round(y_off / dbu)))),
+        ))
+        pins = _cell_pins(cell, PIN_NAMES[cname])
+        for leaf_pin, net in pinmap.items():
+            px, py = pins[leaf_pin]
+            if net in ("VDD", "VSS"):
+                # supplies ride M1 straps, not channel tracks (congestion +
+                # power integrity) -- see build_dff
+                supply_pins.setdefault(net, []).append((px + x_off, py + y_off))
+                continue
+            kind = "gate" if (cname, leaf_pin) in GATE_PINS else "pad"
+            pin_list.append((net, px + x_off, py + y_off, kind))
+        x_cursor += bb.width() * dbu + CELL_GAP
+    return pin_list, supply_pins, x_cursor - CELL_GAP
+
+
+def channel_route(layout, top, pin_list, exports, y_ch0):
+    """Connect every pin of each net through one M2 track per net in the
+    channel above the row (y >= y_ch0), reaching pins with M3 verticals.
+
+    Constraint model (why this is correct by construction): leaf cells are
+    poly+M1 only, so M2/M3 may run anywhere over them. The only conflicts
+    possible are M2-track vs M2-track (avoided: one exclusive track y per
+    net) and M3-drop vs M3-drop (avoided: >= DROP_PITCH x spacing via the
+    greedy assignment below). M3 verticals crossing foreign M2 tracks are
+    different layers. Each drop is: pin M1 pad -> via1/M2 -> short same-y
+    M2 jog to its assigned drop x -> via2/M3 -> vertical to its net's
+    track y -> via2/M2 landing merged with the track.
+
+    exports: [(net, port_name), ...] -> M3 stubs from the net track up to
+    a pad row at the channel top, labeled for the next hierarchy level.
+    Returns y_top of the export pad row."""
+    dbu = layout.dbu
+    li_m1 = layout.layer(34, 0)
+    li_m1lbl = layout.layer(34, 10)
+    li_v1 = layout.layer(35, 0)
+    li_m2 = layout.layer(36, 0)
+    li_v2 = layout.layer(38, 0)
+    li_m3 = layout.layer(42, 0)
+
+    def um(v):
+        return int(round(v / dbu))
+
+    def m2_pad(x, y, hw=0.195):
+        top.shapes(li_m2).insert(db.Box(um(x - hw), um(y - hw), um(x + hw), um(y + hw)))
+
+    nets = []
+    for net, _x, _y, _k in pin_list:
+        if net not in nets:
+            nets.append(net)
+    track_y = {net: y_ch0 + i * TRACK_PITCH for i, net in enumerate(nets)}
+    y_top = y_ch0 + len(nets) * TRACK_PITCH + 0.6
+
+    # greedy left-to-right drop-x assignment at >= DROP_PITCH
+    order = sorted(range(len(pin_list)), key=lambda i: (pin_list[i][1], pin_list[i][2]))
+    drop_x = {}
+    cursor = None
+    for i in order:
+        x = pin_list[i][1]
+        cursor = x if cursor is None else max(x, cursor + DROP_PITCH)
+        drop_x[i] = cursor
+
+    span = {net: [None, None] for net in nets}
+    for i, (net, px, py, kind) in enumerate(pin_list):
+        dx = drop_x[i]
+        if kind == "gate":
+            # skinny-tall M1 landing on the native gate pad (see GATE_PINS)
+            top.shapes(li_m1).insert(db.Box(um(px - 0.13), um(py - 0.30), um(px + 0.13), um(py + 0.30)))
+            top.shapes(li_v1).insert(db.Box(um(px - 0.13), um(py - 0.13), um(px + 0.13), um(py + 0.13)))
+            m2_pad(px, py)
+        else:
+            _via_transition(top, dbu, px, py, li_m1, li_v1, li_m2)
+        if abs(dx - px) > 0.005:
+            _m2_wire(top, dbu, px, py, dx, py, li_m2)
+            m2_pad(dx, py)  # V2.3c/d: via2 needs a full pad, not the 0.32um wire end
+        _via2_hop(top, dbu, dx, py, li_v2, li_m3)
+        ty = track_y[net]
+        _m3_wire(top, dbu, dx, py, dx, ty, li_m3)
+        m2_pad(dx, ty)      # V2.3c/d: landing pad where the vertical meets the track
+        _via2_hop(top, dbu, dx, ty, li_v2, li_m3)
+        s = span[net]
+        s[0] = dx if s[0] is None else min(s[0], dx)
+        s[1] = dx if s[1] is None else max(s[1], dx)
+
+    # export stubs get their own x slots right of all drops
+    ex_x0 = (max(d for d in drop_x.values()) if drop_x else 0.0) + 1.0
+    for k, (net, port) in enumerate(exports):
+        ex = ex_x0 + k * DROP_PITCH
+        ty = track_y[net]
+        m2_pad(ex, ty)
+        _via2_hop(top, dbu, ex, ty, li_v2, li_m3)
+        _m3_wire(top, dbu, ex, ty, ex, y_top, li_m3)
+        top.shapes(li_m3).insert(db.Box(
+            int(round((ex - 0.195) / dbu)), int(round((y_top - 0.195) / dbu)),
+            int(round((ex + 0.195) / dbu)), int(round((y_top + 0.195) / dbu)),
+        ))
+        _add_label(top, dbu, ex, y_top, port, li_m1lbl)
+        s = span[net]
+        s[0] = ex if s[0] is None else min(s[0], ex)
+        s[1] = ex if s[1] is None else max(s[1], ex)
+
+    for net in nets:
+        s = span[net]
+        ty = track_y[net]
+        _m2_wire(top, dbu, s[0], ty, s[1], ty, li_m2)
+        # via2/M2 landings along the track already exist at each drop x
+    return y_top, ex_x0 + len(exports) * DROP_PITCH
+
+
+DFF_SET_INSTS = [
+    ("x10", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "CLK", "vout": "net7"}),
+    ("x11", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "RST_N", "vout": "net8"}),
+    ("x2", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "net7", "CTRL_B": "CLK", "A": "D", "B": "net3"}),
+    ("x5", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net3", "B": "net8", "Z": "net1"}),
+    ("x7", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net1", "vout": "net2"}),
+    ("x1", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "CLK", "CTRL_B": "net7", "A": "net2", "B": "net3"}),
+    ("x3", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "CLK", "CTRL_B": "net7", "A": "net2", "B": "net6"}),
+    ("x6", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net6", "B": "net8", "Z": "net4"}),
+    ("x9", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net4", "vout": "net5"}),
+    ("x4", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "net7", "CTRL_B": "CLK", "A": "net5", "B": "net6"}),
+    ("x8", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net4", "vout": "Q"}),
+]
+
+DFF_RST_INSTS = [
+    ("x10", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "CLK", "vout": "net7"}),
+    ("x2", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "net7", "CTRL_B": "CLK", "A": "D", "B": "net1"}),
+    ("x5", "nand2", {"VDD": "VDD", "VSS": "VSS", "A": "net1", "B": "RST_N", "Z": "net3"}),
+    ("x7", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net3", "vout": "net4"}),
+    ("x1", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "CLK", "CTRL_B": "net7", "A": "net4", "B": "net1"}),
+    ("x3", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "CLK", "CTRL_B": "net7", "A": "net4", "B": "net2"}),
+    ("x6", "nand2", {"VDD": "VDD", "VSS": "VSS", "A": "net2", "B": "RST_N", "Z": "net5"}),
+    ("x9", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net5", "vout": "net6"}),
+    ("x4", "tg", {"VDD": "VDD", "VSS": "VSS", "CTRL": "net7", "CTRL_B": "CLK", "A": "net6", "B": "net2"}),
+    ("x8", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net5", "vout": "Q"}),
+]
+
+DFF_PORTS = [("CLK", "CLK"), ("D", "D"), ("Q", "Q"), ("RST_N", "RST_N")]
+
+
+def _supply_straps(layout, top, supply_pins, y_top, ex_x0):
+    """M1 supply straps + M3 export stubs. All leaf cells are top-aligned,
+    so every VDD rail label sits at the same y -- one strap through them
+    merges the rails. VSS rails differ in depth per cell type (different
+    device widths), so each gets a stub down to a common bottom strap.
+    Returns nothing; exports land at the strap's right end."""
+    dbu = layout.dbu
+    li_m1 = layout.layer(34, 0)
+    li_m1lbl = layout.layer(34, 10)
+    li_v1 = layout.layer(35, 0)
+    li_m2 = layout.layer(36, 0)
+    li_v2 = layout.layer(38, 0)
+    li_m3 = layout.layer(42, 0)
+
+    def um(v):
+        return int(round(v / dbu))
+
+    vdd = supply_pins["VDD"]
+    vss = supply_pins["VSS"]
+    vdd_y = vdd[0][1]
+    vss_y = min(y for _x, y in vss) - 0.6
+    ex_vdd = max(ex_x0, max(x for x, _y in vdd + vss) + 2.0)
+    ex_vss = ex_vdd + DROP_PITCH
+    _m1_wire(top, dbu, min(x for x, _y in vdd), vdd_y, ex_vdd, vdd_y, li_m1)
+    for x, y in vss:
+        _m1_wire(top, dbu, x, y, x, vss_y, li_m1)
+    _m1_wire(top, dbu, min(x for x, _y in vss), vss_y, ex_vss, vss_y, li_m1)
+    for port, sx, sy in (("VDD", ex_vdd, vdd_y), ("VSS", ex_vss, vss_y)):
+        _via_transition(top, dbu, sx, sy, li_m1, li_v1, li_m2)
+        _via2_hop(top, dbu, sx, sy, li_v2, li_m3)
+        _m3_wire(top, dbu, sx, sy, sx, y_top, li_m3)
+        top.shapes(li_m3).insert(db.Box(
+            um(sx - 0.195), um(y_top - 0.195), um(sx + 0.195), um(y_top + 0.195)))
+        _add_label(top, dbu, sx, y_top, port, li_m1lbl)
+
+
+def build_dff(layout, cells, variant):
+    name = "dff_set_n" if variant == "set" else "dff_rst_n"
+    insts = DFF_SET_INSTS if variant == "set" else DFF_RST_INSTS
+    top = layout.create_cell(name)
+    pin_list, supply_pins, _right = _place_row(layout, top, cells, insts)
+    y_top, ex_next = channel_route(layout, top, pin_list, DFF_PORTS, y_ch0=1.0)
+    _supply_straps(layout, top, supply_pins, y_top, ex_next)
+    snap_to_grid(top)
+    return top
 
 
 if __name__ == "__main__":

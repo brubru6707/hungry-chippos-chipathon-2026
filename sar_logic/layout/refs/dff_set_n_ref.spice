@@ -1,0 +1,34 @@
+* Shared leaf subckts for DFF LVS references (native M elements)
+.subckt inv VDD vin vout VSS
+M1 vout vin VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 vout vin VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt tg CTRL VSS A B VDD CTRL_B
+M1 A CTRL_B B VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 A CTRL B VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt nand2 VDD Z A B VSS
+M1 Z A VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 Z B VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M3 Z A net1 VSS nfet_03v3 L=0.28u W=1u nf=1
+M4 net1 B VSS VSS nfet_03v3 L=0.28u W=1u nf=1
+.ends
+.subckt nor2 VDD A B Z VSS
+M1 Z B net1 VDD pfet_03v3 L=0.28u W=2u nf=1
+M2 net1 A VDD VDD pfet_03v3 L=0.28u W=2u nf=1
+M3 Z A VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+M4 Z B VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt dff_set_n VDD CLK D Q RST_N VSS
+x1 CLK VSS net2 net3 VDD net7 tg
+x2 net7 VSS D net3 VDD CLK tg
+x3 CLK VSS net2 net6 VDD net7 tg
+x4 net7 VSS net5 net6 VDD CLK tg
+x7 VDD net1 net2 VSS inv
+x8 VDD net4 Q VSS inv
+x9 VDD net4 net5 VSS inv
+x10 VDD CLK net7 VSS inv
+x5 VDD net3 net8 net1 VSS nor2
+x6 VDD net6 net8 net4 VSS nor2
+x11 VDD RST_N net8 VSS inv
+.ends
