@@ -1,0 +1,50 @@
+* tb_sar_logic -- SAR-3: full binary-search functional testbench
+* Transistor-level sar_logic (gf180mcuD typical, 3.3 V) closed in a loop with
+* a behavioral 8-bit DAC and behavioral comparator (B-sources).
+* 5 conversions, one per 1.2 us: VIN = 0.05, 1.66, 0.6, 2.9, 3.25 V
+* Expected codes = floor(VIN*256/3.3) = 3, 128, 46, 224, 252
+* Convention (matches DAC block + Anderson logic): bit kept when VIN > VDAC.
+* CLK 10 MHz (T=100n); RST_N low for 150 n at the start of each conversion;
+* EOC rises 9 clock edges after release; code sampled 40 n after EOC rise.
+
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
+
+.include sar_logic_subckt.spice
+
+VVDD VDD 0 3.3
+VCLK CLK 0 PULSE(0 3.3 0 1n 1n 49n 100n)
+VRST RST_N 0 PULSE(3.3 0 0 1n 1n 150n 1200n)
+VVIN vin 0 PWL(0 0.05 1199n 0.05 1201n 1.66 2399n 1.66 2401n 0.6 3599n 0.6 3601n 2.9 4799n 2.9 4801n 3.25 6000n 3.25)
+
+* port order: VDD VSS BIT_7..BIT_0 EOC RST_N CMP_OUT CLK
+Xsar VDD 0 BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC RST_N CMP_OUT CLK sar_logic
+
+* behavioral ideal 8-bit DAC on the BIT outputs
+BDAC dac 0 V='(3.3/256)*(128*u(v(BIT_7)-1.65)+64*u(v(BIT_6)-1.65)+32*u(v(BIT_5)-1.65)+16*u(v(BIT_4)-1.65)+8*u(v(BIT_3)-1.65)+4*u(v(BIT_2)-1.65)+2*u(v(BIT_1)-1.65)+1*u(v(BIT_0)-1.65))'
+
+* behavioral comparator, ~1 ns RC to mimic finite decision delay (safe direction:
+* C_i must latch the pre-edge decision, so slower CMP_OUT is conservative)
+BCMP cmp_raw 0 V='3.3*u(v(vin)-v(dac))'
+RCMP cmp_raw CMP_OUT 1k
+CCMP CMP_OUT 0 1p
+
+* light loads on the digital outputs
+CB7 BIT_7 0 20f
+CB6 BIT_6 0 20f
+CB5 BIT_5 0 20f
+CB4 BIT_4 0 20f
+CB3 BIT_3 0 20f
+CB2 BIT_2 0 20f
+CB1 BIT_1 0 20f
+CB0 BIT_0 0 20f
+CEOC EOC 0 20f
+
+.tran 0.5n 6000n
+
+.control
+  run
+  wrdata tb_sar_logic_out.txt V(EOC) V(vin) V(dac) V(BIT_7) V(BIT_6) V(BIT_5) V(BIT_4) V(BIT_3) V(BIT_2) V(BIT_1) V(BIT_0)
+.endc
+.end
