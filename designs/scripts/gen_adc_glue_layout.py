@@ -52,9 +52,16 @@ GLUE_INSTS = [
     ("x_nqb", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "V1B", "B": "CMP_OUT", "Z": "QB"}),
 ]
 
+# Export (pad) order is a CHIP-LEVEL routing contract: the three nets
+# arriving from the SAR port column (CLK, CMP_OUT, RST_N) must have pad
+# x in the same relative order as their SAR port x (CLK 91.59 <
+# CMP_OUT 92.39 < RST_N 93.19), or the exclusive-lane orderings required
+# at the two ends of the M5 band lanes contradict each other (found by
+# gen_adc_chip_top.py's cross-net checker).
 GLUE_PORTS = [
-    ("CLK", "CLK"), ("CK", "CK"), ("RST_N", "RST_N"), ("SAMPLE", "SAMPLE"),
-    ("VOUT1", "VOUT1"), ("VOUT2", "VOUT2"), ("CMP_OUT", "CMP_OUT"),
+    ("CLK", "CLK"), ("CMP_OUT", "CMP_OUT"), ("RST_N", "RST_N"),
+    ("CK", "CK"), ("SAMPLE", "SAMPLE"),
+    ("VOUT1", "VOUT1"), ("VOUT2", "VOUT2"),
 ]
 
 
