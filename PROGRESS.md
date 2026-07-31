@@ -173,8 +173,8 @@ Everything remaining is top-level integration.
 
 | # | Item | Block | Blocker / Why it's next |
 |---|------|-------|-------------------------|
-| 1 | Pin-contract table (INT-2) | INT | No dependencies — do first. DAC side fixed (12 pins), SAR side fixed (14 pins: `VDD VSS BIT_7..0 EOC RST_N CMP_OUT CLK`), comparator 7 pins (`CK VIN1 VIN2 VOUT1 VOUT2 VDD VSS`). |
-| 2 | Sync `strongarm.sch` (COMP-10) + create `sar_logic.sym` | COMP/SAR | Both cheap, both prerequisites for INT-3: re-netlisting the comparator regresses LVS without the sync, and the SAR block has no symbol yet. |
+| 1 | ~~Pin-contract table (INT-2)~~ | INT | 🟢 Done 2026-07-30 — `docs/pin_contracts.md`, conversion scheme decided (DAC as VDAC generator; see INT-2 row). |
+| 2 | ~~Sync `strongarm.sch` (COMP-10) + create `sar_logic.sym`~~ | COMP/SAR | 🟢 Done 2026-07-30 — COMP-10 verified by netlist diff; `sar_logic/sar_designs/sar_logic.sym` created, instance pin order verified = subckt port order. |
 | 3 | Stitch ADC top + integration TB (INT-3/4/5) | INT | Needs #1–#2. SAR timing note for the TB: EOC rises 8 CLK edges after RST_N release; code FFs latch on sequencer-tap rising edges. |
 | 4 | **Gate 3 at ADC level** (INT-6) | INT | Needs #3. DAC-only Gate 3 already passes. |
 | 5 | **Gate 4** full corner sweep (INT-7) | INT | Needs #4. |
