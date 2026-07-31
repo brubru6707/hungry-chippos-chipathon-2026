@@ -23,7 +23,7 @@
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
 | INT-1 | Repo skeleton, CI stubs, Docker env verified | Bruno | 🟡 In Progress | `README.md`, `.github/workflows/` |
-| INT-2 | Define precise block pin interfaces (pin-contract table) | Bruno | ⚪ Not Started | `docs/pin_contracts.md` |
+| INT-2 | Define precise block pin interfaces (pin-contract table) | Bruno | 🟢 Complete (2026-07-30) | `docs/pin_contracts.md` — port orders verbatim from the LVS/sim-proven netlists; **conversion scheme decided: DAC as VDAC generator** (DAC VIN pin tied to VSS, SAMPLE = reset-to-0V, ADC input direct to comparator VIN1, DAC_TOP→VIN2, CMP_OUT=VOUT2 polarity via SR NAND latch) — the only full-range scheme with the blocks as built (sampling VIN on the array over-drives the rail at the MSB trial; a mid-rail VIN2 reference carries no VIN information). Glue: CK=~CLK, SAMPLE=~RST_N, SR latch kills the CMP_OUT race. 13 ADC pins. Caveats: low-Vcm window below code ~66 (worst-corner), no input S/H (BW ≈ 1.5 kHz full-scale sine @ 10 MHz CLK). |
 | INT-3 | Top-level schematic stitching (ADC top) | Bruno | ⚪ Not Started | `designs/libs/core_sar_adc/adc_top/adc_top.sch` |
 | INT-4 | Top-level symbol for ADC | Bruno | ⚪ Not Started | `designs/libs/core_sar_adc/adc_top/adc_top.sym` |
 | INT-5 | Integration testbench (TT corner, full conversion cycle) | Bruno | ⚪ Not Started | `designs/libs/tb_sar_adc/tb_adc_top/tb_adc_top.sch` |
