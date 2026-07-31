@@ -170,7 +170,7 @@ EOC      ______________________/‾‾  (8th CLK↑ after release; code valid & 
    options if the team wants full range: PMOS-input or complementary-pair comparator variant
    (COMP-ALT could absorb this), or an input attenuator. **Decision deferred to INT-6 data.**
 2. **Input bandwidth** (no input S/H) — see §2. Fine for chipathon testing; flag in the datasheet.
-3. VOUT1/VOUT2 polarity in §1 is derived from netlist topology; **INT-5 TB must confirm it in sim**
-   before Gate 3 is claimed.
+3. VOUT1/VOUT2 polarity in §1 — **confirmed in-system by INT-5**: with keep wired as "VOUT1 falls"
+   (via the buffered NOR latch), mid-range closed-loop conversions are exact (0.6→46, 2.9→225).
 4. The glue cells (2× nand2, 2× inv) are schematic-level here; they must be added to the top-level
    layout at INT-8 (trivial area, standard cells already have proven layouts in `sar_logic`).
