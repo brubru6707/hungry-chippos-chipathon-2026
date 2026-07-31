@@ -290,8 +290,9 @@ def main():
         "nand2": build_nand2(layout),
         "nor2": build_nor2(layout),
     }
-    build_dff(layout, cells, "set")
-    build_dff(layout, cells, "rst")
+    cells["dff_set_n"] = build_dff(layout, cells, "set")
+    cells["dff_rst_n"] = build_dff(layout, cells, "rst")
+    build_sar_top(layout, cells)
     options = db.SaveLayoutOptions()
     options.write_context_info = False
     layout.write("/foss/designs/sar_logic/layout/sar_cells.gds", options)
@@ -417,18 +418,41 @@ def channel_route(layout, top, pin_list, exports, y_ch0):
     track_y = {net: y_ch0 + i * TRACK_PITCH for i, net in enumerate(nets)}
     y_top = y_ch0 + len(nets) * TRACK_PITCH + 0.6
 
-    # greedy left-to-right drop-x assignment at >= DROP_PITCH
+    # greedy left-to-right drop-x assignment at >= DROP_PITCH. Pins of kind
+    # "m3" (fixed export pads from a sub-block) are immovable: flexible pins
+    # must clear them, hopping past when squeezed (the resulting longer M2
+    # jog only crosses M3 pads/verticals -- different layers -- because the
+    # export pads sit in a y band no flexible pin shares).
     order = sorted(range(len(pin_list)), key=lambda i: (pin_list[i][1], pin_list[i][2]))
+    reserved = sorted(pin_list[i][1] for i in order if pin_list[i][3] == "m3")
     drop_x = {}
     cursor = None
     for i in order:
-        x = pin_list[i][1]
-        cursor = x if cursor is None else max(x, cursor + DROP_PITCH)
-        drop_x[i] = cursor
+        _net, x, _y, kind = pin_list[i]
+        if kind == "m3":
+            drop_x[i] = x
+            cursor = x if cursor is None else max(cursor, x)
+            continue
+        dx = x if cursor is None else max(x, cursor + DROP_PITCH)
+        for r in reserved:
+            if abs(dx - r) < DROP_PITCH:
+                dx = r + DROP_PITCH
+        drop_x[i] = dx
+        cursor = dx
 
     span = {net: [None, None] for net in nets}
     for i, (net, px, py, kind) in enumerate(pin_list):
         dx = drop_x[i]
+        if kind == "m3":
+            # drop starts on an existing M3 export pad -- no via1, no jog
+            ty = track_y[net]
+            _m3_wire(top, dbu, px, py, px, ty, li_m3)
+            m2_pad(px, ty)
+            _via2_hop(top, dbu, px, ty, li_v2, li_m3)
+            s = span[net]
+            s[0] = px if s[0] is None else min(s[0], px)
+            s[1] = px if s[1] is None else max(s[1], px)
+            continue
         if kind == "gate":
             # skinny-tall M1 landing on the native gate pad (see GATE_PINS)
             top.shapes(li_m1).insert(db.Box(um(px - 0.13), um(py - 0.30), um(px + 0.13), um(py + 0.30)))
@@ -546,6 +570,98 @@ def build_dff(layout, cells, variant):
     pin_list, supply_pins, _right = _place_row(layout, top, cells, insts)
     y_top, ex_next = channel_route(layout, top, pin_list, DFF_PORTS, y_ch0=1.0)
     _supply_straps(layout, top, supply_pins, y_top, ex_next)
+    snap_to_grid(top)
+    return top
+
+
+
+
+# ======================================================================
+# Step 3: sar_logic top level -- 17 DFFs + 8x(nor2+inv) in one row
+# ======================================================================
+# Same channel scheme one level up. DFF pins are M3 export pads at the
+# cell top edge (kind "m3": fixed x, no via1/jog -- the drop starts on
+# M3 directly). nor2/inv leaves stay poly+M1-only, so their pins accept
+# ordinary drops even under the top channel. Supplies are plain channel
+# nets here: ~67 supply pins spread over a ~1.2mm row have none of the
+# congestion that motivated the DFF-level M1 straps.
+
+DFF_PIN_NAMES = ("VDD", "CLK", "D", "Q", "RST_N", "VSS")
+
+SAR_TOP_INSTS = [
+    # 9-FF one-hot sequencer (S7 seeds via async set; D of S7 tied to VSS)
+    ("XS7", "dff_set_n", {"VDD": "VDD", "CLK": "CLK", "D": "VSS", "Q": "net1", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS6", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net1", "Q": "net8", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS5", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net8", "Q": "net2", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS4", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net2", "Q": "net3", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS3", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net3", "Q": "net4", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS2", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net4", "Q": "net7", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS1", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net7", "Q": "net5", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XS0", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net5", "Q": "net6", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("XSEOC", "dff_rst_n", {"VDD": "VDD", "CLK": "CLK", "D": "net6", "Q": "EOC", "RST_N": "RST_N", "VSS": "VSS"}),
+    # per-bit slices: code FF (clocked by the next sequencer tap) + OR stage
+    ("XC7", "dff_rst_n", {"VDD": "VDD", "CLK": "net8", "D": "CMP_OUT", "Q": "net9", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x1", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net9", "B": "net1", "Z": "net17"}),
+    ("x2", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net17", "vout": "BIT_7"}),
+    ("XC6", "dff_rst_n", {"VDD": "VDD", "CLK": "net2", "D": "CMP_OUT", "Q": "net10", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x3", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net10", "B": "net8", "Z": "net18"}),
+    ("x4", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net18", "vout": "BIT_6"}),
+    ("XC5", "dff_rst_n", {"VDD": "VDD", "CLK": "net3", "D": "CMP_OUT", "Q": "net11", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x5", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net11", "B": "net2", "Z": "net19"}),
+    ("x6", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net19", "vout": "BIT_5"}),
+    ("XC4", "dff_rst_n", {"VDD": "VDD", "CLK": "net4", "D": "CMP_OUT", "Q": "net12", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x7", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net12", "B": "net3", "Z": "net20"}),
+    ("x8", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net20", "vout": "BIT_4"}),
+    ("XC3", "dff_rst_n", {"VDD": "VDD", "CLK": "net7", "D": "CMP_OUT", "Q": "net13", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x9", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net13", "B": "net4", "Z": "net21"}),
+    ("x10", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net21", "vout": "BIT_3"}),
+    ("XC2", "dff_rst_n", {"VDD": "VDD", "CLK": "net5", "D": "CMP_OUT", "Q": "net14", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x11", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net14", "B": "net7", "Z": "net22"}),
+    ("x12", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net22", "vout": "BIT_2"}),
+    ("XC1", "dff_rst_n", {"VDD": "VDD", "CLK": "net6", "D": "CMP_OUT", "Q": "net15", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x13", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net15", "B": "net5", "Z": "net23"}),
+    ("x14", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net23", "vout": "BIT_1"}),
+    ("XC0", "dff_rst_n", {"VDD": "VDD", "CLK": "EOC", "D": "CMP_OUT", "Q": "net16", "RST_N": "RST_N", "VSS": "VSS"}),
+    ("x15", "nor2", {"VDD": "VDD", "VSS": "VSS", "A": "net16", "B": "net6", "Z": "net24"}),
+    ("x16", "inv", {"VDD": "VDD", "VSS": "VSS", "vin": "net24", "vout": "BIT_0"}),
+]
+
+SAR_TOP_PORTS = [
+    ("VDD", "VDD"), ("VSS", "VSS"),
+    ("BIT_7", "BIT_7"), ("BIT_6", "BIT_6"), ("BIT_5", "BIT_5"), ("BIT_4", "BIT_4"),
+    ("BIT_3", "BIT_3"), ("BIT_2", "BIT_2"), ("BIT_1", "BIT_1"), ("BIT_0", "BIT_0"),
+    ("EOC", "EOC"), ("RST_N", "RST_N"), ("CMP_OUT", "CMP_OUT"), ("CLK", "CLK"),
+]
+
+TOP_CELL_GAP = 2.5  # extra clearance so leaf-pin M2 jogs pushed rightward
+                    # cannot reach into a neighboring DFF's internal M2/M3
+
+
+def build_sar_top(layout, cells):
+    top = layout.create_cell("sar_logic")
+    dbu = layout.dbu
+    x_cursor = 0.0
+    pin_list = []
+    for _iname, cname, pinmap in SAR_TOP_INSTS:
+        cell = cells[cname]
+        bb = cell.bbox()
+        x_off = x_cursor - bb.left * dbu
+        y_off = -bb.top * dbu
+        top.insert(db.CellInstArray(
+            cell.cell_index(),
+            db.Trans(db.Vector(int(round(x_off / dbu)), int(round(y_off / dbu)))),
+        ))
+        if cname.startswith("dff"):
+            pins = _cell_pins(cell, DFF_PIN_NAMES)
+            kinds = {p: "m3" for p in DFF_PIN_NAMES}
+        else:
+            pins = _cell_pins(cell, PIN_NAMES[cname])
+            kinds = {p: ("gate" if (cname, p) in GATE_PINS else "pad") for p in PIN_NAMES[cname]}
+        for leaf_pin, net in pinmap.items():
+            px, py = pins[leaf_pin]
+            pin_list.append((net, px + x_off, py + y_off, kinds[leaf_pin]))
+        x_cursor += bb.width() * dbu + TOP_CELL_GAP
+    channel_route(layout, top, pin_list, SAR_TOP_PORTS, y_ch0=1.2)
     snap_to_grid(top)
     return top
 
