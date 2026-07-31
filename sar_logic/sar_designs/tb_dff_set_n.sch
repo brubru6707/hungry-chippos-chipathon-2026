@@ -26,7 +26,7 @@ N 260 100 260 150 {lab=0}
 N 50 150 260 150 {lab=0}
 C {vsource.sym} -200 100 0 0 {name=VRST value="PULSE(3.3 0 100n 1n 1n 100n 1000n)" savecurrent=false}
 C {vsource.sym} -270 100 0 0 {name=VCLK value="PULSE(0 3.3 0 1n 1n 50n 100n)" savecurrent=false}
-C {vsource.sym} -350 100 0 0 {name=VDATA value=0 savecurrent=false}
+C {vsource.sym} -350 100 0 0 {name=VDATA value="PULSE(0 3.3 10n 1n 1n 120n 240n)" savecurrent=false}
 C {vsource.sym} -420 100 0 0 {name=VVDD value=3.3 savecurrent=false}
 C {gnd.sym} 50 160 0 0 {name=l1 lab=0}
 C {capa.sym} 260 70 0 0 {name=CLOAD

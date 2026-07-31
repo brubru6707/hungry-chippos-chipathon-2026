@@ -1,0 +1,21 @@
+* Shared leaf subckts for DFF LVS references (native M elements)
+.subckt inv VDD vin vout VSS
+M1 vout vin VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 vout vin VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt tg CTRL VSS A B VDD CTRL_B
+M1 A CTRL_B B VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 A CTRL B VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt nand2 VDD Z A B VSS
+M1 Z A VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 Z B VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M3 Z A net1 VSS nfet_03v3 L=0.28u W=1u nf=1
+M4 net1 B VSS VSS nfet_03v3 L=0.28u W=1u nf=1
+.ends
+.subckt nor2 VDD A B Z VSS
+M1 Z B net1 VDD pfet_03v3 L=0.28u W=2u nf=1
+M2 net1 A VDD VDD pfet_03v3 L=0.28u W=2u nf=1
+M3 Z A VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+M4 Z B VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends

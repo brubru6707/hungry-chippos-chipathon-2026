@@ -92,4 +92,4 @@ print offset_results >> /foss/designs/comparator/comp2_mc_report.txt
 .endc
 "}
 C {lab_pin.sym} 60 -190 0 0 {name=p7 sig_type=std_logic lab=CKL}
-C {comparator/schematic/comparator_2stage.sym} 210 -160 0 0 {name=x2}
+C {comparator_alt/schematic/comparator_2stage.sym} 210 -160 0 0 {name=x2}
