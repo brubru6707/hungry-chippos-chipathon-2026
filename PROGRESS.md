@@ -52,7 +52,7 @@
 | COMP-6 | Comparator physical layout (KLayout) | Bruno | 🟢 Complete | `comparator/layout/strongarm.gds` |
 | COMP-7 | Sub-block DRC clean | Bruno | 🟢 Complete | `comparator/layout/backups/strongarm_DRC_CLEAN_2026-07-10_15h26m1783711590.gds` — 0 violations (antenna clean; density flags only whole-cell minimum-density, deferred to chip-level dummy fill) |
 | COMP-8 | Sub-block LVS clean (KLayout, not Netgen) | Bruno | 🟢 Complete | `comparator/layout/backups/strongarm_LVS_CLEAN_2026-07-10_10h44m1783694640.gds` — netlists match, 11/11 devices correct. **Note:** verify via the terminal `run_lvs.py` flow in `handoff/README.md`, not the KLayout GUI's "Run KLayout LVS" menu action — that GUI path has a confirmed bug (false short) on this layout, tracked in `bugs/github-issue.md` |
-| COMP-9 | Post-layout extraction (PEX) corner simulation | TBD | 🟡 Partial | `comparator/layout/strongarm_extracted_clean.spice` — device-level extracted deck (LVS-clean GDS, 11 devices) exists and was used for the COMP-5 delay sign-off. **Missing: true parasitic R/C extraction** (interconnect cap/res), which is what would change the numbers. Given the 5.4x delay margin, PEX is a confirmation step, not a risk item. |
+| COMP-9 | Post-layout extraction (PEX) corner simulation | TBD | 🟡 Partial | `comparator/layout/strongarm_extracted_clean.spice` — device-level extracted deck (LVS-clean GDS, 11 devices) exists and was used for the COMP-5 delay sign-off. **Missing: true parasitic R/C extraction.** Magic ext2spice attempted 2026-07-31 (`comparator/layout/pex/`): the gf180mcuD magic tech mis-binds this hand-drawn GDS's nets (34/10 labels not read as ports, nets merge into VSS) — needs real tech-setup work, not pursued. Bounding evidence from the partial extraction: every interconnect coupling cap magic did report is 0.01–0.3 fF, ≪ the 10 fF/output load already assumed in the COMP-5 sign-off; wire R at this 83 µm scale is tens of Ω vs kΩ device Ron. With the 5.4× delay margin, PEX remains confirmation, not risk. |
 | COMP-10 | Sync `strongarm.sch` to the LVS-proven netlist | Bruno | 🟢 Complete (2026-07-30) | `comparator/schematic/strongarm.sch` — fixed the unit-less `M1 L=0.28` typo (→ `0.28u`) and replaced all five NMOS source-tied bulk U-loops (M1→net1, M8/M10/M11→net2, M9→net3 — unbuildable without deep-nwell) with `lab_wire` VSS ties at the bulk pins. **Verified by re-netlisting headlessly and diffing device lines against `strongarm.spice`: exact match** (topology, W/L, bulks, port order `VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS`). The schematic is now safe to instantiate at ADC top level. |
 | COMP-11 | Latch-up hardening — additional substrate taps | Bruno | 🟢 Complete (2026-07-31, at chip level) | `adc_top/layout/adc_chip_top.gds` — 11 p-substrate taps (copies of strongarm's own proven tap stack) in a row under the chip's M5 VSS band branch at y 174, x 350–500 µm, spanning the glue + comparator region; each tied into the branch by a via1–via4 stack. Verified inside the INT-8 chip DRC 0/660 + LVS. The chip-level dummy fill (COMP-7 note) also closed in INT-8. |
 
@@ -150,10 +150,10 @@
 | ID | Task | Owner | Status | Artifact |
 |----|------|-------|--------|----------|
 | REP-1 | Python script: parse ngspice `.raw` → DNL/INL | Bruno | 🟢 Complete | `designs/scripts/extract_dnl_inl.py` — reads the `tb_inl_dnl.sch` transient CSV, reports FS span, DNL, INL (endpoint + best-fit), monotonicity/missing-code checks, writes the DNL/INL-vs-code figures. |
-| REP-2 | Python script: FFT spectrum → ENOB / SNDR | Bruno | ⚪ Not Started | `designs/scripts/calc_enob.py` |
-| REP-3 | Master simulation runner script | Bruno | ⚪ Not Started | `designs/scripts/run_all_sims.sh` |
-| REP-4 | Reproducibility environment doc | Bruno | ⚪ Not Started | `REPRODUCIBILITY.md` |
-| REP-5 | CI library-check passes on `main` branch | Bruno | ⚪ Not Started | `.github/workflows/library_check.yml` |
+| REP-2 | Python script: FFT spectrum → ENOB / SNDR | Bruno | 🟢 Complete (2026-07-31) | `designs/scripts/calc_enob.py` — coherent-FFT SNDR/ENOB with two modes: direct code-series FFT (future silicon captures) and **static-transfer-projected**: reconstructs transition thresholds from the Gate-3 code-center sweep, applies them to a coherent sine, FFTs. Datasheet run (0.65–3.25 V sine = 79% FS, N=8192): **SNDR 45.3 dB → ENOB 7.23 bits** (static figure; no-S/H BW caveat documented). |
+| REP-3 | Master simulation runner script | Bruno | 🟢 Complete (2026-07-31) | `designs/scripts/run_all_sims.sh` — regenerates all generated layouts + refs, runs the full DRC/LVS suite (5 blocks + chip + density + antenna), PASS/FAIL summary; Gate-3 256-run sweep behind `--full`. Validated end-to-end: **ALL CHECKS PASS**. Gotcha encoded: `run_dac_{drc,lvs}.sh` cd into the run dir — every path they receive must be absolute. |
+| REP-4 | Reproducibility environment doc | Bruno | 🟢 Complete (2026-07-31) | `REPRODUCIBILITY.md` — container setup (HOME/USER/PATH workarounds), non-negotiable sim settings table, per-gate re-run commands, artifact/reference table, datasheet lines. |
+| REP-5 | CI library-check passes on `main` branch | Bruno | 🟢 Complete (2026-07-31) | `.github/workflows/library_check.yml` + `designs/scripts/ci_library_check.py` — plain-runner scope (pip klayout, no PDK): GDS integrity/topcell/bbox for all 6 signed-off layouts, LVS-reference device-count guards (X-call sneaking in changes the count), ENOB ≥ 7.0 regression, script compile. Validated green locally; full DRC/LVS stays the container flow per REPRODUCIBILITY.md. |
 
 ---
 
@@ -163,7 +163,7 @@
 
 | Item | Status |
 |------|--------|
-| Define measurable target specs: Resolution, ENOB, conversion rate, DNL, INL | 🟡 Partial — full-scale (3.3 V) and 1 LSB (12.9 mV) now fixed and recorded in `VERIFICATION_PLAN.md`; DNL/INL gates (Gate 3/4) exist. Still missing: target ENOB and a conversion-rate/sample-rate number (`PROGRESS.md` says "Not defined yet"). |
+| Define measurable target specs: Resolution, ENOB, conversion rate, DNL, INL | 🟢 Done (2026-07-31) — 8-bit, FS 3.3 V, 1 LSB 12.9 mV, DNL/INL < 0.5 LSB (Gates 3/4 PASS), **ENOB 7.23 bits / SNDR 45.3 dB** (static-projected, `calc_enob.py`), **833 kS/s @ 10 MHz** (12 CLK/conversion). Pending only team ratification of the last two numbers. |
 | S/H simulation must load worst-case DAC switch config + comparator input cap, not an ideal/light load | 🟢 Done — `tb_sample_hold.sch` loads the full 12.77 pF array + 20 fF comparator cap; full-range acquisition PASS, worst-corner error <0.02 mV. |
 | DAC capacitor sizing should be justified via kT/C noise budget, not just "C_u ≥ 50 fF" as a guess | 🟢 Done — kT/C ≈ 18 µV rms for C ≈ 12.75 pF, ~360× below 0.5 LSB. C_u is matching-limited, not noise-limited. |
 | Avoid a bootstrap switch for the 8-bit DAC specifically — a sized transmission gate is sufficient and cheaper on schedule | 🟢 Addressed — array switches are per-bit sized NMOS pass-gates; the single full-range sample switch is a sized transmission gate. No bootstrap anywhere. Emily's bootstrap was evaluated and rejected. |
@@ -192,9 +192,13 @@ delay margin makes it confirmation, not risk); COMP-ALT-7/10/11/12/13/14/15
 (Luc's double-tail backup, for the paper); REP-2 `calc_enob.py`; REP-3 master
 sim runner; REP-4 `REPRODUCIBILITY.md`; REP-5 CI on `main`.
 
-**Still-undefined specs** (review feedback, blocks a clean Gate-4 story): target
-**ENOB** and a **conversion/sample rate**. Everything else in the spec table is
-fixed (FS = 3.3 V, 1 LSB = 12.9 mV, DNL/INL < 0.5 LSB).
+**Specs — now defined (2026-07-31, pending team ratification):** target
+**ENOB ≥ 7.2 bits** (static-transfer-projected, SNDR 45.3 dB at 79% FS
+swing — `calc_enob.py` on the Gate-3 sweep; dynamic use limited by the
+no-S/H BW ≈ 1.5 kHz for full-swing sines) and **sample rate 833 kS/s @
+10 MHz CLK** (12 CLK/conversion). Everything else was already fixed
+(FS = 3.3 V, 1 LSB = 12.9 mV, DNL/INL < 0.5 LSB, input range
+0.65–3.25 V quoted / 0.62–3.29 V guaranteed).
 
 ---
 
