@@ -1,39 +1,28 @@
 #!/usr/bin/env python3
-"""INT-6 / Gate 3 -- generate the 256-code TT sweep decks for adc_top.
+"""INT-6 / Gate 3 -- generate per-code decks for the 256-code TT sweep.
 
-One full conversion per code, VIN at the code centers of the MEASURED DAC
-transfer (FS = 3.293 V from DAC-9, so V_LSB = 3.293/256 = 12.8633 mV --
-this is the standard gain-corrected grid: Gate 3 judges linearity, the
-~0.2% FS gain gap is a separate, already-understood artifact of the
-20 fF comparator load on C_total).
+One ngspice run per code, CONSTANT VIN (code center of the measured DAC
+transfer, V_LSB = 3.293/256). Constant VIN avoids the PWL-step
+convergence failure that killed the chunked variant at tight tolerances
+("timestep too small ... trouble with node vvin#branch" at a staircase
+edge, which aborts the run and loses every .meas in the chunk).
+Runs are independent -> parallelize with xargs -P.
 
-Sweep is split into NCHUNK independent ngspice decks (conversions are
-independent -- each chunk restarts from t=0 with its own VIN PWL) so they
-run in parallel in the container. Codes are sampled with .meas FIND ...
-AT= statements instead of wrdata to keep outputs tiny.
-
-Timing per conversion (per docs/pin_contracts.md section 5):
-  t0 = k*1.2us, CLK 10 MHz (high [0,49n] of each period),
-  RST_N low [t0, t0+120n] (released in a CLK-HIGH phase),
-  EOC rises at t0+901n, bits sampled at t0+950n.
+Verified-trustworthy sim settings (see PROGRESS INT-6): .tran max step
+0.05n + reltol=1e-4; .save limited to the 9 measured signals (without it
+ngspice tries to store every node at every point and dies allocating).
 
 Usage:  python3 gen_adc_sweep_tt.py <outdir>
-Then:   run each chunk_*.spice with ngspice -b; parse with
-        designs/scripts/check_adc_sweep.py
+Run:    cd <outdir> && ls code_*.spice | xargs -P 10 -I{} sh -c \
+          'ngspice -b {} > {}.log 2>&1'
+Check:  python3 designs/scripts/check_adc_sweep.py <outdir>
 """
 import os, sys
 
-NCODES   = 256
-NCHUNK   = 8
-PER      = NCODES // NCHUNK
-TCONV    = 1.2e-6
-VLSB     = 3.293 / 256          # measured-FS code width (DAC-9)
-TSAMPLE  = 950e-9               # after t0: EOC+~50ns
-TSTEP    = "0.05n"              # 0.1n + default reltol corrupts FINE decisions too:
-                                # the recheck run showed +-2..4 LSB artifacts at 0.1n
-                                # collapsing to a uniform -1 at 0.05n/reltol=1e-4.
+VLSB    = 3.293 / 256
+TSAMPLE = 950e-9
 
-HEADER = """* INT-6 Gate-3 sweep chunk {c}: codes {k0}..{k1} (TT, 3.3 V, 10 MHz)
+DECK = """* INT-6 Gate-3 per-code conversion: code {k} (TT, 3.3 V, 10 MHz)
 .include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
@@ -45,7 +34,7 @@ HEADER = """* INT-6 Gate-3 sweep chunk {c}: codes {k0}..{k1} (TT, 3.3 V, 10 MHz)
 VVDD VDD 0 3.3
 VCLK CLK 0 PULSE(0 3.3 0 1n 1n 49n 100n)
 VRST RST_N 0 PULSE(3.3 0 0 1n 1n 120n 1200n)
-{vin}
+VVIN vin 0 {vin:.6f}
 
 Xadc VDD 0 vin CLK RST_N BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC adc_top
 
@@ -60,38 +49,29 @@ CB0 BIT_0 0 20f
 CEOC EOC 0 20f
 
 .option reltol=1e-4
-.tran {tstep} {tstop}
+.save V(EOC) V(BIT_7) V(BIT_6) V(BIT_5) V(BIT_4) V(BIT_3) V(BIT_2) V(BIT_1) V(BIT_0)
+.tran 0.05n 1.0u
+
+.meas tran eoc_{k} FIND V(EOC) AT={ts:.0f}n
+{bitmeas}
+.control
+set num_threads=1
+run
+.endc
+.end
 """
 
 def main(outdir):
     os.makedirs(outdir, exist_ok=True)
-    for c in range(NCHUNK):
-        k0, k1 = c * PER, c * PER + PER - 1
-        pts = []
-        for i in range(PER):
-            k = k0 + i
-            vin = (k + 0.5) * VLSB
-            t0 = i * TCONV
-            if i == 0:
-                pts.append(f"0 {vin:.6f}")
-            else:
-                pts.append(f"{t0*1e9:.0f}n {vin:.6f}")
-            pts.append(f"{(t0+TCONV)*1e9-2:.0f}n {vin:.6f}")
-        vinsrc = "VVIN vin 0 PWL(" + " ".join(pts) + ")"
-        meas = []
-        for i in range(PER):
-            k = k0 + i
-            t = i * TCONV + TSAMPLE
-            meas.append(f".meas tran eoc_{k} FIND V(EOC) AT={t*1e9:.0f}n")
-            for b in range(8):
-                meas.append(f".meas tran b{b}_{k} FIND V(BIT_{b}) AT={t*1e9:.0f}n")
-        deck = HEADER.format(c=c, k0=k0, k1=k1, vin=vinsrc, tstep=TSTEP,
-                             tstop=f"{PER*TCONV*1e6:.1f}u")
-        deck += "\n".join(meas)
-        deck += "\n.control\nset num_threads=1\nrun\n.endc\n.end\n"
-        with open(os.path.join(outdir, f"chunk_{c}.spice"), "w") as f:
+    for k in range(256):
+        bitmeas = "\n".join(
+            f".meas tran b{b}_{k} FIND V(BIT_{b}) AT={TSAMPLE*1e9:.0f}n"
+            for b in range(8))
+        deck = DECK.format(k=k, vin=(k + 0.5) * VLSB, ts=TSAMPLE*1e9,
+                           bitmeas=bitmeas)
+        with open(os.path.join(outdir, f"code_{k:03d}.spice"), "w") as f:
             f.write(deck)
-    print(f"wrote {NCHUNK} chunks x {PER} conversions to {outdir}")
+    print(f"wrote 256 per-code decks to {outdir}")
 
 if __name__ == "__main__":
     main(sys.argv[1] if len(sys.argv) > 1 else "adc_top/sim/sweep_tt")

@@ -155,20 +155,19 @@ EOC      ______________________/‾‾  (8th CLK↑ after release; code valid & 
 
 ## 6 · Caveats / open items
 
-1. **Comparator valid common-mode window — BOTH ends.** Critical (small-differential) decisions
-   occur at Vcm ≈ VIN_adc.
-   *Low end:* COMP-5 worst-corner compliance is Vcm ≥ 0.85 V ⇒ codes below ~66 not
-   worst-corner-guaranteed. At TT, INT-5 measured VIN=0.6 V converting exactly but VIN=0.05 V
-   collapsing to code 0.
-   *High end (new, found in INT-5):* for inputs within ~150 mV of VDD the StrongARM **inverts**
-   decisions — the branch nodes crash so fast that Cgs coupling through the cross-coupled NMOS
-   pair (net3 → M9 gate = VOUT2) pulls the *losing* output down before the conduction race
-   develops, e.g. a +58 mV keep decided as discard at Vcm≈3.2 V. VIN=2.9 V converts exactly;
-   VIN=3.25 V errs by ~6 LSB. This is intrinsic comparator dynamics (step/tolerance-converged),
-   not a glue or DAC issue.
-   ⇒ **Practical specified input range ≈ 0.6–3.1 V at TT** (exact bounds from the INT-6 sweep);
-   options if the team wants full range: PMOS-input or complementary-pair comparator variant
-   (COMP-ALT could absorb this), or an input attenuator. **Decision deferred to INT-6 data.**
+1. **Comparator valid common-mode window — low end only** *(final, from the INT-6 definitive
+   sweep + standalone characterization; supersedes the earlier "high-end inversion" note).*
+   *Low end (real):* the NMOS-input StrongARM does not resolve below Vcm ≈ 0.5–0.6 V at TT
+   (standalone characterization: dead ≤ 0.5 V, perfect 0.6–3.3 V down to ±3.2 mV). In-system,
+   codes 1–38 (VIN < 0.50 V) read 0. COMP-5's worst-corner compliance bound is Vcm ≥ 0.85 V.
+   ⇒ **TT input range: 0.50–3.29 V** (codes 39–255, every one within 1 LSB incl. the top code);
+   worst-corner guaranteed range to be set by Gate 4 (expect ≥ 0.85 V low bound per COMP-5).
+   *High end:* **no upper restriction.** The "StrongARM inverts decisions near VDD" finding
+   reported during INT-5 was a **simulation artifact of coarse settings** (0.1–0.5 ns max step /
+   default reltol corrupt the sub-ns regeneration); at 0.05 ns + reltol=1e-4 the standalone
+   comparator, the trusted-settings node trace, and the definitive 256-code sweep all agree:
+   decisions are correct up to the top code. Always simulate this comparator with
+   `.tran` max step ≤ 0.05 ns and `reltol=1e-4`.
 2. **Input bandwidth** (no input S/H) — see §2. Fine for chipathon testing; flag in the datasheet.
 3. VOUT1/VOUT2 polarity in §1 — **confirmed in-system by INT-5**: with keep wired as "VOUT1 falls"
    (via the buffered NOR latch), mid-range closed-loop conversions are exact (0.6→46, 2.9→225).

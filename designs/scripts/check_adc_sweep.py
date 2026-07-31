@@ -18,7 +18,7 @@ import glob, os, re, sys
 
 def parse(sweep_dir):
     vals = {}
-    for log in glob.glob(os.path.join(sweep_dir, "chunk_*.log")):
+    for log in glob.glob(os.path.join(sweep_dir, "chunk_*.log")) + glob.glob(os.path.join(sweep_dir, "code_*.spice.log")):
         for line in open(log, errors="replace"):
             m = re.match(r"\s*(eoc|b\d)_(\d+)\s*=\s*([-\d.eE+]+)", line)
             if m:

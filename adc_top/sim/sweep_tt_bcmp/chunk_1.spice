@@ -1,0 +1,320 @@
+* INT-6 Gate-3 sweep chunk 1: codes 32..63 (TT, 3.3 V, 10 MHz)
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
+
+.include ../adc_top_bcmp_subckt.spice
+
+VVDD VDD 0 3.3
+VCLK CLK 0 PULSE(0 3.3 0 1n 1n 49n 100n)
+VRST RST_N 0 PULSE(3.3 0 0 1n 1n 120n 1200n)
+VVIN vin 0 PWL(0 0.418057 1198n 0.418057 1200n 0.430920 2398n 0.430920 2400n 0.443783 3598n 0.443783 3600n 0.456646 4798n 0.456646 4800n 0.469510 5998n 0.469510 6000n 0.482373 7198n 0.482373 7200n 0.495236 8398n 0.495236 8400n 0.508100 9598n 0.508100 9600n 0.520963 10798n 0.520963 10800n 0.533826 11998n 0.533826 12000n 0.546689 13198n 0.546689 13200n 0.559553 14398n 0.559553 14400n 0.572416 15598n 0.572416 15600n 0.585279 16798n 0.585279 16800n 0.598143 17998n 0.598143 18000n 0.611006 19198n 0.611006 19200n 0.623869 20398n 0.623869 20400n 0.636732 21598n 0.636732 21600n 0.649596 22798n 0.649596 22800n 0.662459 23998n 0.662459 24000n 0.675322 25198n 0.675322 25200n 0.688186 26398n 0.688186 26400n 0.701049 27598n 0.701049 27600n 0.713912 28798n 0.713912 28800n 0.726775 29998n 0.726775 30000n 0.739639 31198n 0.739639 31200n 0.752502 32398n 0.752502 32400n 0.765365 33598n 0.765365 33600n 0.778229 34798n 0.778229 34800n 0.791092 35998n 0.791092 36000n 0.803955 37198n 0.803955 37200n 0.816818 38398n 0.816818)
+
+Xadc VDD 0 vin CLK RST_N BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC adc_top_bcmp
+
+CB7 BIT_7 0 20f
+CB6 BIT_6 0 20f
+CB5 BIT_5 0 20f
+CB4 BIT_4 0 20f
+CB3 BIT_3 0 20f
+CB2 BIT_2 0 20f
+CB1 BIT_1 0 20f
+CB0 BIT_0 0 20f
+CEOC EOC 0 20f
+
+.tran 0.1n 38.4u
+.meas tran eoc_32 FIND V(EOC) AT=950n
+.meas tran b0_32 FIND V(BIT_0) AT=950n
+.meas tran b1_32 FIND V(BIT_1) AT=950n
+.meas tran b2_32 FIND V(BIT_2) AT=950n
+.meas tran b3_32 FIND V(BIT_3) AT=950n
+.meas tran b4_32 FIND V(BIT_4) AT=950n
+.meas tran b5_32 FIND V(BIT_5) AT=950n
+.meas tran b6_32 FIND V(BIT_6) AT=950n
+.meas tran b7_32 FIND V(BIT_7) AT=950n
+.meas tran eoc_33 FIND V(EOC) AT=2150n
+.meas tran b0_33 FIND V(BIT_0) AT=2150n
+.meas tran b1_33 FIND V(BIT_1) AT=2150n
+.meas tran b2_33 FIND V(BIT_2) AT=2150n
+.meas tran b3_33 FIND V(BIT_3) AT=2150n
+.meas tran b4_33 FIND V(BIT_4) AT=2150n
+.meas tran b5_33 FIND V(BIT_5) AT=2150n
+.meas tran b6_33 FIND V(BIT_6) AT=2150n
+.meas tran b7_33 FIND V(BIT_7) AT=2150n
+.meas tran eoc_34 FIND V(EOC) AT=3350n
+.meas tran b0_34 FIND V(BIT_0) AT=3350n
+.meas tran b1_34 FIND V(BIT_1) AT=3350n
+.meas tran b2_34 FIND V(BIT_2) AT=3350n
+.meas tran b3_34 FIND V(BIT_3) AT=3350n
+.meas tran b4_34 FIND V(BIT_4) AT=3350n
+.meas tran b5_34 FIND V(BIT_5) AT=3350n
+.meas tran b6_34 FIND V(BIT_6) AT=3350n
+.meas tran b7_34 FIND V(BIT_7) AT=3350n
+.meas tran eoc_35 FIND V(EOC) AT=4550n
+.meas tran b0_35 FIND V(BIT_0) AT=4550n
+.meas tran b1_35 FIND V(BIT_1) AT=4550n
+.meas tran b2_35 FIND V(BIT_2) AT=4550n
+.meas tran b3_35 FIND V(BIT_3) AT=4550n
+.meas tran b4_35 FIND V(BIT_4) AT=4550n
+.meas tran b5_35 FIND V(BIT_5) AT=4550n
+.meas tran b6_35 FIND V(BIT_6) AT=4550n
+.meas tran b7_35 FIND V(BIT_7) AT=4550n
+.meas tran eoc_36 FIND V(EOC) AT=5750n
+.meas tran b0_36 FIND V(BIT_0) AT=5750n
+.meas tran b1_36 FIND V(BIT_1) AT=5750n
+.meas tran b2_36 FIND V(BIT_2) AT=5750n
+.meas tran b3_36 FIND V(BIT_3) AT=5750n
+.meas tran b4_36 FIND V(BIT_4) AT=5750n
+.meas tran b5_36 FIND V(BIT_5) AT=5750n
+.meas tran b6_36 FIND V(BIT_6) AT=5750n
+.meas tran b7_36 FIND V(BIT_7) AT=5750n
+.meas tran eoc_37 FIND V(EOC) AT=6950n
+.meas tran b0_37 FIND V(BIT_0) AT=6950n
+.meas tran b1_37 FIND V(BIT_1) AT=6950n
+.meas tran b2_37 FIND V(BIT_2) AT=6950n
+.meas tran b3_37 FIND V(BIT_3) AT=6950n
+.meas tran b4_37 FIND V(BIT_4) AT=6950n
+.meas tran b5_37 FIND V(BIT_5) AT=6950n
+.meas tran b6_37 FIND V(BIT_6) AT=6950n
+.meas tran b7_37 FIND V(BIT_7) AT=6950n
+.meas tran eoc_38 FIND V(EOC) AT=8150n
+.meas tran b0_38 FIND V(BIT_0) AT=8150n
+.meas tran b1_38 FIND V(BIT_1) AT=8150n
+.meas tran b2_38 FIND V(BIT_2) AT=8150n
+.meas tran b3_38 FIND V(BIT_3) AT=8150n
+.meas tran b4_38 FIND V(BIT_4) AT=8150n
+.meas tran b5_38 FIND V(BIT_5) AT=8150n
+.meas tran b6_38 FIND V(BIT_6) AT=8150n
+.meas tran b7_38 FIND V(BIT_7) AT=8150n
+.meas tran eoc_39 FIND V(EOC) AT=9350n
+.meas tran b0_39 FIND V(BIT_0) AT=9350n
+.meas tran b1_39 FIND V(BIT_1) AT=9350n
+.meas tran b2_39 FIND V(BIT_2) AT=9350n
+.meas tran b3_39 FIND V(BIT_3) AT=9350n
+.meas tran b4_39 FIND V(BIT_4) AT=9350n
+.meas tran b5_39 FIND V(BIT_5) AT=9350n
+.meas tran b6_39 FIND V(BIT_6) AT=9350n
+.meas tran b7_39 FIND V(BIT_7) AT=9350n
+.meas tran eoc_40 FIND V(EOC) AT=10550n
+.meas tran b0_40 FIND V(BIT_0) AT=10550n
+.meas tran b1_40 FIND V(BIT_1) AT=10550n
+.meas tran b2_40 FIND V(BIT_2) AT=10550n
+.meas tran b3_40 FIND V(BIT_3) AT=10550n
+.meas tran b4_40 FIND V(BIT_4) AT=10550n
+.meas tran b5_40 FIND V(BIT_5) AT=10550n
+.meas tran b6_40 FIND V(BIT_6) AT=10550n
+.meas tran b7_40 FIND V(BIT_7) AT=10550n
+.meas tran eoc_41 FIND V(EOC) AT=11750n
+.meas tran b0_41 FIND V(BIT_0) AT=11750n
+.meas tran b1_41 FIND V(BIT_1) AT=11750n
+.meas tran b2_41 FIND V(BIT_2) AT=11750n
+.meas tran b3_41 FIND V(BIT_3) AT=11750n
+.meas tran b4_41 FIND V(BIT_4) AT=11750n
+.meas tran b5_41 FIND V(BIT_5) AT=11750n
+.meas tran b6_41 FIND V(BIT_6) AT=11750n
+.meas tran b7_41 FIND V(BIT_7) AT=11750n
+.meas tran eoc_42 FIND V(EOC) AT=12950n
+.meas tran b0_42 FIND V(BIT_0) AT=12950n
+.meas tran b1_42 FIND V(BIT_1) AT=12950n
+.meas tran b2_42 FIND V(BIT_2) AT=12950n
+.meas tran b3_42 FIND V(BIT_3) AT=12950n
+.meas tran b4_42 FIND V(BIT_4) AT=12950n
+.meas tran b5_42 FIND V(BIT_5) AT=12950n
+.meas tran b6_42 FIND V(BIT_6) AT=12950n
+.meas tran b7_42 FIND V(BIT_7) AT=12950n
+.meas tran eoc_43 FIND V(EOC) AT=14150n
+.meas tran b0_43 FIND V(BIT_0) AT=14150n
+.meas tran b1_43 FIND V(BIT_1) AT=14150n
+.meas tran b2_43 FIND V(BIT_2) AT=14150n
+.meas tran b3_43 FIND V(BIT_3) AT=14150n
+.meas tran b4_43 FIND V(BIT_4) AT=14150n
+.meas tran b5_43 FIND V(BIT_5) AT=14150n
+.meas tran b6_43 FIND V(BIT_6) AT=14150n
+.meas tran b7_43 FIND V(BIT_7) AT=14150n
+.meas tran eoc_44 FIND V(EOC) AT=15350n
+.meas tran b0_44 FIND V(BIT_0) AT=15350n
+.meas tran b1_44 FIND V(BIT_1) AT=15350n
+.meas tran b2_44 FIND V(BIT_2) AT=15350n
+.meas tran b3_44 FIND V(BIT_3) AT=15350n
+.meas tran b4_44 FIND V(BIT_4) AT=15350n
+.meas tran b5_44 FIND V(BIT_5) AT=15350n
+.meas tran b6_44 FIND V(BIT_6) AT=15350n
+.meas tran b7_44 FIND V(BIT_7) AT=15350n
+.meas tran eoc_45 FIND V(EOC) AT=16550n
+.meas tran b0_45 FIND V(BIT_0) AT=16550n
+.meas tran b1_45 FIND V(BIT_1) AT=16550n
+.meas tran b2_45 FIND V(BIT_2) AT=16550n
+.meas tran b3_45 FIND V(BIT_3) AT=16550n
+.meas tran b4_45 FIND V(BIT_4) AT=16550n
+.meas tran b5_45 FIND V(BIT_5) AT=16550n
+.meas tran b6_45 FIND V(BIT_6) AT=16550n
+.meas tran b7_45 FIND V(BIT_7) AT=16550n
+.meas tran eoc_46 FIND V(EOC) AT=17750n
+.meas tran b0_46 FIND V(BIT_0) AT=17750n
+.meas tran b1_46 FIND V(BIT_1) AT=17750n
+.meas tran b2_46 FIND V(BIT_2) AT=17750n
+.meas tran b3_46 FIND V(BIT_3) AT=17750n
+.meas tran b4_46 FIND V(BIT_4) AT=17750n
+.meas tran b5_46 FIND V(BIT_5) AT=17750n
+.meas tran b6_46 FIND V(BIT_6) AT=17750n
+.meas tran b7_46 FIND V(BIT_7) AT=17750n
+.meas tran eoc_47 FIND V(EOC) AT=18950n
+.meas tran b0_47 FIND V(BIT_0) AT=18950n
+.meas tran b1_47 FIND V(BIT_1) AT=18950n
+.meas tran b2_47 FIND V(BIT_2) AT=18950n
+.meas tran b3_47 FIND V(BIT_3) AT=18950n
+.meas tran b4_47 FIND V(BIT_4) AT=18950n
+.meas tran b5_47 FIND V(BIT_5) AT=18950n
+.meas tran b6_47 FIND V(BIT_6) AT=18950n
+.meas tran b7_47 FIND V(BIT_7) AT=18950n
+.meas tran eoc_48 FIND V(EOC) AT=20150n
+.meas tran b0_48 FIND V(BIT_0) AT=20150n
+.meas tran b1_48 FIND V(BIT_1) AT=20150n
+.meas tran b2_48 FIND V(BIT_2) AT=20150n
+.meas tran b3_48 FIND V(BIT_3) AT=20150n
+.meas tran b4_48 FIND V(BIT_4) AT=20150n
+.meas tran b5_48 FIND V(BIT_5) AT=20150n
+.meas tran b6_48 FIND V(BIT_6) AT=20150n
+.meas tran b7_48 FIND V(BIT_7) AT=20150n
+.meas tran eoc_49 FIND V(EOC) AT=21350n
+.meas tran b0_49 FIND V(BIT_0) AT=21350n
+.meas tran b1_49 FIND V(BIT_1) AT=21350n
+.meas tran b2_49 FIND V(BIT_2) AT=21350n
+.meas tran b3_49 FIND V(BIT_3) AT=21350n
+.meas tran b4_49 FIND V(BIT_4) AT=21350n
+.meas tran b5_49 FIND V(BIT_5) AT=21350n
+.meas tran b6_49 FIND V(BIT_6) AT=21350n
+.meas tran b7_49 FIND V(BIT_7) AT=21350n
+.meas tran eoc_50 FIND V(EOC) AT=22550n
+.meas tran b0_50 FIND V(BIT_0) AT=22550n
+.meas tran b1_50 FIND V(BIT_1) AT=22550n
+.meas tran b2_50 FIND V(BIT_2) AT=22550n
+.meas tran b3_50 FIND V(BIT_3) AT=22550n
+.meas tran b4_50 FIND V(BIT_4) AT=22550n
+.meas tran b5_50 FIND V(BIT_5) AT=22550n
+.meas tran b6_50 FIND V(BIT_6) AT=22550n
+.meas tran b7_50 FIND V(BIT_7) AT=22550n
+.meas tran eoc_51 FIND V(EOC) AT=23750n
+.meas tran b0_51 FIND V(BIT_0) AT=23750n
+.meas tran b1_51 FIND V(BIT_1) AT=23750n
+.meas tran b2_51 FIND V(BIT_2) AT=23750n
+.meas tran b3_51 FIND V(BIT_3) AT=23750n
+.meas tran b4_51 FIND V(BIT_4) AT=23750n
+.meas tran b5_51 FIND V(BIT_5) AT=23750n
+.meas tran b6_51 FIND V(BIT_6) AT=23750n
+.meas tran b7_51 FIND V(BIT_7) AT=23750n
+.meas tran eoc_52 FIND V(EOC) AT=24950n
+.meas tran b0_52 FIND V(BIT_0) AT=24950n
+.meas tran b1_52 FIND V(BIT_1) AT=24950n
+.meas tran b2_52 FIND V(BIT_2) AT=24950n
+.meas tran b3_52 FIND V(BIT_3) AT=24950n
+.meas tran b4_52 FIND V(BIT_4) AT=24950n
+.meas tran b5_52 FIND V(BIT_5) AT=24950n
+.meas tran b6_52 FIND V(BIT_6) AT=24950n
+.meas tran b7_52 FIND V(BIT_7) AT=24950n
+.meas tran eoc_53 FIND V(EOC) AT=26150n
+.meas tran b0_53 FIND V(BIT_0) AT=26150n
+.meas tran b1_53 FIND V(BIT_1) AT=26150n
+.meas tran b2_53 FIND V(BIT_2) AT=26150n
+.meas tran b3_53 FIND V(BIT_3) AT=26150n
+.meas tran b4_53 FIND V(BIT_4) AT=26150n
+.meas tran b5_53 FIND V(BIT_5) AT=26150n
+.meas tran b6_53 FIND V(BIT_6) AT=26150n
+.meas tran b7_53 FIND V(BIT_7) AT=26150n
+.meas tran eoc_54 FIND V(EOC) AT=27350n
+.meas tran b0_54 FIND V(BIT_0) AT=27350n
+.meas tran b1_54 FIND V(BIT_1) AT=27350n
+.meas tran b2_54 FIND V(BIT_2) AT=27350n
+.meas tran b3_54 FIND V(BIT_3) AT=27350n
+.meas tran b4_54 FIND V(BIT_4) AT=27350n
+.meas tran b5_54 FIND V(BIT_5) AT=27350n
+.meas tran b6_54 FIND V(BIT_6) AT=27350n
+.meas tran b7_54 FIND V(BIT_7) AT=27350n
+.meas tran eoc_55 FIND V(EOC) AT=28550n
+.meas tran b0_55 FIND V(BIT_0) AT=28550n
+.meas tran b1_55 FIND V(BIT_1) AT=28550n
+.meas tran b2_55 FIND V(BIT_2) AT=28550n
+.meas tran b3_55 FIND V(BIT_3) AT=28550n
+.meas tran b4_55 FIND V(BIT_4) AT=28550n
+.meas tran b5_55 FIND V(BIT_5) AT=28550n
+.meas tran b6_55 FIND V(BIT_6) AT=28550n
+.meas tran b7_55 FIND V(BIT_7) AT=28550n
+.meas tran eoc_56 FIND V(EOC) AT=29750n
+.meas tran b0_56 FIND V(BIT_0) AT=29750n
+.meas tran b1_56 FIND V(BIT_1) AT=29750n
+.meas tran b2_56 FIND V(BIT_2) AT=29750n
+.meas tran b3_56 FIND V(BIT_3) AT=29750n
+.meas tran b4_56 FIND V(BIT_4) AT=29750n
+.meas tran b5_56 FIND V(BIT_5) AT=29750n
+.meas tran b6_56 FIND V(BIT_6) AT=29750n
+.meas tran b7_56 FIND V(BIT_7) AT=29750n
+.meas tran eoc_57 FIND V(EOC) AT=30950n
+.meas tran b0_57 FIND V(BIT_0) AT=30950n
+.meas tran b1_57 FIND V(BIT_1) AT=30950n
+.meas tran b2_57 FIND V(BIT_2) AT=30950n
+.meas tran b3_57 FIND V(BIT_3) AT=30950n
+.meas tran b4_57 FIND V(BIT_4) AT=30950n
+.meas tran b5_57 FIND V(BIT_5) AT=30950n
+.meas tran b6_57 FIND V(BIT_6) AT=30950n
+.meas tran b7_57 FIND V(BIT_7) AT=30950n
+.meas tran eoc_58 FIND V(EOC) AT=32150n
+.meas tran b0_58 FIND V(BIT_0) AT=32150n
+.meas tran b1_58 FIND V(BIT_1) AT=32150n
+.meas tran b2_58 FIND V(BIT_2) AT=32150n
+.meas tran b3_58 FIND V(BIT_3) AT=32150n
+.meas tran b4_58 FIND V(BIT_4) AT=32150n
+.meas tran b5_58 FIND V(BIT_5) AT=32150n
+.meas tran b6_58 FIND V(BIT_6) AT=32150n
+.meas tran b7_58 FIND V(BIT_7) AT=32150n
+.meas tran eoc_59 FIND V(EOC) AT=33350n
+.meas tran b0_59 FIND V(BIT_0) AT=33350n
+.meas tran b1_59 FIND V(BIT_1) AT=33350n
+.meas tran b2_59 FIND V(BIT_2) AT=33350n
+.meas tran b3_59 FIND V(BIT_3) AT=33350n
+.meas tran b4_59 FIND V(BIT_4) AT=33350n
+.meas tran b5_59 FIND V(BIT_5) AT=33350n
+.meas tran b6_59 FIND V(BIT_6) AT=33350n
+.meas tran b7_59 FIND V(BIT_7) AT=33350n
+.meas tran eoc_60 FIND V(EOC) AT=34550n
+.meas tran b0_60 FIND V(BIT_0) AT=34550n
+.meas tran b1_60 FIND V(BIT_1) AT=34550n
+.meas tran b2_60 FIND V(BIT_2) AT=34550n
+.meas tran b3_60 FIND V(BIT_3) AT=34550n
+.meas tran b4_60 FIND V(BIT_4) AT=34550n
+.meas tran b5_60 FIND V(BIT_5) AT=34550n
+.meas tran b6_60 FIND V(BIT_6) AT=34550n
+.meas tran b7_60 FIND V(BIT_7) AT=34550n
+.meas tran eoc_61 FIND V(EOC) AT=35750n
+.meas tran b0_61 FIND V(BIT_0) AT=35750n
+.meas tran b1_61 FIND V(BIT_1) AT=35750n
+.meas tran b2_61 FIND V(BIT_2) AT=35750n
+.meas tran b3_61 FIND V(BIT_3) AT=35750n
+.meas tran b4_61 FIND V(BIT_4) AT=35750n
+.meas tran b5_61 FIND V(BIT_5) AT=35750n
+.meas tran b6_61 FIND V(BIT_6) AT=35750n
+.meas tran b7_61 FIND V(BIT_7) AT=35750n
+.meas tran eoc_62 FIND V(EOC) AT=36950n
+.meas tran b0_62 FIND V(BIT_0) AT=36950n
+.meas tran b1_62 FIND V(BIT_1) AT=36950n
+.meas tran b2_62 FIND V(BIT_2) AT=36950n
+.meas tran b3_62 FIND V(BIT_3) AT=36950n
+.meas tran b4_62 FIND V(BIT_4) AT=36950n
+.meas tran b5_62 FIND V(BIT_5) AT=36950n
+.meas tran b6_62 FIND V(BIT_6) AT=36950n
+.meas tran b7_62 FIND V(BIT_7) AT=36950n
+.meas tran eoc_63 FIND V(EOC) AT=38150n
+.meas tran b0_63 FIND V(BIT_0) AT=38150n
+.meas tran b1_63 FIND V(BIT_1) AT=38150n
+.meas tran b2_63 FIND V(BIT_2) AT=38150n
+.meas tran b3_63 FIND V(BIT_3) AT=38150n
+.meas tran b4_63 FIND V(BIT_4) AT=38150n
+.meas tran b5_63 FIND V(BIT_5) AT=38150n
+.meas tran b6_63 FIND V(BIT_6) AT=38150n
+.meas tran b7_63 FIND V(BIT_7) AT=38150n
+.control
+set num_threads=1
+run
+.endc
+.end
