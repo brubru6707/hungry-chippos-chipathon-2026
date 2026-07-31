@@ -29,7 +29,9 @@ PER      = NCODES // NCHUNK
 TCONV    = 1.2e-6
 VLSB     = 3.293 / 256          # measured-FS code width (DAC-9)
 TSAMPLE  = 950e-9               # after t0: EOC+~50ns
-TSTEP    = "0.1n"               # INT-5 finding: 0.5n corrupts near-rail decisions
+TSTEP    = "0.05n"              # 0.1n + default reltol corrupts FINE decisions too:
+                                # the recheck run showed +-2..4 LSB artifacts at 0.1n
+                                # collapsing to a uniform -1 at 0.05n/reltol=1e-4.
 
 HEADER = """* INT-6 Gate-3 sweep chunk {c}: codes {k0}..{k1} (TT, 3.3 V, 10 MHz)
 .include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
@@ -57,6 +59,7 @@ CB1 BIT_1 0 20f
 CB0 BIT_0 0 20f
 CEOC EOC 0 20f
 
+.option reltol=1e-4
 .tran {tstep} {tstop}
 """
 

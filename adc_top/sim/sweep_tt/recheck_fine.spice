@@ -1,0 +1,82 @@
+* numerics cross-check: failing mid-scale codes at 0.05n / reltol=1e-4
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
+.include ../adc_top_subckt.spice
+.option reltol=1e-4
+VVDD VDD 0 3.3
+VCLK CLK 0 PULSE(0 3.3 0 1n 1n 49n 100n)
+VRST RST_N 0 PULSE(3.3 0 0 1n 1n 120n 1200n)
+VVIN vin 0 PWL(0 1.820154 1198n 1.820154 1200n 1.897334 2398n 1.897334 2400n 2.103146 3598n 2.103146 3600n 2.167463 4798n 2.167463 4800n 2.489045 5998n 2.489045 6000n 2.694857 7198n 2.694857)
+Xadc VDD 0 vin CLK RST_N BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC adc_top
+CB7 BIT_7 0 20f
+CB6 BIT_6 0 20f
+CB5 BIT_5 0 20f
+CB4 BIT_4 0 20f
+CB3 BIT_3 0 20f
+CB2 BIT_2 0 20f
+CB1 BIT_1 0 20f
+CB0 BIT_0 0 20f
+CEOC EOC 0 20f
+.tran 0.05n 7.2u
+.meas tran eoc_141 FIND V(EOC) AT=950n
+.meas tran b0_141 FIND V(BIT_0) AT=950n
+.meas tran b1_141 FIND V(BIT_1) AT=950n
+.meas tran b2_141 FIND V(BIT_2) AT=950n
+.meas tran b3_141 FIND V(BIT_3) AT=950n
+.meas tran b4_141 FIND V(BIT_4) AT=950n
+.meas tran b5_141 FIND V(BIT_5) AT=950n
+.meas tran b6_141 FIND V(BIT_6) AT=950n
+.meas tran b7_141 FIND V(BIT_7) AT=950n
+.meas tran eoc_147 FIND V(EOC) AT=2150n
+.meas tran b0_147 FIND V(BIT_0) AT=2150n
+.meas tran b1_147 FIND V(BIT_1) AT=2150n
+.meas tran b2_147 FIND V(BIT_2) AT=2150n
+.meas tran b3_147 FIND V(BIT_3) AT=2150n
+.meas tran b4_147 FIND V(BIT_4) AT=2150n
+.meas tran b5_147 FIND V(BIT_5) AT=2150n
+.meas tran b6_147 FIND V(BIT_6) AT=2150n
+.meas tran b7_147 FIND V(BIT_7) AT=2150n
+.meas tran eoc_163 FIND V(EOC) AT=3350n
+.meas tran b0_163 FIND V(BIT_0) AT=3350n
+.meas tran b1_163 FIND V(BIT_1) AT=3350n
+.meas tran b2_163 FIND V(BIT_2) AT=3350n
+.meas tran b3_163 FIND V(BIT_3) AT=3350n
+.meas tran b4_163 FIND V(BIT_4) AT=3350n
+.meas tran b5_163 FIND V(BIT_5) AT=3350n
+.meas tran b6_163 FIND V(BIT_6) AT=3350n
+.meas tran b7_163 FIND V(BIT_7) AT=3350n
+.meas tran eoc_168 FIND V(EOC) AT=4550n
+.meas tran b0_168 FIND V(BIT_0) AT=4550n
+.meas tran b1_168 FIND V(BIT_1) AT=4550n
+.meas tran b2_168 FIND V(BIT_2) AT=4550n
+.meas tran b3_168 FIND V(BIT_3) AT=4550n
+.meas tran b4_168 FIND V(BIT_4) AT=4550n
+.meas tran b5_168 FIND V(BIT_5) AT=4550n
+.meas tran b6_168 FIND V(BIT_6) AT=4550n
+.meas tran b7_168 FIND V(BIT_7) AT=4550n
+.meas tran eoc_193 FIND V(EOC) AT=5750n
+.meas tran b0_193 FIND V(BIT_0) AT=5750n
+.meas tran b1_193 FIND V(BIT_1) AT=5750n
+.meas tran b2_193 FIND V(BIT_2) AT=5750n
+.meas tran b3_193 FIND V(BIT_3) AT=5750n
+.meas tran b4_193 FIND V(BIT_4) AT=5750n
+.meas tran b5_193 FIND V(BIT_5) AT=5750n
+.meas tran b6_193 FIND V(BIT_6) AT=5750n
+.meas tran b7_193 FIND V(BIT_7) AT=5750n
+.meas tran eoc_209 FIND V(EOC) AT=6950n
+.meas tran b0_209 FIND V(BIT_0) AT=6950n
+.meas tran b1_209 FIND V(BIT_1) AT=6950n
+.meas tran b2_209 FIND V(BIT_2) AT=6950n
+.meas tran b3_209 FIND V(BIT_3) AT=6950n
+.meas tran b4_209 FIND V(BIT_4) AT=6950n
+.meas tran b5_209 FIND V(BIT_5) AT=6950n
+.meas tran b6_209 FIND V(BIT_6) AT=6950n
+.meas tran b7_209 FIND V(BIT_7) AT=6950n
+.control
+set num_threads=2
+run
+.endc
+.end
