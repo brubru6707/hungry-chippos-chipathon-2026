@@ -282,6 +282,16 @@ def build_nor2(layout, cell_name="nor2", pfet_w=2.0, nfet_w=0.5):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--fold", type=int, default=0,
+                    help="fold the top row into N stacked rows (0 = flat, the "
+                         "signed-off SAR-4 strip); folded output goes to --out")
+    ap.add_argument("--out", default=None,
+                    help="output GDS path (default: sar_cells.gds flat, "
+                         "sar_folded.gds folded)")
+    args = ap.parse_args()
+
     layout = db.Layout()
     layout.dbu = 0.001
     cells = {
@@ -292,11 +302,18 @@ def main():
     }
     cells["dff_set_n"] = build_dff(layout, cells, "set")
     cells["dff_rst_n"] = build_dff(layout, cells, "rst")
-    build_sar_top(layout, cells)
+    if args.fold:
+        top = build_sar_top_folded(layout, cells, n_rows=args.fold)
+        out = args.out or "/foss/designs/sar_logic/layout/sar_folded.gds"
+    else:
+        top = build_sar_top(layout, cells)
+        out = args.out or "/foss/designs/sar_logic/layout/sar_cells.gds"
+    b = top.bbox()
     options = db.SaveLayoutOptions()
     options.write_context_info = False
-    layout.write("/foss/designs/sar_logic/layout/sar_cells.gds", options)
-    print("wrote sar_logic/layout/sar_cells.gds with topcells:", [c.name for c in layout.each_cell()])
+    layout.write(out, options)
+    print("wrote %s topcell=%s size=%.2f x %.2f um" % (
+        out, top.name, b.width() * layout.dbu, b.height() * layout.dbu))
 
 
 
@@ -308,7 +325,9 @@ def main():
 from gen_dac_switch_layout import (  # noqa: E402
     _m2_wire,
     _m3_wire,
+    _m4_wire,
     _via2_hop,
+    _via3_hop,
     _via_transition,
 )
 
@@ -381,7 +400,7 @@ def _place_row(layout, top, cells, insts):
     return pin_list, supply_pins, x_cursor - CELL_GAP
 
 
-def channel_route(layout, top, pin_list, exports, y_ch0):
+def channel_route(layout, top, pin_list, exports, y_ch0, stagger=0.0):
     """Connect every pin of each net through one M2 track per net in the
     channel above the row (y >= y_ch0), reaching pins with M3 verticals.
 
@@ -396,7 +415,19 @@ def channel_route(layout, top, pin_list, exports, y_ch0):
 
     exports: [(net, port_name), ...] -> M3 stubs from the net track up to
     a pad row at the channel top, labeled for the next hierarchy level.
-    Returns y_top of the export pad row."""
+
+    stagger > 0 arranges the export pads as a REVERSE staircase (leftmost
+    pad highest, each next pad `stagger` lower) instead of one shared
+    y_top row. Purpose: a later hierarchy level can leave each pad with a
+    horizontal M3 feeder running RIGHT at the pad's own y -- the feeder
+    then only crosses the M3 verticals of pads further right, whose tops
+    are strictly LOWER, so no same-layer conflict is possible by
+    construction (the fold-level analogue of the one-track-per-net rule).
+    stagger must be >= 0.195 + 0.16 + 0.30 = 0.655 (pad hw + wire hw +
+    M3 spacing) -- use 0.7.
+
+    Returns (y_top, next free x after the exports, export pad list
+    [(net, port, x, y), ...])."""
     dbu = layout.dbu
     li_m1 = layout.layer(34, 0)
     li_m1lbl = layout.layer(34, 10)
@@ -474,17 +505,21 @@ def channel_route(layout, top, pin_list, exports, y_ch0):
 
     # export stubs get their own x slots right of all drops
     ex_x0 = (max(d for d in drop_x.values()) if drop_x else 0.0) + 1.0
+    pads = []
+    n_ex = len(exports)
     for k, (net, port) in enumerate(exports):
         ex = ex_x0 + k * DROP_PITCH
+        pad_y = y_top + (n_ex - 1 - k) * stagger
         ty = track_y[net]
         m2_pad(ex, ty)
         _via2_hop(top, dbu, ex, ty, li_v2, li_m3)
-        _m3_wire(top, dbu, ex, ty, ex, y_top, li_m3)
+        _m3_wire(top, dbu, ex, ty, ex, pad_y, li_m3)
         top.shapes(li_m3).insert(db.Box(
-            int(round((ex - 0.195) / dbu)), int(round((y_top - 0.195) / dbu)),
-            int(round((ex + 0.195) / dbu)), int(round((y_top + 0.195) / dbu)),
+            int(round((ex - 0.195) / dbu)), int(round((pad_y - 0.195) / dbu)),
+            int(round((ex + 0.195) / dbu)), int(round((pad_y + 0.195) / dbu)),
         ))
-        _add_label(top, dbu, ex, y_top, port, li_m1lbl)
+        _add_label(top, dbu, ex, pad_y, port, li_m1lbl)
+        pads.append((net, port, ex, pad_y))
         s = span[net]
         s[0] = ex if s[0] is None else min(s[0], ex)
         s[1] = ex if s[1] is None else max(s[1], ex)
@@ -494,7 +529,7 @@ def channel_route(layout, top, pin_list, exports, y_ch0):
         ty = track_y[net]
         _m2_wire(top, dbu, s[0], ty, s[1], ty, li_m2)
         # via2/M2 landings along the track already exist at each drop x
-    return y_top, ex_x0 + len(exports) * DROP_PITCH
+    return y_top, ex_x0 + len(exports) * DROP_PITCH, pads
 
 
 DFF_SET_INSTS = [
@@ -568,7 +603,7 @@ def build_dff(layout, cells, variant):
     insts = DFF_SET_INSTS if variant == "set" else DFF_RST_INSTS
     top = layout.create_cell(name)
     pin_list, supply_pins, _right = _place_row(layout, top, cells, insts)
-    y_top, ex_next = channel_route(layout, top, pin_list, DFF_PORTS, y_ch0=1.0)
+    y_top, ex_next, _pads = channel_route(layout, top, pin_list, DFF_PORTS, y_ch0=1.0)
     _supply_straps(layout, top, supply_pins, y_top, ex_next)
     snap_to_grid(top)
     return top
@@ -637,12 +672,14 @@ TOP_CELL_GAP = 2.5  # extra clearance so leaf-pin M2 jogs pushed rightward
                     # cannot reach into a neighboring DFF's internal M2/M3
 
 
-def build_sar_top(layout, cells):
-    top = layout.create_cell("sar_logic")
+def _place_top_insts(layout, top, cells, insts):
+    """Place top-row instances left-to-right (bbox tops at y=0) and return
+    their pin_list for channel_route -- the shared placement engine for the
+    flat sar_logic row and each row of the folded variant."""
     dbu = layout.dbu
     x_cursor = 0.0
     pin_list = []
-    for _iname, cname, pinmap in SAR_TOP_INSTS:
+    for _iname, cname, pinmap in insts:
         cell = cells[cname]
         bb = cell.bbox()
         x_off = x_cursor - bb.left * dbu
@@ -661,7 +698,123 @@ def build_sar_top(layout, cells):
             px, py = pins[leaf_pin]
             pin_list.append((net, px + x_off, py + y_off, kinds[leaf_pin]))
         x_cursor += bb.width() * dbu + TOP_CELL_GAP
+    return pin_list
+
+
+def build_sar_top(layout, cells):
+    top = layout.create_cell("sar_logic")
+    pin_list = _place_top_insts(layout, top, cells, SAR_TOP_INSTS)
     channel_route(layout, top, pin_list, SAR_TOP_PORTS, y_ch0=1.2)
+    snap_to_grid(top)
+    return top
+
+
+
+
+# ======================================================================
+# Step 4 (INT-8): folded sar_logic -- same instances, N stacked rows
+# ======================================================================
+# The flat 1219.6 x 45.7 um strip does not fit padring slot B (558.75 um
+# usable width), so the same SAR_TOP_INSTS are split into width-balanced
+# rows (breaking only at slice starts, i.e. before an XS*/XC* DFF, so all
+# nor2/inv slice-local nets stay in-row) and stacked vertically.
+#
+# Fold-level routing model (correct by construction, mirroring
+# channel_route's argument): every net that spans rows -- or is a
+# top-level port -- gets ONE exclusive vertical M4 track in a channel
+# right of all rows. Each row exports its channel nets as reverse-
+# staircase M3 pads (channel_route stagger=0.7): pad k of a row sits at
+# its own y, so its horizontal M3 feeder to the M4 track crosses only
+# the M3 verticals of pads further right, which top out strictly lower
+# -- no same-layer crossing. Feeders vs. foreign M4 verticals and M4
+# verticals vs. anything in the rows are different-layer by definition
+# (rows are poly..M3 only). Ports are labeled on their M4 track pad
+# (46/10), the pattern LVS-proven by the DAC's DAC_TOP label.
+
+FOLD_ROW_GAP = 3.0   # bbox gap between stacked rows: metal-only export pads
+                     # of row k+1 face DFF nwell/active bottoms of row k --
+                     # no same-layer pairing closer than intra-row precedent
+FOLD_CH_GAP = 2.0    # rows' right edge to first M4 track
+FOLD_M4_PITCH = 0.8  # exclusive M4 vertical track pitch (= DROP_PITCH)
+
+
+def _partition_slices(cells, n_rows):
+    """Split SAR_TOP_INSTS into n_rows width-balanced runs, breaking only
+    before a DFF instance (slice starts) so slice-internal nets never
+    cross rows."""
+    dbu = 0.001
+    widths = [cells[c].bbox().width() * dbu + TOP_CELL_GAP for _, c, _ in SAR_TOP_INSTS]
+    total = sum(widths)
+    target = total / n_rows
+    rows, cur, acc = [], [], 0.0
+    for inst, w in zip(SAR_TOP_INSTS, widths):
+        breakable = inst[1].startswith("dff")
+        if cur and breakable and acc + w / 2 > target and len(rows) < n_rows - 1:
+            rows.append(cur)
+            cur, acc = [], 0.0
+        cur.append(inst)
+        acc += w
+    rows.append(cur)
+    return rows
+
+
+def build_sar_top_folded(layout, cells, n_rows=3):
+    dbu = layout.dbu
+    li_m3 = layout.layer(42, 0)
+    li_v3 = layout.layer(40, 0)
+    li_m4 = layout.layer(46, 0)
+    li_m4lbl = layout.layer(46, 10)
+
+    def um(v):
+        return int(round(v / dbu))
+
+    rows = _partition_slices(cells, n_rows)
+    nets_by_row = [set(n for _, _, pm in row for n in pm.values()) for row in rows]
+    port_nets = [net for net, _port in SAR_TOP_PORTS]
+    crossing = set()
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            crossing |= nets_by_row[i] & nets_by_row[j]
+    channel_nets = sorted(crossing | set(port_nets),
+                          key=lambda n: (port_nets.index(n) if n in port_nets else 99, n))
+
+    top = layout.create_cell("sar_logic")
+    pads_all = []
+    y_cursor = 0.0
+    x_right = 0.0
+    for k, row in enumerate(rows):
+        rc = layout.create_cell("sar_fold_row%d" % k)
+        pin_list = _place_top_insts(layout, rc, cells, row)
+        present = [n for n in channel_nets if any(p[0] == n for p in pin_list)]
+        present.sort(key=lambda n: min(p[1] for p in pin_list if p[0] == n))
+        _yt, _xe, pads = channel_route(layout, rc, pin_list,
+                                       [(n, n) for n in present], y_ch0=1.2, stagger=0.7)
+        snap_to_grid(rc)
+        bb = rc.bbox()
+        x_off = -bb.left * dbu
+        y_off = y_cursor - bb.top * dbu
+        top.insert(db.CellInstArray(
+            rc.cell_index(), db.Trans(db.Vector(um(x_off), um(y_off)))))
+        pads_all += [(net, x + x_off, y + y_off) for net, _p, x, y in pads]
+        x_right = max(x_right, x_off + bb.right * dbu)
+        y_cursor -= bb.height() * dbu + FOLD_ROW_GAP
+
+    x_ch0 = x_right + FOLD_CH_GAP
+    slot_x = {net: x_ch0 + i * FOLD_M4_PITCH for i, net in enumerate(channel_nets)}
+    for net in channel_nets:
+        pts = [(x, y) for n, x, y in pads_all if n == net]
+        sx = slot_x[net]
+        for (px, py) in pts:
+            _m3_wire(top, dbu, px, py, sx, py, li_m3)
+            # full M3 landing pad under the via3 (0.39um, same enclosure
+            # rationale as the channel router's V2.3c/d m2_pad landings)
+            top.shapes(li_m3).insert(db.Box(
+                um(sx - 0.195), um(py - 0.195), um(sx + 0.195), um(py + 0.195)))
+            _via3_hop(top, dbu, sx, py, li_v3, li_m4)
+        ys = [py for _px, py in pts]
+        _m4_wire(top, dbu, sx, min(ys), sx, max(ys), li_m4)
+        if net in port_nets:
+            _add_label(top, dbu, sx, max(ys), net, li_m4lbl)
     snap_to_grid(top)
     return top
 
