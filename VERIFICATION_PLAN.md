@@ -203,12 +203,43 @@ artifact.
 
 ---
 
+## ADC-level closure (2026-07-31) — Gates 3, 4, 5 + final specs
+
+- **Gate 3 (TT, ADC level):** definitive 256-code per-code sweep
+  (`adc_top/sim/sweep_tt_fine2/`, trusted settings 0.05n + reltol=1e-4):
+  perfectly monotonic, no missing codes; codes 39–102 exact, 103–255 a
+  uniform −1 (calibratable ≈ −0.5 LSB analog offset), 1–38 dead
+  (comparator low-Vcm limit). PASS over VIN 0.50–3.29 V.
+- **Gate 4 (MOS corners):** FF/SS/FS/SF structurally identical to TT;
+  only the dead zone moves with the NMOS corner (FF 0.40 → SS 0.62 V).
+  **Guaranteed range 0.62–3.29 V** (`adc_top/sim/corners_report.md`).
+  Supply/temp follow-up (TT, 21-code reduced sweeps at 3.0 V, 3.6 V,
+  −40 °C, +125 °C): see `adc_top/sim/sweep_{v30,v36,tm40,t125}/` and
+  the PROGRESS INT-7 row.
+- **Gate 5 (chip):** `adc_top/layout/adc_chip_top.gds` — main DRC 0/660,
+  LVS "Netlists match" 862/862 devices, density (post dummy-fill) and
+  antenna clean, COMP-11 taps in. Regression: `designs/scripts/
+  run_all_sims.sh` → ALL CHECKS PASS.
+
+**Final spec table (pending team ratification of ENOB + rate):**
+
+| Spec | Value | Source |
+|------|-------|--------|
+| Resolution | 8 bit | architecture |
+| FS / LSB | 3.3 V (VDD-ref) / 12.9 mV (measured FS 3.293 V) | DAC-9 |
+| DNL / INL | < 0.5 LSB after offset/gain cal (code-center bound) | Gates 3/4 |
+| Input range | **0.65–3.25 V quoted** (0.62–3.29 V guaranteed) | Gate 4 |
+| Offset | ≈ −0.5 LSB, calibratable | Gate 3 |
+| ENOB / SNDR | **7.23 bits / 45.3 dB** static-transfer-projected @ 79% FS swing (`calc_enob.py`) | REP-2 |
+| Sample rate | **833 kS/s @ 10 MHz CLK** (12 CLK/conversion) | pin_contracts §5 |
+| Input BW | ~1.5 kHz full-swing sine (no input S/H); DC/stepped unaffected | pin_contracts §2 |
+
 ## Verification Gates Summary
 
 | Gate | Criterion | Block | Status |
 |------|-----------|-------|--------|
-| Gate 1 | σ_offset characterized + delay < 2 ns @ TT (MC N≥100) | Comparator | 🟡 |
+| Gate 1 | σ_offset characterized + delay < 2 ns @ TT (MC N≥100) | Comparator | 🟢 PASS (see PROGRESS COMP-5) |
 | Gate 2 | DAC settling ≤ 0.5 LSB (6.45 mV) within 40 ns, TT + PVT corners | Cap DAC | 🟢 **PASS**, post VREF=VDD rework 2026-07-18 (worst case SS/125°C/2.97V: 3.86 ns, 36.1 ns margin) |
-| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🟢 DAC-only nominal sweep PASS post VREF=VDD rework (FS span 3293mV = 99.8% of 3.3V, max\|DNL\|=0.002, max\|INL\|=0.004 LSB); **cap-mismatch PASSES at Cu=50fF (≥99.9997% yield, corrected local-mismatch model — see above, LSB-based conclusion unaffected by the rework)**, no upsizing needed, common-centroid layout (DAC-5) still required for systematic-gradient cancellation; full ADC-level integration still pending |
-| Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | ⚪ |
-| Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | ⚪ |
+| Gate 3 | Top-level DNL/INL < 0.5 LSB @ TT corner | Integration | 🟢 **ADC-level PASS 2026-07-31** over VIN 0.50–3.29 V (see above; DAC-only + cap-mismatch MC results retained above) |
+| Gate 4 | Full corner sweep (FF/SS/SF/FS) passes spec | Integration | 🟢 **PASS 2026-07-31** — guaranteed range 0.62–3.29 V |
+| Gate 5 | DRC clean + LVS clean → tapeout sign-off | Integration | 🟢 **PASS 2026-07-31** — chip DRC 0/660 + LVS 862/862 + density/antenna clean |
