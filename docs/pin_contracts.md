@@ -90,7 +90,7 @@ charge-injection numbers from DAC-4c still apply).
 | `VSS` | rail | DAC `VIN` (reset reference = 0 V), comparator `VSS`, sar_logic `VSS`, glue-cell VSS. Must be SPICE node `0` (DAC internal grounds are global `0`). |
 | `BIT_i` (i=0..7) | sar_logic `BIT_i` | DAC `B_i` — **straight, no inversion** (BIT_7→B7=MSB). Also to output pads. |
 | `CMP_OUT` | SR-latch `Q` (glue, §4) | sar_logic `CMP_OUT` |
-| `VOUT1`, `VOUT2` | comparator | SR-latch inputs (§4) |
+| `VOUT1`, `VOUT2` | comparator | identical inverter buffers → NOR SR latch (§4) |
 | `CK` | glue: `CK = INV(CLK)` | comparator `CK` |
 | `SAMPLE` | glue: `SAMPLE = INV(RST_N)` | DAC `SAMPLE` |
 | `CLK`, `RST_N` | pads | sar_logic + glue |
@@ -113,18 +113,24 @@ Three tiny cells, reusing existing proven sub-cells:
 
 1. **CK inverter** — `CK = INV(CLK)` (sar_logic `inv` cell). Comparator evaluates during the CLK-low
    half-period, resets during CLK-high.
-2. **Decision SR latch** — cross-coupled NAND2 (2× sar_logic/dac `nand2`):
-   `Q = NAND(VOUT1, QB)`, `QB = NAND(VOUT2, Q)`, `CMP_OUT = Q`.
-   StrongARM precharge (both VOUT high) = NAND-latch hold state, so the decision survives the
-   comparator's reset phase and the C_i-latch race the SAR-3 TB had to model with a 1 ns RC is
-   eliminated structurally. VOUT1 falls (keep) → Q=1; VOUT2 falls (discard) → Q=0.
+2. **Decision latch — buffered NOR SR latch** (2× sar_logic `inv` + 2× sar_logic `nor2`):
+   `V1B = INV(VOUT1)`, `V2B = INV(VOUT2)`, then `CMP_OUT = Q = NOR(V2B, QB)`, `QB = NOR(V1B, Q)`.
+   StrongARM precharge (both VOUT high ⇒ both V*B low) = NOR-latch hold state, so the decision
+   survives the comparator's reset phase and the C_i-latch race the SAR-3 TB had to model with a
+   1 ns RC is eliminated structurally. VOUT1 falls (keep) → V1B=1 → QB=0 → Q=1; VOUT2 falls → Q=0.
+   ⚠️ **Do not connect the comparator outputs directly to a NAND SR latch.** Found in INT-5 sim:
+   the NAND whose second input is enabled by the *held* state presents a larger (Miller) input
+   capacitance than the disabled one, so the comparator sees state-dependent asymmetric loads. In
+   the low-gain near-rail regime this biased every decision toward repeating the previous one
+   (sticky keeps ratcheted VIN=3.25 V to code 255). The identical inverter buffers make both
+   outputs see the same state-independent load.
 3. **SAMPLE inverter** — `SAMPLE = INV(RST_N)` (reset phase = DAC_TOP reset phase).
 
 ## 5 · Phasing
 
 ```
 CLK      ‾\__/‾‾\__/‾‾\__/‾‾\__ ...            (10 MHz, T=100 ns; FF edges on ↑)
-RST_N    ____/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ ...            (release mid-CLK-low, ≥ setup before ↑)
+RST_N    ____/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ ...            (release during a CLK-HIGH phase — see below)
 SAMPLE   ‾‾‾‾\________________ ...            (= ~RST_N: DAC_TOP reset ends at release)
 trial i        [BIT set on CLK↑]--DAC settles (≤3.9 ns worst corner)--
 CK       __/‾\__/‾\__/‾\__ ...                (= ~CLK: strobe on CLK↓, mid-trial)
@@ -132,6 +138,12 @@ CMP_OUT        [SR latch updates ≤1 ns after CK↑; stable through next CLK↑
 EOC      ______________________/‾‾  (8th CLK↑ after release; code valid & held)
 ```
 
+- **RST_N release phasing constraint:** RST_N must be released during a **CLK-high** half-period.
+  The comparator strobes on CLK falling edges (CK=~CLK); the MSB trial's B7 asserts at RST_N release
+  (S7 is set during reset), so the release must happen *before* the falling-edge strobe of its own
+  trial window. Releasing during CLK-low would make trial 7 latch a stale pre-release comparison
+  (DAC_TOP still at 0 V ⇒ MSB always kept). Release early in the CLK-high phase leaves ≥45 ns for
+  the MSB settle before the strobe.
 - Trial bit asserts on a rising CLK edge → DAC has a **half period (50 ns)** to settle
   (needs 3.9 ns worst corner, Gate 2) → comparator strobes at the falling edge → decision latched in
   the SR latch ~370 ps later (worst corner, COMP-5) → SAR C_i FF captures it on the next rising edge
@@ -143,11 +155,20 @@ EOC      ______________________/‾‾  (8th CLK↑ after release; code valid & 
 
 ## 6 · Caveats / open items
 
-1. **Low-end common-mode window.** Critical (small-differential) decisions occur at Vcm ≈ VIN_adc.
-   COMP-5 worst-corner compliance is Vcm ≥ 0.85 V ⇒ codes below ~66 (VIN < 0.85 V) are not
-   worst-corner-guaranteed. TT behavior to be measured by the INT-6 256-code sweep; if the low-end
-   DNL/INL degrades even at TT, options are (a) spec a reduced input range, (b) a PMOS-input
-   comparator variant, (c) re-bias. **Decision deferred to INT-6 data.**
+1. **Comparator valid common-mode window — BOTH ends.** Critical (small-differential) decisions
+   occur at Vcm ≈ VIN_adc.
+   *Low end:* COMP-5 worst-corner compliance is Vcm ≥ 0.85 V ⇒ codes below ~66 not
+   worst-corner-guaranteed. At TT, INT-5 measured VIN=0.6 V converting exactly but VIN=0.05 V
+   collapsing to code 0.
+   *High end (new, found in INT-5):* for inputs within ~150 mV of VDD the StrongARM **inverts**
+   decisions — the branch nodes crash so fast that Cgs coupling through the cross-coupled NMOS
+   pair (net3 → M9 gate = VOUT2) pulls the *losing* output down before the conduction race
+   develops, e.g. a +58 mV keep decided as discard at Vcm≈3.2 V. VIN=2.9 V converts exactly;
+   VIN=3.25 V errs by ~6 LSB. This is intrinsic comparator dynamics (step/tolerance-converged),
+   not a glue or DAC issue.
+   ⇒ **Practical specified input range ≈ 0.6–3.1 V at TT** (exact bounds from the INT-6 sweep);
+   options if the team wants full range: PMOS-input or complementary-pair comparator variant
+   (COMP-ALT could absorb this), or an input attenuator. **Decision deferred to INT-6 data.**
 2. **Input bandwidth** (no input S/H) — see §2. Fine for chipathon testing; flag in the datasheet.
 3. VOUT1/VOUT2 polarity in §1 is derived from netlist topology; **INT-5 TB must confirm it in sim**
    before Gate 3 is claimed.

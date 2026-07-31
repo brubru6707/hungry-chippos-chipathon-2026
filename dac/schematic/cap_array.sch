@@ -224,55 +224,55 @@ N 1500 -170 1560 -170 {lab=B7}
 C {lab_wire.sym} 1560 -170 0 0 {name=lwp11 sig_type=std_logic lab=B7}
 N 1500 -70 1560 -70 {lab=DAC_TOP}
 C {lab_wire.sym} 1560 -70 0 0 {name=lwp12 sig_type=std_logic lab=DAC_TOP}
-C {dac/schematic/nand2.sym} 2700 -1270 0 0 {name=x_nand0}
+C {dac/schematic/dac_nand2.sym} 2700 -1270 0 0 {name=x_nand0}
 C {lab_wire.sym} 2600 -1270 0 0 {name=lnd0_a sig_type=std_logic lab=B0}
 C {lab_wire.sym} 2600 -1230 0 0 {name=lnd0_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -1250 0 0 {name=lnd0_y sig_type=std_logic lab=B0NAND}
 C {lab_wire.sym} 2660 -1310 0 0 {name=lnd0_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -1190 0 0 {name=gnand0 lab=0}
-C {dac/schematic/nand2.sym} 2700 -1670 0 0 {name=x_nand1}
+C {dac/schematic/dac_nand2.sym} 2700 -1670 0 0 {name=x_nand1}
 C {lab_wire.sym} 2600 -1670 0 0 {name=lnd1_a sig_type=std_logic lab=B1}
 C {lab_wire.sym} 2600 -1630 0 0 {name=lnd1_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -1650 0 0 {name=lnd1_y sig_type=std_logic lab=B1NAND}
 C {lab_wire.sym} 2660 -1710 0 0 {name=lnd1_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -1590 0 0 {name=gnand1 lab=0}
-C {dac/schematic/nand2.sym} 2700 -2070 0 0 {name=x_nand2}
+C {dac/schematic/dac_nand2.sym} 2700 -2070 0 0 {name=x_nand2}
 C {lab_wire.sym} 2600 -2070 0 0 {name=lnd2_a sig_type=std_logic lab=B2}
 C {lab_wire.sym} 2600 -2030 0 0 {name=lnd2_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -2050 0 0 {name=lnd2_y sig_type=std_logic lab=B2NAND}
 C {lab_wire.sym} 2660 -2110 0 0 {name=lnd2_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -1990 0 0 {name=gnand2 lab=0}
-C {dac/schematic/nand2.sym} 2700 -2470 0 0 {name=x_nand3}
+C {dac/schematic/dac_nand2.sym} 2700 -2470 0 0 {name=x_nand3}
 C {lab_wire.sym} 2600 -2470 0 0 {name=lnd3_a sig_type=std_logic lab=B3}
 C {lab_wire.sym} 2600 -2430 0 0 {name=lnd3_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -2450 0 0 {name=lnd3_y sig_type=std_logic lab=B3NAND}
 C {lab_wire.sym} 2660 -2510 0 0 {name=lnd3_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -2390 0 0 {name=gnand3 lab=0}
-C {dac/schematic/nand2.sym} 2700 -2870 0 0 {name=x_nand4}
+C {dac/schematic/dac_nand2.sym} 2700 -2870 0 0 {name=x_nand4}
 C {lab_wire.sym} 2600 -2870 0 0 {name=lnd4_a sig_type=std_logic lab=B4}
 C {lab_wire.sym} 2600 -2830 0 0 {name=lnd4_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -2850 0 0 {name=lnd4_y sig_type=std_logic lab=B4NAND}
 C {lab_wire.sym} 2660 -2910 0 0 {name=lnd4_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -2790 0 0 {name=gnand4 lab=0}
-C {dac/schematic/nand2.sym} 2700 -3270 0 0 {name=x_nand5}
+C {dac/schematic/dac_nand2.sym} 2700 -3270 0 0 {name=x_nand5}
 C {lab_wire.sym} 2600 -3270 0 0 {name=lnd5_a sig_type=std_logic lab=B5}
 C {lab_wire.sym} 2600 -3230 0 0 {name=lnd5_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -3250 0 0 {name=lnd5_y sig_type=std_logic lab=B5NAND}
 C {lab_wire.sym} 2660 -3310 0 0 {name=lnd5_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -3190 0 0 {name=gnand5 lab=0}
-C {dac/schematic/nand2.sym} 2700 -3670 0 0 {name=x_nand6}
+C {dac/schematic/dac_nand2.sym} 2700 -3670 0 0 {name=x_nand6}
 C {lab_wire.sym} 2600 -3670 0 0 {name=lnd6_a sig_type=std_logic lab=B6}
 C {lab_wire.sym} 2600 -3630 0 0 {name=lnd6_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -3650 0 0 {name=lnd6_y sig_type=std_logic lab=B6NAND}
 C {lab_wire.sym} 2660 -3710 0 0 {name=lnd6_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -3590 0 0 {name=gnand6 lab=0}
-C {dac/schematic/nand2.sym} 2700 -4070 0 0 {name=x_nand7}
+C {dac/schematic/dac_nand2.sym} 2700 -4070 0 0 {name=x_nand7}
 C {lab_wire.sym} 2600 -4070 0 0 {name=lnd7_a sig_type=std_logic lab=B7}
 C {lab_wire.sym} 2600 -4030 0 0 {name=lnd7_b sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 2740 -4050 0 0 {name=lnd7_y sig_type=std_logic lab=B7NAND}
 C {lab_wire.sym} 2660 -4110 0 0 {name=lnd7_vdd sig_type=std_logic lab=VDD}
 C {gnd.sym} 2660 -3990 0 0 {name=gnand7 lab=0}
-C {dac/schematic/inv1.sym} 1700 -40 0 0 {name=x_sampinv}
+C {dac/schematic/dac_inv1.sym} 1700 -40 0 0 {name=x_sampinv}
 C {lab_wire.sym} 1600 -40 0 0 {name=lsampinv_vin sig_type=std_logic lab=SAMPLE}
 C {lab_wire.sym} 1730 -40 0 0 {name=lsampinv_vout sig_type=std_logic lab=SAMPLE_N}
 C {lab_wire.sym} 1630 -110 0 0 {name=lsampinv_vdd sig_type=std_logic lab=VDD}

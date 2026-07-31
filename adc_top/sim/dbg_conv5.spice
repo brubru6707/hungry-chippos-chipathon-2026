@@ -1,0 +1,55 @@
+* tb_adc_top -- INT-5: full-ADC integration testbench (TT, 3.3 V, 10 MHz CLK)
+* First fully transistor-level closed-loop conversion test: real cap-DAC
+* (255 Cu charge-redistribution + switches), real StrongARM comparator,
+* real sar_logic controller, plus the adc_top glue (CK=~CLK inverter,
+* SAMPLE=~RST_N inverter, NAND SR decision latch).
+* Scheme per docs/pin_contracts.md: DAC is a VDAC generator (DAC VIN pin
+* tied to VSS inside adc_top); ADC input drives comparator VIN1 directly.
+* 5 conversions, one per 1.2 us: VIN = 0.05, 1.66, 0.6, 2.9, 3.25 V
+* Ideal codes = floor(VIN*256/3.3) = 3, 128, 46, 224, 252
+* NOTE: low-VIN conversions (0.05, 0.6) probe the known StrongARM low-Vcm
+* window (COMP-5: compliant Vcm >= 0.85 V worst-corner) -- this TB is the
+* TT measurement of that caveat, expect possible low-code degradation.
+* RST_N released at t=120n inside a CLK-HIGH phase (pin_contracts section 5:
+* release during CLK-low would make the MSB trial latch a stale pre-release
+* comparison). EOC rises on the 8th CLK rising edge after release (900n);
+* code sampled 50 ns later.
+
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
+
+.include adc_top_subckt.spice
+
+VVDD VDD 0 3.3
+* CLK: high [0,49n], low [49n,100n] each period
+VCLK CLK 0 PULSE(0 3.3 0 1n 1n 49n 100n)
+* RST_N: low [0,120n] of each 1.2us conversion; release at 120n = CLK-high phase
+VRST RST_N 0 PULSE(3.3 0 0 1n 1n 120n 1200n)
+* VIN steps during the next conversion's reset window
+VVIN vin 0 3.25
+
+* port order: VDD VSS VIN CLK RST_N BIT_7..BIT_0 EOC
+Xadc VDD 0 vin CLK RST_N BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC adc_top
+
+* pad-ish loads on the digital outputs
+CB7 BIT_7 0 20f
+CB6 BIT_6 0 20f
+CB5 BIT_5 0 20f
+CB4 BIT_4 0 20f
+CB3 BIT_3 0 20f
+CB2 BIT_2 0 20f
+CB1 BIT_1 0 20f
+CB0 BIT_0 0 20f
+CEOC EOC 0 20f
+
+.tran 0.1n 1100n
+
+.control
+  set num_threads=4
+  run
+  wrdata dbg_conv5_out.txt V(Xadc.DAC_TOP) V(Xadc.CMP_OUT) V(Xadc.VOUT1) V(Xadc.VOUT2) V(Xadc.CK) V(Xadc.QB)
+.endc
+.end
