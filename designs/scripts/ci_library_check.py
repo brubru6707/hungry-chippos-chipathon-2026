@@ -77,7 +77,7 @@ def check_enob():
     out = subprocess.run(
         [sys.executable, os.path.join(ROOT, "designs/scripts/calc_enob.py"),
          "--transfer", os.path.join(ROOT, "adc_top/sim/sweep_tt_fine2/sweep_codes.csv"),
-         "--vlo", "0.65", "--vhi", "3.25"],
+         "--vlo", "0.70", "--vhi", "3.25"],
         capture_output=True, text=True)
     m = re.search(r"ENOB = ([\d.]+)", out.stdout)
     ok = m is not None and float(m.group(1)) >= 7.0

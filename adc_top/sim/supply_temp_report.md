@@ -22,7 +22,32 @@ sweep found (worst here = cold, ending ≤ code 48 ⇒ ≈0.62 V), so the
 quoted 0.65 V low bound holds across supply ±10% and −40..125 °C at TT
 models.
 
-**Residual caveat (documented, not run):** the cross-corner SS × −40 °C
-was not simulated; both axes individually reach ≈0.62 V, so their
-combination could push the true low bound slightly above the 0.62 V
-guaranteed number — the 0.65 V *quoted* bound is the one with margin.
+## Cross-corner SS × −40 °C (closed 2026-07-31)
+
+The residual caveat above is now measured. 33-code sweeps (the reduced
+set plus every code 46–56 and 58/60/62 for ~1-code resolution across
+the boundary), SS MOS models via the new `--corner` argument, −40 °C,
+at both 3.3 V and 2.97 V (VDD −10%). Dirs `sweep_ss_cold{,_2v97}/`
+(checker outputs saved as `check_output.txt` in each).
+
+| Condition | Monotonic | Err band (nonzero codes) | Dead zone ends between codes | ≈ VIN bound |
+|---|---|---|---|---|
+| SS / −40 °C / 3.3 V  | yes | 0 / −1 | 53 → 54 | 0.688–0.701 V |
+| SS / −40 °C / 2.97 V | yes | 0 / −1 | 58 → 60 | 0.677–0.700 V |
+
+Structurally identical to every other condition (monotonic, exact codes
+through mid-range, the same uniform −1 offset band above ~code 96–112).
+The two supplies agree in **absolute volts** (≈0.70 V) — the bound is
+the comparator's NMOS-Vth-driven low-Vcm limit, not ratiometric.
+
+**Verdict (supersedes the one above for the low bound):** the axes
+stack — SS (0.62 V) plus cold (−40 °C) pushes the dead zone to
+**≈0.70 V**, above the previously quoted 0.65 V. The datasheet low
+bound is therefore raised: **input range 0.70–3.25 V quoted, guaranteed
+across MOS corners, −40..125 °C and VDD ±10%** (first working code
+center at the worst measured condition: code 54 = 0.701 V @ 3.3 V,
+code 60 = 0.700 V @ 2.97 V, both read back exact). At nominal 27 °C
+the per-corner bounds of `corners_report.md` (FF 0.40 … SS 0.62 V) are
+unchanged. ENOB at the corrected 0.70–3.25 V swing (77% FS,
+`calc_enob.py` on the Gate-3 transfer): **SNDR 45.10 dB → ENOB 7.20
+bits** (was 45.3 dB / 7.23 b at the old 0.65 V swing).

@@ -93,7 +93,8 @@ cd <run_dir> && python /foss/pdks/gf180mcuD/libs.tech/klayout/tech/drc/run_drc.p
 | Gate 3 (TT transfer) | `python3 designs/scripts/gen_adc_sweep_tt.py adc_top/sim/sweep_tt_fine2` then `cd` there, `ls code_*.spice \| xargs -P 8 -I{} sh -c 'ngspice -b {} > {}.log 2>&1'`, then `python3 designs/scripts/check_adc_sweep.py adc_top/sim/sweep_tt_fine2` | monotonic, no missing codes, codes 39–102 exact, 103–255 = −1, 1–38 dead |
 | Gate 4 (MOS corners) | same with corner arg `ff/ss/fs/sf`, dirs `adc_top/sim/sweep_{ff,ss,fs,sf}` | identical structure; dead zone FF 0.40 V … SS 0.62 V (`adc_top/sim/corners_report.md`) |
 | Supply/temp follow-up | `python3 designs/scripts/gen_adc_sweep_vt.py <dir> --vdd 3.0\|3.6 --temp -40\|125` + run + `--check` | monotonic, offset band only |
-| ENOB (REP-2) | `python3 designs/scripts/calc_enob.py --transfer adc_top/sim/sweep_tt_fine2/sweep_codes.csv --vlo 0.65 --vhi 3.25` | SNDR 45.3 dB → **ENOB 7.23 bits** (static-projected) |
+| SS×−40 °C cross-corner | same with `--corner ss --temp -40 --vdd 3.3\|2.97` (dirs `adc_top/sim/sweep_ss_cold{,_2v97}`) | monotonic, offset band only; dead zone ends codes 53→54 @ 3.3 V / 58→60 @ 2.97 V (both ≈0.70 V — sets the quoted low bound) |
+| ENOB (REP-2) | `python3 designs/scripts/calc_enob.py --transfer adc_top/sim/sweep_tt_fine2/sweep_codes.csv --vlo 0.70 --vhi 3.25` | SNDR 45.10 dB → **ENOB 7.20 bits** (static-projected) |
 
 ## 5 · One-shot regression
 
@@ -106,12 +107,14 @@ bash designs/scripts/run_all_sims.sh --full   # + the 256-code TT sweep (hours)
 
 - 8-bit SAR, FS = 3.3 V (VDD-referenced), 1 LSB = 12.9 mV
   (measured FS 3.293 V)
-- Input range **0.65–3.25 V** quoted (guaranteed 0.62–3.29 V across MOS
-  corners; low bound tracks the NMOS corner)
+- Input range **0.70–3.25 V** quoted — guaranteed across MOS corners,
+  −40..125 °C and VDD ±10 % (the SS×−40 °C cross-corner sets the
+  ≈0.70 V bound; at nominal 27 °C/3.3 V the range is 0.62–3.29 V
+  across MOS corners; low bound tracks the NMOS Vth in absolute volts)
 - Offset ≈ −0.5 LSB, calibratable; monotonic, no missing codes
-- **ENOB 7.2 bits / SNDR 45.3 dB** (static-transfer-projected at 79 % FS
-  swing); no input S/H → full-swing sine BW ≈ 1.5 kHz, DC/stepped
-  inputs unaffected
+- **ENOB 7.20 bits / SNDR 45.10 dB** (static-transfer-projected at 77 %
+  FS swing, 0.70–3.25 V); no input S/H → full-swing sine BW ≈ 1.5 kHz,
+  DC/stepped inputs unaffected
 - **833 kS/s @ 10 MHz CLK** (12 CLK per conversion: reset ≥ 1 period +
   8 trials + EOC margin); timing closes with >10× slack — CLK is not
   the limit below ~100 MHz (re-verification needed to claim it)

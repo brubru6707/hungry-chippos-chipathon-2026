@@ -3,11 +3,15 @@
 
 Same per-code constant-VIN methodology and trusted sim settings as
 gen_adc_sweep_tt.py (0.05n max step + reltol=1e-4, .save limited), with
-two extra axes at TT models:
+two extra axes (default TT models; --corner adds the MOS corner axis for
+cross-corner checks like SS x -40 C):
   --vdd   supply (V). The DAC reference IS VDD, so the transfer is
           ratiometric: code centers use V_LSB = vdd*(3.293/3.3)/256
           (3.293 = measured FS at 3.3 V, DAC-9). CLK/RST_N swings scale.
   --temp  die temperature (C), via .temp.
+  --corner  MOS corner section of sm141064.ngspice (typical/ff/ss/fs/sf).
+          MIM caps stay mimcap_typical per DAC-9b (global cap variation
+          cancels ratiometrically).
 
 A reduced 19-code subset (default) spans the full range incl. the
 low-Vcm dead-zone boundary (codes ~39-48 at TT) and both extremes --
@@ -30,9 +34,9 @@ TSAMPLE = 950e-9
 DEFAULT_CODES = [2, 8, 16, 32, 40, 44, 48, 64, 80, 96, 112, 128,
                  144, 160, 176, 192, 208, 224, 240, 248, 255]
 
-DECK = """* supply/temp sweep: code {k} (TT, VDD={vdd} V, {temp} C, 10 MHz)
+DECK = """* supply/temp sweep: code {k} (corner {corner}, VDD={vdd} V, {temp} C, 10 MHz)
 .include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
-.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice {corner}
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
@@ -70,7 +74,7 @@ run
 """
 
 
-def gen(outdir, vdd, temp, codes):
+def gen(outdir, vdd, temp, codes, corner="typical"):
     vlsb = vdd * FS_RATIO / 256.0
     os.makedirs(outdir, exist_ok=True)
     for k in codes:
@@ -78,10 +82,11 @@ def gen(outdir, vdd, temp, codes):
             ".meas tran b%d_%d FIND V(BIT_%d) AT=%.0fn"
             % (b, k, b, TSAMPLE * 1e9) for b in range(8))
         deck = DECK.format(k=k, vin=(k + 0.5) * vlsb, ts=TSAMPLE * 1e9,
-                           bitmeas=bitmeas, vdd=vdd, temp=temp)
+                           bitmeas=bitmeas, vdd=vdd, temp=temp, corner=corner)
         with open(os.path.join(outdir, "code_%03d.spice" % k), "w") as f:
             f.write(deck)
-    print("wrote %d decks to %s (VDD=%g, %gC)" % (len(codes), outdir, vdd, temp))
+    print("wrote %d decks to %s (corner=%s, VDD=%g, %gC)"
+          % (len(codes), outdir, corner, vdd, temp))
 
 
 def check(outdir, vdd):
@@ -121,6 +126,8 @@ def main():
     ap.add_argument("outdir")
     ap.add_argument("--vdd", type=float, default=3.3)
     ap.add_argument("--temp", type=float, default=27.0)
+    ap.add_argument("--corner", default="typical",
+                    choices=["typical", "ff", "ss", "fs", "sf"])
     ap.add_argument("--codes", default=None,
                     help="comma-separated code list (default reduced 21)")
     ap.add_argument("--check", action="store_true")
@@ -129,7 +136,7 @@ def main():
         sys.exit(check(args.outdir, args.vdd))
     codes = ([int(c) for c in args.codes.split(",")] if args.codes
              else DEFAULT_CODES)
-    gen(args.outdir, args.vdd, args.temp, codes)
+    gen(args.outdir, args.vdd, args.temp, codes, args.corner)
 
 
 if __name__ == "__main__":
