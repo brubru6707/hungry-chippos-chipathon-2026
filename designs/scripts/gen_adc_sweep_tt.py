@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""INT-6 / Gate 3 -- generate per-code decks for the 256-code TT sweep.
+"""INT-6/INT-7 (Gate 3/4) -- generate per-code decks for the 256-code sweep.
+
+Optional second arg = MOS corner section (typical/ff/ss/fs/sf; default
+typical). MIM caps stay at mimcap_typical for all corners: global cap
+variation is a common scale factor and cancels in this ratiometric DAC
+(see DAC-9b); VDD=3.3/27C here -- supply/temp axes were covered per-block
+(DAC Gate 2: 30 PVT corners; COMP-5: SS/125C/2.97V delay).
 
 One ngspice run per code, CONSTANT VIN (code center of the measured DAC
 transfer, V_LSB = 3.293/256). Constant VIN avoids the PWL-step
@@ -22,9 +28,9 @@ import os, sys
 VLSB    = 3.293 / 256
 TSAMPLE = 950e-9
 
-DECK = """* INT-6 Gate-3 per-code conversion: code {k} (TT, 3.3 V, 10 MHz)
+DECK = """* Gate-3/4 per-code conversion: code {k} (corner {corner}, 3.3 V, 10 MHz)
 .include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
-.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice {corner}
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
@@ -61,17 +67,18 @@ run
 .end
 """
 
-def main(outdir):
+def main(outdir, corner="typical"):
     os.makedirs(outdir, exist_ok=True)
     for k in range(256):
         bitmeas = "\n".join(
             f".meas tran b{b}_{k} FIND V(BIT_{b}) AT={TSAMPLE*1e9:.0f}n"
             for b in range(8))
         deck = DECK.format(k=k, vin=(k + 0.5) * VLSB, ts=TSAMPLE*1e9,
-                           bitmeas=bitmeas)
+                           bitmeas=bitmeas, corner=corner)
         with open(os.path.join(outdir, f"code_{k:03d}.spice"), "w") as f:
             f.write(deck)
     print(f"wrote 256 per-code decks to {outdir}")
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "adc_top/sim/sweep_tt")
+    main(sys.argv[1] if len(sys.argv) > 1 else "adc_top/sim/sweep_tt",
+         sys.argv[2] if len(sys.argv) > 2 else "typical")
