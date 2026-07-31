@@ -320,7 +320,9 @@ def main():
 
     rt = Router(layout, top)
     build_routes(rt)
+    build_taps(rt)
     run_checks(rt, block_regions)
+    build_fill(layout, top)
 
     b = top.bbox()
     opts = db.SaveLayoutOptions()
@@ -380,7 +382,9 @@ def build_routes(rt):
             DAC_VDD_Y1, w=0.0)
     rt.allow(5, DAC_W_EDGE - 0.1, DAC_VDD_Y0 - 0.1, DAC_W_EDGE + 1.1, DAC_VDD_Y1 + 0.1)
     # band branches (M5) feeding comparator + glue supplies
-    rt.wire("VSS", 5, VSS_SPINE_X0 + 1.0, VSS_BRANCH_Y, CMP_PIN["VSS"][0] + 1.0,
+    # branch reaches x 501 so all 11 COMP-11 tap stacks (350..500) land
+    # inside it (an isolated 0.4um M5 via pad violates MT.1/MT.4)
+    rt.wire("VSS", 5, VSS_SPINE_X0 + 1.0, VSS_BRANCH_Y, 501.0,
             VSS_BRANCH_Y, w=1.0)
     # VDD branch: M4 underpass below the VSS spine
     rt.wire("VDD", 5, VDD_SPINE_X0 + 1.0, VDD_BRANCH_Y, 40.0, VDD_BRANCH_Y, w=1.0)
@@ -558,6 +562,94 @@ def build_routes(rt):
     # nearest foreign M1 is 1.1um away).
     rt.wire("_patch_v13d", 1, 487.79, 233.54, 488.2, 233.92, w=0.0)
     rt.allow(1, 487.6, 233.4, 488.35, 234.05)
+
+
+def build_taps(rt):
+    """COMP-11: extra substrate taps for latch-up margin. The comparator
+    block has only ONE tap; add a row of 11 p-substrate taps under the
+    VSS band branch (y 174) spanning the glue + comparator region, each
+    a copy of strongarm's own DRC/LVS-proven tap stack (COMP 0.48^2 +
+    PPLUS 0.8^2 + CONT 0.22^2 under an M1 pad) with a via1..via4 stack
+    up into the M5 VSS branch directly above."""
+    layout = rt.layout
+    li_comp = layout.layer(22, 0)
+    li_pplus = layout.layer(31, 0)
+    li_cont = layout.layer(33, 0)
+    y = VSS_BRANCH_Y
+    for i in range(11):
+        x = 350.0 + 15.0 * i
+        layout_shapes = [
+            (li_comp, box(x - 0.24, y - 0.24, x + 0.24, y + 0.24)),
+            (li_pplus, box(x - 0.4, y - 0.4, x + 0.4, y + 0.4)),
+            (li_cont, box(x - 0.11, y - 0.11, x + 0.11, y + 0.11)),
+        ]
+        for li, b in layout_shapes:
+            rt.top.shapes(li).insert(b)
+        rt.wire("VSS", 1, x, y, x, y, w=0.6)   # M1 pad over the contact
+        rt.stack("VSS", x, y, 1, 5)
+
+
+FILL_SIZE = 3.0
+FILL_PITCH = 3.8
+FILL_MARGIN = 1.0
+
+
+def build_fill(layout, top):
+    """Chip-level dummy fill on the datatype-4 layers that density.drc
+    sums with the drawn layers (COMP 25% / poly 14% / M1..M5+MT 30%
+    whole-die minimums; pre-fill the die sits at 0.2-12%). Same-mask
+    physical spacing to drawn shapes is kept by a FILL_MARGIN exclusion
+    even though the datatype-0 rule deck does not check dt-4 shapes.
+    The DAC block bbox is excluded from all METAL fill so the verified
+    cap-array parasitics (DAC-9 FS, INT-6/7 transfer) are untouched;
+    COMP/poly fill far below the MIM stack is allowed everywhere."""
+    b = top.bbox()
+    die = db.Region(db.Box(b.left + um(1.0), b.bottom + um(1.0),
+                           b.right - um(1.0), b.top - um(1.0)))
+    dac_bbox = db.Region(box(DAC_DX - 312.0, DAC_DY - 139.0,
+                             DAC_DX + 135.0, DAC_DY + 135.5))
+
+    def reg(l, d):
+        r = db.Region(top.begin_shapes_rec(layout.layer(l, d)))
+        r.merge()
+        return r
+
+    comp, nwell, poly = reg(22, 0), reg(21, 0), reg(30, 0)
+    specs = [
+        # (dummy layer, obstacles (already sized), extra excl., pitch):
+        # M2/M3 lose the whole DAC bbox, so they need a tighter pitch
+        # (3.0um squares @ 3.5um = 73% local) to clear the 30% die
+        # minimum; the rest use the default 3.8um (62% local)
+        ((22, 4), comp.sized(um(1.0)) + nwell.sized(um(2.0))
+         + poly.sized(um(1.0)), None, FILL_PITCH),
+        ((30, 4), poly.sized(um(1.0)) + comp.sized(um(1.0)), None, FILL_PITCH),
+        ((34, 4), reg(34, 0).sized(um(FILL_MARGIN)), None, FILL_PITCH),
+        ((36, 4), reg(36, 0).sized(um(FILL_MARGIN)), dac_bbox, 3.5),
+        ((42, 4), reg(42, 0).sized(um(FILL_MARGIN)), dac_bbox, 3.5),
+        ((46, 4), reg(46, 0).sized(um(FILL_MARGIN)), dac_bbox, FILL_PITCH),
+        ((81, 4), reg(81, 0).sized(um(FILL_MARGIN)), dac_bbox, FILL_PITCH),
+    ]
+    x0 = die.bbox().left * DBU
+    y0 = die.bbox().bottom * DBU
+    grids = {}
+    for pitch in set(s[3] for s in specs):
+        base = db.Region()
+        for i in range(int((die.bbox().width() * DBU) / pitch)):
+            for j in range(int((die.bbox().height() * DBU) / pitch)):
+                gx = x0 + i * pitch
+                gy = y0 + j * pitch
+                base.insert(box(gx, gy, gx + FILL_SIZE, gy + FILL_SIZE))
+        grids[pitch] = base
+    die_area = float(top.bbox().area())
+    for (l, d), obst, extra, pitch in specs:
+        avoid = obst
+        if extra is not None:
+            avoid = avoid + extra
+        keep = grids[pitch].outside(avoid) & die
+        top.shapes(layout.layer(l, d)).insert(keep)
+        tot = reg(l, 0).area() + keep.area()
+        print("fill %d/%d: %5d squares, density %.1f%%" % (
+            l, d, keep.count(), 100.0 * tot / die_area))
 
 
 def run_checks(rt, block_regions):
