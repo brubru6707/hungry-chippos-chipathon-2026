@@ -81,7 +81,6 @@ N -340 -300 -120 -300 {lab=VDD}
 N 50 40 50 350 {lab=VSS}
 N -280 -390 -280 -260 {lab=#net7}
 N -100 -580 -100 -550 {lab=CLK}
-N -310 20 -10 20 {lab=#net1}
 N 500 40 510 40 {lab=#net4}
 N 280 40 500 40 {lab=#net4}
 N 110 20 160 20 {lab=#net6}
@@ -99,6 +98,11 @@ N -140 140 -140 350 {lab=VSS}
 N -450 240 -200 240 {lab=#net8}
 N -200 240 150 240 {lab=#net8}
 N -270 -670 -270 140 {lab=VDD}
+N -310 20 -70 20 {lab=#net1}
+N -230 -200 -230 -20 {lab=#net2}
+N -230 -20 -30 -20 {lab=#net2}
+N -30 -20 -30 20 {lab=#net2}
+N -30 20 -10 20 {lab=#net2}
 C {tg.sym} -360 -200 0 1 {name=x1}
 C {tg.sym} -540 0 0 0 {name=x2}
 C {tg.sym} 70 20 0 0 {name=x3}
@@ -108,7 +112,7 @@ C {inv.sym} 610 40 0 0 {name=x8}
 C {inv.sym} 380 -200 0 1 {name=x9}
 C {ipin.sym} -700 0 0 0 {name=p1 lab=D}
 C {ipin.sym} -10 -580 1 0 {name=p2 lab=CLK}
-C {ipin.sym} -200 110 1 0 {name=p3 lab=RST_N}
+C {ipin.sym} -200 110 1 0 {name=p3 lab=SET_N}
 C {opin.sym} 670 40 0 0 {name=p4 lab=Q}
 C {iopin.sym} -60 -690 3 0 {name=p5 lab=VDD}
 C {iopin.sym} -80 360 1 0 {name=p6 lab=VSS}
