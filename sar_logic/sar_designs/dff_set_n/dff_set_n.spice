@@ -1,0 +1,47 @@
+** sch_path: /foss/designs/dff_set_n.sch
+.subckt dff_set_n VDD CLK D Q SET_N VSS
+*.PININFO D:I CLK:I SET_N:I Q:O VDD:B VSS:B
+x1 CLK VSS net2 net3 VDD net7 tg
+x2 net7 VSS D net3 VDD CLK tg
+x3 CLK VSS net2 net6 VDD net7 tg
+x4 net7 VSS net5 net6 VDD CLK tg
+x7 VDD net1 net2 VSS inv
+x8 VDD net4 Q VSS inv
+x9 VDD net4 net5 VSS inv
+x10 VDD CLK net7 VSS inv
+x5 VDD net3 net8 net1 VSS nor2
+x6 VDD net6 net8 net4 VSS nor2
+x11 VDD SET_N net8 VSS inv
+.ends
+
+* expanding   symbol:  tg.sym # of pins=6
+** sym_path: /foss/designs/tg.sym
+** sch_path: /foss/designs/tg.sch
+.subckt tg CTRL VSS A B VDD CTRL_B
+*.PININFO VDD:B VSS:B A:B B:B CTRL_B:I CTRL:I
+M1 A CTRL_B B VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 A CTRL B VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+
+
+* expanding   symbol:  inv.sym # of pins=4
+** sym_path: /foss/designs/inv.sym
+** sch_path: /foss/designs/inv.sch
+.subckt inv VDD vin vout VSS
+*.PININFO vin:I vout:O VDD:B VSS:B
+M1 vout vin VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 vout vin VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+
+
+* expanding   symbol:  nor2.sym # of pins=5
+** sym_path: /foss/designs/nor2.sym
+** sch_path: /foss/designs/nor2.sch
+.subckt nor2 VDD A B Z VSS
+*.PININFO VSS:B VDD:B A:I B:I Z:O
+M1 Z B net1 VDD pfet_03v3 L=0.28u W=2u nf=1
+M2 net1 A VDD VDD pfet_03v3 L=0.28u W=2u nf=1
+M3 Z A VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+M4 Z B VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+

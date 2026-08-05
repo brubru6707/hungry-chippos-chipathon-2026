@@ -1,0 +1,6 @@
+** sch_path: /foss/designs/tg.sch
+.subckt tg CTRL VSS A B VDD CTRL_B
+*.PININFO VDD:B VSS:B A:B B:B CTRL_B:I CTRL:I
+M1 A CTRL_B B VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 A CTRL B VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
