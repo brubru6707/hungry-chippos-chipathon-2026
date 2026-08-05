@@ -51,10 +51,10 @@ sa=0 sb=0 sd=0
 model=nfet_03v3
 spiceprefix=X}
 C {symbols/nfet_03v3.sym} -20 200 0 0 {name=MT1
-L=0.4u
+L=1u
 W=2u
 nf=1
-m=5
+m=1
 ad="'int((nf+1)/2) * W/nf * 0.18u'"
 pd="'2*int((nf+1)/2) * (W/nf + 0.18u)'"
 as="'int((nf+2)/2) * W/nf * 0.18u'"
