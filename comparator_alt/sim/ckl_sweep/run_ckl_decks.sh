@@ -3,13 +3,13 @@
 # and collect the sigma results into one summary table.
 #
 # Usage (inside the container):
-#   bash /foss/designs/comparator/sim/ckl_sweep/run_ckl_decks.sh
+#   bash /foss/designs/comparator_alt/sim/ckl_sweep/run_ckl_decks.sh
 #
 # All decks run simultaneously (they write to distinct files, so this is safe).
 # Wall time ~= the time of ONE deck (about 6-8 min at N=30).
 
 NGSPICE=/foss/tools/bin/ngspice
-OUTDIR="/foss/designs/comparator/sim/ckl_sweep"
+OUTDIR="/foss/designs/comparator_alt/sim/ckl_sweep"
 SUMMARY="$OUTDIR/ckl_sweep_summary.txt"
 
 cd "$OUTDIR"

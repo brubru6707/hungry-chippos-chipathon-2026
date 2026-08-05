@@ -189,7 +189,7 @@ CKL = 2.8n chosen for margin on both sides, not for σ.
 Decision completes ~1.0 ns after CK edge (TT, −10 mV od) — informal; Gate-1
 delay corners remain COMP-ALT-10.
 
-**Artifacts:** `comparator/mc_ckl2p8_n100_{report,offsets}.txt`,
-`comparator/sim/ckl_sweep/` (deck generators, debug decks, logs).
+**Artifacts:** `comparator_alt/results/mc_ckl2p8_n100_{report,offsets}.txt`,
+`comparator_alt/sim/ckl_sweep/` (deck generators, debug decks, logs).
 NOTE: `DESIGN_LOG.md` referenced by PROGRESS.md §6 is absent from the repo —
 possibly never committed; this entry is the standing COMP-ALT record until found.

@@ -27,7 +27,7 @@ N="${2:-30}"
 shift 2 2>/dev/null || shift $# # remaining args = delays
 DELAYS="${@:-2.7 3.0 3.3 3.6 3.9 4.2 4.5}"
 
-OUTDIR="/foss/designs/comparator/sim/ckl_sweep"
+OUTDIR="/foss/designs/comparator_alt/sim/ckl_sweep"
 mkdir -p "$OUTDIR"
 
 if [ ! -f "$NETLIST" ]; then

@@ -6,7 +6,7 @@
 # Usage (inside the container):
 #   bash make_debug_decks.sh <path-to-tb_2stage.spice> [delay1 delay2 ...]
 # Then:
-#   for f in /foss/designs/comparator/sim/ckl_sweep/debug_*.spice; do
+#   for f in /foss/designs/comparator_alt/sim/ckl_sweep/debug_*.spice; do
 #     /foss/tools/bin/ngspice -b "$f"; done
 #
 # VIN1 keeps its PWL ramp: at t<45n it sits at ~1.640 V, i.e. VIN1 < VIN2
@@ -17,7 +17,7 @@ set -e
 NETLIST="$1"
 shift 1 2>/dev/null || true
 DELAYS="${@:-2.7 3.0 3.3}"
-OUTDIR="/foss/designs/comparator/sim/ckl_sweep"
+OUTDIR="/foss/designs/comparator_alt/sim/ckl_sweep"
 mkdir -p "$OUTDIR"
 
 if head -1 "$NETLIST" | grep -q "xschem version"; then

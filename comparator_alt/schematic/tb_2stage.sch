@@ -56,7 +56,7 @@ dowhile run < mc_runs
   end
   destroy $curplot
   alter @vvin1[pwl] = [ 0 1.66 1e-6 1.64 ]
-  tran 10p 1u
+  tran 1n 1u
   let t_dn = -1
   meas tran t_dn when v(vout1)=1.5 fall=1
   if t_dn > 0
@@ -89,13 +89,13 @@ echo   mean = $&mu_mv mV   sigma = $&sig_mv mV
 echo ==================================================
 
 * --- save raw results to disk for later plotting ---
-wrdata /foss/designs/comparator/comp2_mc_offsets.txt offset_results
-echo MC ckl=2.8n seed=12345 N=$&mc_runs good=$&ngood mean_mv=$&mu_mv sigma_mv=$&sig_mv > /foss/designs/comparator/comp2_mc_report.txt
-print offset_results >> /foss/designs/comparator/comp2_mc_report.txt
+wrdata /foss/designs/comparator_alt/results/comp2_mc_offsets.txt offset_results
+echo MC ckl=2.8n seed=12345 N=$&mc_runs good=$&ngood mean_mv=$&mu_mv sigma_mv=$&sig_mv > /foss/designs/comparator_alt/results/comp2_mc_report.txt
+print offset_results >> /foss/designs/comparator_alt/results/comp2_mc_report.txt
 .endc
 "}
 C {lab_pin.sym} 60 -190 0 0 {name=p7 sig_type=std_logic lab=CKL}
-C {comparator/schematic/comparator_2stage.sym} 210 -160 0 0 {name=x1}
+C {comparator_alt/schematic/comparator_2stage.sym} 210 -160 0 0 {name=x1}
 C {code_shown.sym} -1620 -1290 0 0 {name=COMMENTS only_toplevel=false value="
 * SPICE component: <name> <node+> <node-> <value>
 * V means voltage source, M is MOSFET, X is a subcircuit
