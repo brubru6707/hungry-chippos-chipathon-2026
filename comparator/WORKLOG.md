@@ -193,3 +193,39 @@ delay corners remain COMP-ALT-10.
 `comparator_alt/sim/ckl_sweep/` (deck generators, debug decks, logs).
 NOTE: `DESIGN_LOG.md` referenced by PROGRESS.md §6 is absent from the repo —
 possibly never committed; this entry is the standing COMP-ALT record until found.
+
+## 2026-08-05 — COMP-ALT-10: delay + corner-window sign-off (schematic level) — PASS, no caveats
+
+**Corner problem found and fixed.** With the original W=2u tail, the whole preamp
+trajectory speeds up ~35% at FF/−40°C/3.63V and the CKL window's cliff (~2.7n)
+fell below the fixed CKL=2.8n strobe — **no decision at FF**. Fix: preamp tail
+MT1 halved again, **W=2u→1u (now 1µm/1µm, m=1)**. Half the drain rate doubles
+every corner's window in time; the FF cliff now sits beyond 3.0n and CKL=2.8n
+is mid-window at all three corners. Principle: a fixed strobe survives corners
+only if the window is much wider than the ±35% corner time-scaling — bought
+here with margin. (If COMP-ALT-11's wider sweeps ever pinch these margins, the
+by-construction fallback is self-timed CKL: a skewed NOR across DIP1/DIP2 fires
+the latch at a fixed point on the bucket trajectory instead of a fixed time.)
+
+**Delay results** (`comparator_alt/sim/run_comp2_delay_corners.sh`, measured CK
+rising VDD/2 → losing VOUT1 falling VDD/2, Vcm=VDD/2, loads per tb):
+
+| corner | CKL=2.6n | CKL=2.8n (design) | CKL=3.0n | od=0.1mV @2.8n |
+|---|---|---|---|---|
+| FF/−40C/3.63V | 741 ps | **950 ps** | 1174 ps | 989 ps |
+| TT/ 27C/3.30V | — | **1024 ps** | — | 1078 ps |
+| SS/125C/2.97V | 1110 ps | **1274 ps** | 1435 ps | 1283 ps |
+
+Worst case at the design point: **1.27 ns (SS), 36% margin to the 2 ns spec**;
+near-zero-overdrive runs resolve in ~1.0–1.3 ns everywhere (no schematic-level
+metastability hazard). All runs od=0.5LSB=6.457mV unless noted.
+
+**Offset MC re-run after the resize** (tb Simulate, N=100, good=100/100,
+CKL=2.8n): **mean = −0.296 mV, σ = 1.128 mV** — vs 1.088 mV before the resize;
+0.04 mV of σ traded for the corner margin. 33× below the 36.9 mV baseline,
+44% margin to the 2 mV target. Gate-1 (alt) offset + delay both PASS at
+schematic level.
+
+**Reminder:** `comparator_alt/layout/preamp_dyn.gds` tail device is now two
+revisions stale (m=5→m=1, then W=2u→1u) — redraw before COMP-ALT-12/13. PEX
+(COMP-ALT-14) remains the post-layout confirmation of both numbers.
