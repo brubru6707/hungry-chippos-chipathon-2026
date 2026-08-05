@@ -21,5 +21,5 @@ C {opin.sym} 790 -210 0 0 {name=p10 lab=VOUT1}
 C {ipin.sym} 490 -250 0 0 {name=p2 lab=CKL}
 C {lab_wire.sym} 420 -230 0 0 {name=p11 sig_type=std_logic lab=DIP1}
 C {lab_wire.sym} 420 -210 0 0 {name=p12 sig_type=std_logic lab=DIP2}
-C {comparator_alt/schematic/preamp_dyn.sym} 180 -220 0 0 {name=x2}
-C {comparator_alt/schematic/strongarm_2.sym} 640 -220 0 0 {name=x4}
+C {comparator_alt/schematic/preamp_dyn.sym} 180 -220 0 0 {name=x1}
+C {comparator_alt/schematic/strongarm_2.sym} 640 -220 0 0 {name=x2}

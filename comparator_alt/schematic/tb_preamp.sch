@@ -40,4 +40,4 @@ C {code_shown.sym} 550 -590 0 0 {name=MODELS only_toplevel=false value="
 .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
 "
 }
-C {comparator_alt/schematic/preamp_dyn.sym} 190 -180 0 0 {name=x2}
+C {comparator_alt/schematic/preamp_dyn.sym} 190 -180 0 0 {name=x1}

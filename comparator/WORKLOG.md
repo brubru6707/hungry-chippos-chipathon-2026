@@ -149,3 +149,47 @@ near-zero SS result is 370.455 ps, a 5.40x margin to the 2 ns requirement:
 because `run_lvs.py` produces an LVS device-level deck without parasitic C or
 R; this is not a full-RC PEX claim. Comparator offset acceptability remains a
 separate Gate-1 consideration.
+
+## 2026-08-04 — COMP-ALT: CKL re-sweep, root-cause of invalid MC results, tail fix (Gate-1 offset PASS)
+
+**Headline:** two-stage offset MC at CKL=2.8n: N=100, good=100/100,
+mean = −0.28 mV, σ = 1.09 mV → 34× below the 36.9 mV StrongARM baseline,
+45% margin to the 2 mV target. COMP-ALT-7 caveats (latch resize, bulk ties) covered.
+
+**Root cause of weeks of bad numbers:** the layout-driven nf→m edit (COMP-ALT-8
+lesson) is NOT electrically neutral in ngspice: `W=4u nf=16` is 4 µm total,
+`W=4u m=16` is 64 µm. The edit multiplied the preamp pair ×16 and tail ×5.
+Preamp integration collapsed from ~3 ns to ~0.4 ns; at every swept CKL (2.7–4.5n)
+the latch fired into dead (fully-discharged) preamp outputs. All MC "results" in
+that regime came from a reset-overlap artifact: CK fell while CKL was still high,
+the preamp precharge snapped DIP1/2 to VDD, and the latch "decided" from residue
+~1 ns after CK fell. Symptoms for future reference: means pinned near the ±10 mV
+ramp endpoint, missing-measure runs, and vout transitions timestamped after CK's
+falling edge. The 07-31 comp2 (σ=1.30 mV) run is retroactively untrustworthy.
+
+**Fixes:**
+1. Preamp tail MT1: was W=2u/L=0.4u m=5 (10 µm, accidental) → now W=2u/L=1u m=1
+   (2 µm, ~12× weaker). Integration peak −221 mV at ~1.7 ns after CK (gain ≈ 22 at
+   peak); usable window restored. Input pair m=16 kept (offset budget needs 64 µm²).
+2. CKL pulse width 8n → 5n so the latch window always closes before CK falls —
+   makes the reset-overlap artifact structurally impossible.
+3. MC tb: `tran 10p 1u` → `tran 1n 1u` (10p forced ≥100k steps/transient for
+   ~µV-irrelevant precision; ~40× runtime saving).
+
+**Design insight (exposure, not just timing):** the latch needs its input drive
+*held* ~0.5–1 ns to regenerate past the point of no return, and this preamp's
+differential peak coincides with near-empty (CM < 1 V) outputs by construction.
+So CKL must fire BEFORE the peak, where signal and common-mode are both healthy:
+at 2.8n the latch samples ~−98 mV at CM ≈ 2.5 V and resolves in ~0.26 ns.
+
+**CKL sweep (N=30/point, tran 1n, seed 12345 paired across points):**
+σ = 0.92 / 0.92 / 0.94 / 0.94 / 0.96 mV at CKL = 2.6/2.7/2.8/2.9/3.0n — flat,
+forgiving window. Hard cliff at ≥3.1n (misses + endpoint-contaminated mean).
+CKL = 2.8n chosen for margin on both sides, not for σ.
+Decision completes ~1.0 ns after CK edge (TT, −10 mV od) — informal; Gate-1
+delay corners remain COMP-ALT-10.
+
+**Artifacts:** `comparator_alt/results/mc_ckl2p8_n100_{report,offsets}.txt`,
+`comparator_alt/sim/ckl_sweep/` (deck generators, debug decks, logs).
+NOTE: `DESIGN_LOG.md` referenced by PROGRESS.md §6 is absent from the repo —
+possibly never committed; this entry is the standing COMP-ALT record until found.
