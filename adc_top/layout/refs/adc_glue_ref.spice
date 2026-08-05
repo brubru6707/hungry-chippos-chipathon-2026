@@ -1,0 +1,21 @@
+* Native-element LVS reference for adc_glue (adc_top glue gates, INT-8)
+* Leaf subckts = sar_logic/layout/refs (SAR-6 LVS-proven); instances/nets
+* verbatim from adc_top/sim/adc_top_subckt.spice x_inv_ck..x_nqb.
+.subckt inv VDD vin vout VSS
+M1 vout vin VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 vout vin VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt nor2 VDD A B Z VSS
+M1 Z B net1 VDD pfet_03v3 L=0.28u W=2u nf=1
+M2 net1 A VDD VDD pfet_03v3 L=0.28u W=2u nf=1
+M3 Z A VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+M4 Z B VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends
+.subckt adc_glue CLK CK RST_N SAMPLE VOUT1 VOUT2 CMP_OUT VDD VSS
+x_inv_ck VDD CLK CK VSS inv
+x_inv_smp VDD RST_N SAMPLE VSS inv
+x_ib1 VDD VOUT1 V1B VSS inv
+x_ib2 VDD VOUT2 V2B VSS inv
+x_nq VDD V2B QB CMP_OUT VSS nor2
+x_nqb VDD V1B CMP_OUT QB VSS nor2
+.ends

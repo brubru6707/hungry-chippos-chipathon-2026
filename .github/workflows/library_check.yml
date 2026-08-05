@@ -1,0 +1,25 @@
+# REP-5: library check on every push/PR to main.
+# Guards artifacts (GDS integrity, LVS-reference device counts, ENOB
+# regression, script compile) on a plain runner. Full DRC/LVS needs the
+# PDK container and stays a local flow — see REPRODUCIBILITY.md.
+name: Library Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  library-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install klayout numpy
+      - name: Run library check
+        run: python3 designs/scripts/ci_library_check.py

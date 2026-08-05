@@ -1,0 +1,7 @@
+* Native-element LVS reference for SAR nor2 (sar_logic/sar_designs/nor2.sch)
+.subckt nor2 VDD A B Z VSS
+M1 Z B net1 VDD pfet_03v3 L=0.28u W=2u nf=1
+M2 net1 A VDD VDD pfet_03v3 L=0.28u W=2u nf=1
+M3 Z A VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+M4 Z B VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
+.ends

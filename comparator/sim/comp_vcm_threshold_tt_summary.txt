@@ -1,0 +1,23 @@
+StrongARM decision-threshold vs common-mode, TT/3.3V/27C (2026-07-30)
+Deck: tb_vcm_threshold_tt.spice (cells: comp_char_cells.spice — strongarm +
+the adc_top in-system load: identical inverter buffers + NOR SR latch).
+Method: 33 Vcm points (0.1..3.3V, 0.1V step) x 8 differentials
+(+-3.2, +-6.4, +-12.9, +-25.7 mV = 1/4, 1/2, 1, 2 LSB), one CK strobe each
+(100 ns cycle, strobe on CK rise, latch sampled 45 ns later). Inputs driven
+by ideal sources. 264/264 strobes parsed from .meas output.
+
+RESULT:
+  Vcm 0.6 .. 3.3 V : ALL 224 decisions correct, including +-3.2 mV at
+                     Vcm = 3.3 V. No polarity inversion, no stickiness.
+  Vcm 0.1 .. 0.5 V : comparator does not resolve (outputs never swing;
+                     the SR latch simply holds its previous state).
+                     Dead zone, consistent with COMP-5's "hard fail
+                     <= 0.6 V" worst-corner bound.
+
+INTERPRETATION (for the INT-6 error analysis): the bare comparator with
+ideal-source inputs is clean over 0.6-3.3 V at TT. The mid-scale and
+near-rail errors seen in the closed-loop adc_top sweep therefore arise at
+the comparator<->DAC interface (floating DAC_TOP node dynamics: TG charge
+injection ~+5 mV, per-strobe kickback -0.3..-0.5 mV growing with Vcm,
+and trial-history effects), NOT from the comparator's static decision
+capability. See PROGRESS.md INT-6 row for the follow-up attribution.

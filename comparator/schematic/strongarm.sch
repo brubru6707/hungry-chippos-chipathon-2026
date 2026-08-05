@@ -30,18 +30,6 @@ N -130 -20 90 -70 {lab=VOUT1}
 N -90 -70 130 -20 {lab=VOUT2}
 N -580 -70 -550 -70 {lab=CK}
 N 0 310 0 360 {lab=#net2}
-N -240 110 -130 110 {lab=#net3}
-N -240 110 -240 140 {lab=#net3}
-N -240 140 -130 140 {lab=#net3}
-N -130 280 -20 280 {lab=#net2}
-N -20 250 -20 280 {lab=#net2}
-N -130 250 -20 250 {lab=#net2}
-N 20 250 130 250 {lab=#net2}
-N 20 250 20 280 {lab=#net2}
-N 20 280 130 280 {lab=#net2}
-N 130 140 240 140 {lab=#net1}
-N 240 110 240 140 {lab=#net1}
-N 130 110 240 110 {lab=#net1}
 N -200 -70 -130 -70 {lab=VDD}
 N -200 -100 -200 -70 {lab=VDD}
 N -200 -100 -130 -100 {lab=VDD}
@@ -56,9 +44,6 @@ N 290 -100 360 -100 {lab=VDD}
 N 450 -70 520 -70 {lab=VDD}
 N 450 -100 450 -70 {lab=VDD}
 N 450 -100 520 -100 {lab=VDD}
-N 0 390 70 390 {lab=#net2}
-N 70 360 70 390 {lab=#net2}
-N 0 360 70 360 {lab=#net2}
 N -510 -150 550 -150 {lab=VDD}
 N -360 -100 -290 -100 {lab=VDD}
 N -290 -100 -290 -70 {lab=VDD}
@@ -90,7 +75,7 @@ N -540 -150 -510 -150 {lab=VDD
 spice_ignore=true}
 N 290 -100 290 -70 {lab=VDD}
 C {symbols/nfet_03v3.sym} 110 110 0 0 {name=M1
-L=0.28
+L=0.28u
 W=2u
 nf=1
 m=1
@@ -250,3 +235,13 @@ C {ipin.sym} 220 250 0 1 {name=p9 lab=VIN2}
 C {ipin.sym} -580 -70 0 0 {name=CK lab=CK}
 C {iopin.sym} 550 -150 0 0 {name=p1 lab=VDD}
 C {iopin.sym} 0 420 1 0 {name=p6 lab=VSS}
+N 130 110 160 110 {lab=VSS}
+N -160 110 -130 110 {lab=VSS}
+N 100 250 130 250 {lab=VSS}
+N -130 250 -100 250 {lab=VSS}
+N 0 390 30 390 {lab=VSS}
+C {lab_wire.sym} 160 110 0 0 {name=lbulk1 sig_type=std_logic lab=VSS}
+C {lab_wire.sym} -160 110 0 0 {name=lbulk9 sig_type=std_logic lab=VSS}
+C {lab_wire.sym} 100 250 0 0 {name=lbulk8 sig_type=std_logic lab=VSS}
+C {lab_wire.sym} -100 250 0 0 {name=lbulk10 sig_type=std_logic lab=VSS}
+C {lab_wire.sym} 30 390 0 0 {name=lbulk11 sig_type=std_logic lab=VSS}
