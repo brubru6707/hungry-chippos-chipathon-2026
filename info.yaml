@@ -1,0 +1,39 @@
+# SSCS Chipathon 2026 — team submission info
+# Team: Hungry Chippos — 8-bit SAR ADC (GF180MCU, gf180mcuD variant=D)
+# NOTE: drafted 2026-08-05 ahead of the official template release
+# (per Mitch Bailey's announcement the weekly form will specify the exact
+# schema); reconcile field names against the official info.yaml when it drops.
+
+project:
+  name: hungry-chippos-8bit-sar-adc
+  description: 8-bit SAR ADC (833 kS/s @ 10 MHz CLK) targeting GF180MCU
+  repo: https://github.com/brubru6707/hungry-chippos-chipathon-2026
+  issue: https://github.com/sscs-ose/sscs-chipathon-2026/issues/18
+
+top_block: adc_top
+gds_file: adc_top/layout/adc_chip_top.gds
+lvs_config: lvs_config.json
+
+# Placed macro is 514.25 x 549.7 um; padring proposal Block B (16 pins).
+area:
+  width_um: 514.25
+  height_um: 549.7
+
+# 14 pads used of Block B's 16: power 1, ground 1, digital 11, analog 1.
+# (Issue #18 currently says "13 of 16" — its own list has 14 entries.)
+# Single 3.3 V supply (VDD doubles as the DAC reference); chip-wide common ground.
+pins:
+  - {name: VIN,   direction: input,  type: analog}   # 0.70-3.25 V quoted range
+  - {name: VDD,   direction: input,  type: power}    # 3.3 V, also DAC reference
+  - {name: VSS,   direction: input,  type: ground}
+  - {name: CLK,   direction: input,  type: digital}  # 10 MHz
+  - {name: RST_N, direction: input,  type: digital}  # async reset / start-of-conversion
+  - {name: BIT_7, direction: output, type: digital}
+  - {name: BIT_6, direction: output, type: digital}
+  - {name: BIT_5, direction: output, type: digital}
+  - {name: BIT_4, direction: output, type: digital}
+  - {name: BIT_3, direction: output, type: digital}
+  - {name: BIT_2, direction: output, type: digital}
+  - {name: BIT_1, direction: output, type: digital}
+  - {name: BIT_0, direction: output, type: digital}
+  - {name: EOC,   direction: output, type: digital}
