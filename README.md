@@ -1,263 +1,188 @@
-# IIC-OSIC-TOOLS Analog Design Project Template (GlobalFoundries 180nm)
+# Hungry Chippos — 8-bit SAR ADC (SSCS Chipathon 2026)
 
-This repository is an analog design project template for the SSCS 2025 Chipathon (https://github.com/sscs-ose/sscs-chipathon-2025). The design environment is setup using the IIC-OSIC-TOOLS docker container (https://github.com/iic-jku/IIC-OSIC-TOOLS). The container is preconfigured with GlobalFoundries 180nm PDK (gf180mcuD).
+An 8-bit successive-approximation-register ADC in **GlobalFoundries 180 nm (gf180mcuD, variant D / 5LM)**, designed end-to-end with open-source tools (Xschem, ngspice, KLayout, Magic) for the [IEEE SSCS Chipathon 2026](https://github.com/sscs-ose/sscs-chipathon-2026). The signed-off chip block is **DRC-clean, LVS-clean, and tapeout-ready**.
 
-## What's Included
+![ADC chip top layout](docs/img/adc_chip_top_layout.png)
+*`adc_top` chip block — 514.25 × 549.7 µm. Cap-DAC MiM array (top right), comparator + glue (center), 3-row folded SAR logic (bottom).*
 
-When you use this template, you get:
-- **Pre-configured Docker environment** with IIC-OSIC-TOOLS and GlobalFoundries 180nm PDK
-- **VNC and web-based GUI access** for design tools like Xschem, Ngspice, Magic, and KLayout
-- **Cross-platform scripts** for launching the containerized design environment
-- **Example analog schematic and layout design** (5-Transistor OTA) with proper library structure and testbench
+## Headline numbers
 
-## CAD Tool Computing Constellation
-First, review [this document](https://github.com/mosbiuschip/chipathon2025/tree/main/CAD_tool_computing_constellation) to get a sense of how the various pieces of software work together on your computer. 
+| Spec | Value |
+| :--- | :--- |
+| Resolution | 8 bits |
+| Sample rate | 833 kS/s @ 10 MHz CLK (12 CLK/conversion) |
+| ENOB / SNDR | 7.20 bits / 45.3 dB (static-transfer-projected) |
+| Quoted input range | 0.70 – 3.25 V (holds across VDD ±10 %, −40…125 °C, all MOS corners incl. SS × −40 °C) |
+| Linearity | Monotonic, no missing codes, all MOS corners |
+| Supply | Single 3.3 V (VDD doubles as the DAC reference) |
+| Block area | 514.25 × 549.7 µm (padring proposal Block B) |
+| Sign-off | DRC **0/660**, LVS **862/862 “Netlists match”**, density + antenna clean |
 
-## Required Software on Your Computer
+All numbers are simulation-verified; see the [Progress Tracker](PROGRESS.md) and [Reproducibility guide](REPRODUCIBILITY.md) for the exact runs.
 
-Before you begin, you'll need to install the following required software:
+## Team
 
-### 1. GitHub Desktop
+| Team Member | Role | GitHub | Affiliation |
+| :--- | :--- | :--- | :--- |
+| Bruno | Top-level Integration & Comparator | [@brubru6707](https://github.com/brubru6707) | Brown University (2nd Year) |
+| Max | DAC / Cap Array | @Maxwell | Brown University (2nd Year) |
+| Sam | SAR Logic | [@sam581](https://github.com/sam581) | Brown University (2nd Year) |
+| Emily | Layout / Verification | — | Brown University (2nd Year) |
+| Mimi | Switch | — | Brown University (2nd Year) |
+| Luc | Alternative Comparator Design | — | Brown University (3rd Year) |
 
-- **Download**: [GitHub Desktop](https://desktop.github.com/)
-- Available for Windows, macOS, and Linux
-- Provides a user-friendly graphical interface for Git operations
+**Per-block scoreboard** (each block individually signed off before chip assembly):
 
-You don't have to know how to use the `git` command. Although learning it helps you understand how the version control works. If you are an experienced user, feel free to manage your repository from the command-line interface (CLI).
+| Block | Owner | LVS devices | DRC | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| Cap-DAC (255 Cu + switches) | Max | 377/377 | 0/660 | 8-bit binary-weighted charge redistribution, MiM option B |
+| SAR logic | Sam | 458/458 | 0/660 | 1220 × 46 µm strip, folded into 3 rows for the chip slot |
+| StrongARM comparator | Bruno | 11 devices | 0/660 | MC offset characterized (see below) |
+| Glue (CK/SAMPLE inverters + SR latch) | Bruno | 16/16 | 0/660 | 6 gates |
+| **Chip top `adc_top`** | Bruno / Emily | **862/862** | **0/660** | + density & antenna clean |
 
-### 2. Docker Desktop
+## Architecture
 
-`docker` is a lightweight, container-based alternative to virtual machines that ensures consistent development and deployment environments across different platforms by packaging applications with all their dependencies. *Docker Desktop* is its graphical user interface (GUI). 
+VIN drives the comparator directly; the cap-DAC runs as a VDAC generator that walks toward VIN under SAR control (scheme in [docs/pin_contracts.md](docs/pin_contracts.md)). The comparator decision is buffered through matched inverters into a cross-coupled NOR SR latch — deliberately *not* a NAND latch, whose asymmetric Miller loading was found (INT-5) to bias near-rail decisions.
 
-**Download and Installation:**
-- **Windows**: [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
-- **macOS**: [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)
-- **Linux**: [Docker Desktop for Linux](https://docs.docker.com/desktop/install/linux-install/) or [Docker Engine](https://docs.docker.com/engine/install/)
+![adc_top top-level schematic](docs/img/adc_top_schematic.svg)
+*Top level: cap-DAC, clocked comparator, decision latch, and SAR controller.*
 
-**System Requirements:**
-- **Windows**: Windows 10/11 with WSL 2 enabled  
-  > **Note:** Windows Subsystem for Linux (WSL 2) provides the lightweight virtualization layer that Docker Desktop relies on for Linux containers. If WSL 2 is not yet installed on your machine, follow Microsoft’s official guide: <https://learn.microsoft.com/windows/wsl/install>. After WSL 2 is enabled, Docker Desktop will automatically detect it; see Docker’s documentation for details: <https://docs.docker.com/desktop/windows/wsl/>.
-- **macOS**: macOS 10.15 or newer
-- **Linux**: 64-bit distribution with kernel 3.10+
+<table>
+<tr>
+<td width="50%">
 
-In this project we will be using the IIC-OSIC-TOOLS docker (https://github.com/iic-jku/IIC-OSIC-TOOLS) to setup our development environments.
+![Cap-DAC bit slices](docs/img/dac_cap_array_schematic.svg)
+*Cap-DAC: one of 8 binary-weighted bit slices (unit switch + MiM caps + NAND drive).*
 
+</td>
+<td width="50%">
 
-## Getting Started: Team Environment Setup
+![SAR logic](docs/img/sar_logic_schematic.svg)
+*SAR controller: DFF-based sequencer + bit register, 458 devices.*
 
-### GitHub Collaborative Team Workflow
-For the detailed branching and pull-request process see **[docs/team_workflow.md](docs/team_workflow.md)**.
+</td>
+</tr>
+<tr>
+<td>
 
-In brief:
-- The **team leader** creates the repository from this template and adds teammates as collaborators.
-- Every contributor works on a dedicated feature branch and opens a pull request for review before merging into `main`.  
+![Cap array layout](docs/img/dac_cap_array_layout.png)
+*Cap-DAC layout (MiM cap array + switch/driver row).*
 
-### Step 1: Create Your Project Repository
+</td>
+<td>
 
-#### Use GitHub Template
+![SAR logic layout](docs/img/sar_logic_layout.png)
+*SAR logic strip layout (shown unfolded).*
 
-This repository is set up as a GitHub template. Using the template feature gives you a clean project without the template's commit history.
+</td>
+</tr>
+</table>
 
+## Two comparators, two full integrations
 
+The chip has **two fully-integrated ADC variants**, differing only in the comparator:
 
-1. Visit the template repository: [https://github.com/Jianxun/iic-osic-tools-project-template/](https://github.com/Jianxun/iic-osic-tools-project-template/)
-2. Click the green **"Use this template"** button
-3. Select **"Create a new repository"**
-4. Fill in your repository details:
-   - Repository name (e.g., `my-analog-design-project`)
-   - Description (optional)
-   - Choose public or private
-5. Click **"Create repository"**
+- **Variant A — `adc_top`** (taped-out block): Bruno's single-stage **StrongARM latch**. This is the laid-out, signed-off configuration.
+- **Variant B — `adc_top_alt`** (schematic/simulation level): Luc's **two-stage comparator** — a dynamic preamp in front of a StrongARM latch — dropped into the *same* DAC, SAR, and glue. Netlist: [`adc_top/sim/adc_top_alt_subckt.spice`](adc_top/sim/adc_top_alt_subckt.spice), testbench: [`tb_adc_top_alt.spice`](adc_top/sim/tb_adc_top_alt.spice).
 
-![GitHub "Use this template" button](docs/screenshots/using_github_template.png)
+Integration details for Variant B (2026-08-05):
 
-**Clone your new repository to your local machine using GitHub Desktop:**
-1. Open GitHub Desktop
-2. Click "Clone a repository from the Internet"
-3. Select your newly created repository
-4. Choose your local directory and click "Clone"
+- The latch clock **CKL** is generated on-chip from CK by a 2-inverter delay chain with 20 fF loads, measured **0.70 ns** at TT ([`tb_ckl_delay.spice`](adc_top/sim/tb_ckl_delay.spice)) — inside the 0.6–1.0 ns survival window from Luc's COMP-ALT-10 corner study. (1.7 ns was tried first and the latch fails exactly as the window predicts.)
+- The two-stage comparator's decision polarity at the same input pins is **opposite** to the bare StrongARM's, so VIN/DAC_TOP are swapped at its inputs to restore the SAR loop convention.
 
-![GitHub Desktop clone dialog](docs/screenshots/clone_your_repo.png)
+**Closed-loop conversion results** (5 conversions, TT, 3.3 V, 10 MHz — same stimulus for both variants):
 
-### Step 2: Launch the Docker Container
+![Closed-loop conversions, both variants](docs/img/adc_closed_loop_conversions.png)
 
-The project includes platform-specific scripts to launch the Docker container with the IIC-OSIC-TOOLS environment. **Before running the following scripts, make sure your Docker Desktop is running.**
+| VIN (V) | Ideal code | Variant A (StrongARM) | Variant B (two-stage) |
+| :--- | :--- | :--- | :--- |
+| 1.66 | 128 | 127 (−1) | 129 (+1) |
+| 2.90 | 224 | 225 (+1) | 225 (+1) |
+| 3.25 | 252 | 246 (−6) | 253 (+1) |
+| 0.60 | 46 | 46 (0) | 64 (saturates) |
+| 0.05 | 3 | 0 (clips) | 64 (saturates) |
 
-#### For Mac/Unix/Linux Systems:
-Open a terminal, navigate to you repository, and use the following command:
+The comparison matches each design's physics: Luc's nfet-input dynamic preamp is **tighter at the top of the range** (+1 LSB at 3.25 V where the bare StrongARM drops 6 LSB) but raises the usable low end to ≈0.8 V, while Variant A holds accuracy further down. Its preamp input pair also adds ≈300 fF on DAC_TOP (≈1.3 % DAC attenuation → the consistent +1 LSB). In-range codes for Variant B are within ±1 LSB.
+
+<table>
+<tr>
+<td width="50%">
+
+![StrongARM schematic](docs/img/strongarm_schematic.svg)
+*Variant A: StrongARM latch (COMP-10 netlist).*
+
+</td>
+<td width="50%">
+
+![Two-stage comparator](docs/img/alt_comparator_2stage_schematic.svg)
+*Variant B: dynamic preamp → StrongARM-2 latch.*
+
+![Dynamic preamp](docs/img/alt_preamp_schematic.svg)
+*Preamp stage (M = 16 input pair, 64 µm² per device).*
+
+</td>
+</tr>
+<tr>
+<td>
+
+![StrongARM layout](docs/img/strongarm_layout.png)
+*StrongARM layout. Offset MC (N=100): σ = 36.9 mV — [report](comparator/comp_mc_report.txt); the SAR loop tolerates this as a code offset, not a linearity error.*
+
+</td>
+<td>
+
+![StrongARM-2 layout](docs/img/alt_strongarm2_layout.png)
+*StrongARM-2 latch layout. Offset MC (N=100, CKL=2.8 ns): σ = 1.09 mV — [report](comparator_alt/results/mc_ckl2p8_n100_report.txt).*
+
+</td>
+</tr>
+</table>
+
+## Chipathon links
+
+| | |
+| :--- | :--- |
+| Team issue | [sscs-chipathon-2026#18](https://github.com/sscs-ose/sscs-chipathon-2026/issues/18) |
+| Progress tracker | [PROGRESS.md](PROGRESS.md) |
+| Reproducibility | [REPRODUCIBILITY.md](REPRODUCIBILITY.md) |
+| Proposal | [Google Doc](https://docs.google.com/document/d/1fKD_CIMakMogI1Ux0onroEAOE0f9v6Mbu71VdGIJpjI/edit?usp=sharing) |
+| Proposal slides / video | [Slides](https://docs.google.com/presentation/d/1YiHz-10-ayeriHM-xqGJkT-SbB14Z78Zl8ZGlZeix68/edit?usp=sharing) · [Video](https://youtube.com/watch?v=9x7Wc1Ou2T4&feature=youtu.be) |
+| Schematic review slides / video | [Slides](https://docs.google.com/presentation/d/16MQY0RTOPxoqBUxwLf6Rn5_GblbKmeqlZLEJHqbb0rs/edit?usp=sharing) · [Video](https://youtu.be/x1xBCsqazME?si=QPp0k89b8nxFMOwx) |
+| Signed-off GDS | [`adc_top/layout/adc_chip_top.gds`](adc_top/layout/adc_chip_top.gds) (topcell `adc_top`) |
+
+## Tapeout submission files
+
+Per the dry-run instructions, the repo root carries:
+
+- [`info.yaml`](info.yaml) — top block (`adc_top`), GDS path, area, and the 14-pin list (1 power, 1 ground, 11 digital, 1 analog) for padring Block B
+- [`lvs_config.json`](lvs_config.json) — top source/layout cell and LVS source netlist ([cf-precheck format](https://github.com/chipfoundry/cf-precheck/blob/main/src/cf_precheck/be_checks/README.md))
+
+## Repository map
+
+```
+adc_top/         chip-top schematic, signed-off GDS, DRC/LVS runs, integration sims
+                 (incl. adc_top_alt_* — the Variant B integration)
+dac/             cap-DAC schematics + layout (variant D standing rule: 5LM, MiM option B)
+sar_logic/       SAR controller schematics, layout generator, sims
+comparator/      StrongARM comparator (Variant A) + MC offset study
+comparator_alt/  Luc's two-stage comparator (Variant B) + CKL window study
+input_sampling/  sampling switch work
+docs/            pin contracts, workflows, images (docs/img/)
+designs/         xschem libraries / container-mounted work area
+```
+
+## Development environment
+
+The project uses the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) Docker container (preconfigured gf180mcuD PDK). Quick start:
+
 ```bash
-./start_chipathon_vnc.sh
+./start_chipathon_vnc.sh     # macOS/Linux   (Windows: .\start_chipathon_vnc.bat)
+# VNC to localhost:5901 (or browse http://localhost), password abc123
 ```
 
-#### For Windows Systems:
-
-**Open Command Prompt or PowerShell** navigate to you repository, and use the following command:
-
-
-```cmd
-.\start_chipathon_vnc.bat
-```
-If you are familiar with git bash, feel free to use `start_chipathon_vnc.sh`.
-
-#### ICC-OSIC-TOOLS Image Download 
-
-Now the script pulls the IIC-OSIC-TOOLS *chipathon* image. Have a coffee.
-
-![Container startup messages](docs/screenshots/docker_pull.png)
-
-### Step 3: Access the Design Environment in the Docker Container
-
-Once the container is running, you have two options to access the design environment:
-
-#### Option A: VNC Client (Recommended for better performance)
-1. Download a VNC client:
-   - **Windows**: [TigerVNC](https://tigervnc.org) 
-   - **macOS**: [TigerVNC](https://tigervnc.org)  or built-in Screen Sharing
-   - **Linux**: `vncviewer` (install via package manager)
-
-2. Connect to: `localhost:5901`
-3. Enter password: `abc123`
-
-
-#### Option B: Web Browser (noVNC) (Good for quick debug)
-
-1. Open your web browser
-2. Navigate to: `http://localhost`
-3. Enter password: `abc123`
-4. Click "Connect"
-
-
-### Step 4: Open a Terminal in the Container
-
-Once you're in the VNC session, you can start running the design tools in the containter:
-1. Right-click on the desktop
-2. Select "Terminal Emulator" (or similar option)
-3. You should automatically be in the `/foss/designs` directory
-
-![Desktop context menu with Terminal Emulator option](docs/screenshots/open_a_terminal.png)
-
-### Step 5: Launch Design Tools
-
-You can now start the design tools from the terminal. 
-
-#### Schematic Entry
-
-Launch Xschem for schematic design:
-```bash
-xschem
-```
-You should see the Xschem GUI with available devices from `gf180mcu` and their testbenches. Xschem has UI buttons to netlist and simulate your schematic. You can display results in Xschem or GAW (an external viewer).
-
-See the recommended schematic workflow **[docs/schematic_workflow.md](docs/schematic_workflow.md)**
-
-![Xschem interface with PDK libraries loaded](docs/screenshots/start_xschem.png)
-
-#### Layout
-
-Launch Klayout for layout design:
-```bash
-./scripts/klayout_start.sh
-```
-See the recommended layout workflow with Klayout **[docs/layout_workflow.md](docs/layout_workflow.md)**
-
-![KLayout](docs/screenshots/start_klayout.png)
-
-
-#### Other Tools
-You can launch the other design tools with their appropriate commands. Take a look at [this document](https://github.com/mosbiuschip/chipathon2025/tree/main/CAD_tool_flow) for a brief overview of the analog full custom design CAD flow. 
-
-
-### [Troubleshooting Notes](troubleshooting.md)
-
-## Running Tools After Installation
-
-Once you have run the script for the first time, the container can be started much quicker. 
-
-- Open a terminal or shell on your local machine, go to the local folder that holds your local repo and execute `./start_chipathon_vnc.sh` or `.\start_chipathon_vnc.bat`; [see Step 2 above](#step-2-launch-the-docker-container). Since the container exists, you will get the following prompt:
-
-```
-> ./start_chipathon_vnc.sh 
-[WARNING] Container iic-osic-tools_chipathon_xvnc_uid_501 exists.
-[HINT] It can also be restarted with "docker start iic-osic-tools_chipathon_xvnc_uid_501" or removed with "docker rm iic-osic-tools_chipathon_xvnc_uid_501" if required.
-
-Press "s" to start, and "r" to remove: 
-```
-- Hit `s` to start the container. 
-   - *Note:* You can also start the container from the *Docker Desktop* and directly connect with VNC (next step).
-
-- Connect to the running container with VNC or your browser [see Step 3 above](#step-3-access-the-design-environment-in-the-docker-container).
-
-- Start using the tools [Steps 4, 5, 6 above](#step-4-open-a-terminal-in-the-container)
-
-
-
-## Library Structure Conventions
-
-**A strict file management strategy is required to keep the project and file management easy for a successful tape-out.** Here we propose a folder structure that we think will work well, but of course, other organizations are possible. It's key  to communicate among team members and to *stick* to the chosen approach. 
-
-### Project Folder Structure
-
-The `/foss/designs` directory inside the Docker container is mounted from the `designs` folder in the local copy of this repository on your computer. 
-
-**Important:** Keep all your design files in the `designs` folder to ensure they persist when the Docker container is restarted. Files in other folders inside the container might be deleted, and will for sure be lost if the container gets deleted. 
-
-```
-project-root/
-├── designs/                 # Your design files (mounted in container as /foss/designs)
-│   ├── libs/                   # Design libraries
-│   ├── simulations/            # Symbolic link to the Xschem simulation result folder
-│   └── scripts                 # scripts for launching tools and library maintenance
-├── start_chipathon_vnc.sh   # Container launch script (Unix/Linux/Mac)
-├── start_chipathon_vnc.bat  # Container launch script (Windows)
-└── README.md                # This file
-```
-
-**FYI:** `/foss/designs/simulations` is a symbolic link to `/headless/.xschem/simulations` where `xschem` asks `ngspice` to save its simulation results. 
-
-### Design Library Folder Structure
-
-The project follows specific naming conventions for organizing design libraries under `/designs/libs/`:
-
-```
-/designs/libs/
-├── core_*/          # Design libraries (core circuit cells)
-├── tb_*/            # Testbench libraries
-└── ...
-```
-
-### Naming Conventions
-- **`core_*`**: Design libraries containing your core circuit implementations. 
-- **`tb_*`**: Testbench libraries containing simulation and verification setups.
-
-### File Organization
-Within each library directory:
-- Each cell should have its own subdirectory: `/designs/libs/library_name/cell_name/`
-- Files within a cell directory should be prefixed with the cell name (e.g., `cell_name.sch`, `cell_name.sym`)
-- **Exception**: Testbench directories (starting with `tb_`) are exempt from the file naming prefix requirement
-
-
-## Example Design: 5-Transistor Single Stage OTA
-
-This project includes a reference design to demonstrate the library structure and design flow:
-
-### Libraries
-- **Design**: 5-Transistor Single Stage Operational Transconductance Amplifier (OTA)
-- **Library Location**: `core_analog`
-- **Testbench Location**: `tb_analog`
-
-
-### Usage
-1. **Design Files**: Navigate to `/designs/libs/core_analog/` to find the schematics and symbols of the OTA cell and parameterized unit transistor cells.
-2. **Testbench**: Use the verification setups in `/designs/libs/tb_analog/` to simulate and characterize the design.
-3. **Validation**: Run the library check to ensure proper file organization:
-   ```bash
-   cd designs/CI
-   ./library_check.sh
-   ```
-
-This example demonstrates the proper use of the library naming conventions (`core_*` for design libraries, `tb_*` for testbenches) and serves as a starting point for developing your own analog circuits.
-
+The repo is mounted at `/foss/designs` inside the container. Team branching/PR conventions are in [docs/team_workflow.md](docs/team_workflow.md); layout workflow in [docs/layout_workflow.md](docs/layout_workflow.md); troubleshooting in [docs/troubleshooting.md](docs/troubleshooting.md). Layout/schematic images in `docs/img/` are regenerated headlessly — see [`docs/img/render_gds.py`](docs/img/render_gds.py).
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).

@@ -1,0 +1,9 @@
+{
+    "TOP_SOURCE": "adc_top",
+    "TOP_LAYOUT": "adc_top",
+    "LAYOUT_FILE": "adc_top/layout/adc_chip_top.gds",
+    "LVS_SPICE_FILES": [
+        "adc_top/layout/refs/adc_top_ref.spice"
+    ],
+    "LVS_VERILOG_FILES": []
+}
