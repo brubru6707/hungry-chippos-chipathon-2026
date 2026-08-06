@@ -1,0 +1,41 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /foss/designs/comparator_alt/schematic/tb_2stage.sch
+
+Doing analysis at TEMP = 125.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+x1.dip2                                   2.97
+vin1                                    1.4849
+x1.x1.tail                             1.07731
+ck                                           0
+x1.dip1                                   2.97
+vin2                                     1.485
+vdd                                       2.97
+vout2                                     2.97
+vout1                                     2.97
+x1.x2.net1                                2.97
+ckl                                          0
+x1.x2.net3                                2.97
+x1.x2.net2                             2.19156
+vckl#branch                                  0
+vck#branch                                   0
+vvin2#branch                                 0
+vvin1#branch                                 0
+vvdd#branch                       -1.99848e-10
+
+ Reference value :  1.81280e-09 Reference value :  4.65132e-09 Reference value :  8.32392e-09 Reference value :  9.49333e-09 Reference value :  1.36450e-08 Reference value :  1.72950e-08 Reference value :  1.98250e-08
+No. of Data Rows : 2032
+tdelay              =  1.57709e-09 targ=  3.62709e-09 trig=  2.05000e-09
+v1end               =  2.97000e+00
+v2end               =  2.97000e+00
+RESULT ss_od0p1mv_ckl3p1 delay=1.57709E-09 v1end=2.97 v2end=2.97
+Note: Simulation executed from .control section 

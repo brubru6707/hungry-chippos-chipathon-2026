@@ -32,7 +32,7 @@ vvin2#branch                                 0
 vvin1#branch                                 0
 vvdd#branch                       -1.99799e-10
 
- Reference value :  3.56130e-09 Reference value :  6.58130e-09 Reference value :  7.90335e-09 Reference value :  9.92335e-09 Reference value :  1.22750e-08 Reference value :  1.35150e-08 Reference value :  1.72050e-08
+ Reference value :  9.28000e-11 Reference value :  1.27280e-09 Reference value :  3.72130e-09 Reference value :  6.43130e-09 Reference value :  6.87130e-09 Reference value :  7.32130e-09 Reference value :  8.26335e-09 Reference value :  1.24950e-08 Reference value :  1.62850e-08 Reference value :  1.98850e-08
 No. of Data Rows : 2032
 tdelay              =  1.10996e-09 targ=  3.15996e-09 trig=  2.05000e-09
 v1end               =  2.97000e+00

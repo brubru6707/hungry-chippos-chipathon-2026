@@ -1,0 +1,40 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /foss/designs/comparator_alt/schematic/tb_2stage.sch
+
+Doing analysis at TEMP = 125.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+x1.dip2                                      3
+vin1                                       0.9
+x1.x1.tail                             1.06582
+ck                                           0
+x1.dip1                                      3
+vin2                                       1.5
+vdd                                          3
+vout2                                        3
+vout1                                        3
+x1.x2.net1                                   3
+ckl                                          0
+x1.x2.net3                                   3
+x1.x2.net2                             2.21548
+vckl#branch                                  0
+vck#branch                                   0
+vvin2#branch                                 0
+vvin1#branch                                 0
+vvdd#branch                       -2.00972e-10
+
+ Reference value :  9.28000e-11 Reference value :  9.02800e-10 Reference value :  1.33280e-09 Reference value :  1.69280e-09 Reference value :  2.02500e-09 Reference value :  2.86500e-09 Reference value :  3.17500e-09 Reference value :  3.47500e-09 Reference value :  5.17114e-09 Reference value :  5.77114e-09 Reference value :  6.46114e-09 Reference value :  6.77114e-09 Reference value :  7.09114e-09 Reference value :  7.40114e-09 Reference value :  7.71114e-09 Reference value :  8.13114e-09 Reference value :  8.80100e-09 Reference value :  9.33500e-09 Reference value :  9.66500e-09 Reference value :  1.00050e-08 Reference value :  1.02350e-08 Reference value :  1.10750e-08 Reference value :  1.15250e-08 Reference value :  1.23250e-08 Reference value :  1.26950e-08 Reference value :  1.30650e-08 Reference value :  1.33950e-08 Reference value :  1.39550e-08 Reference value :  1.47350e-08 Reference value :  1.51050e-08 Reference value :  1.58650e-08 Reference value :  1.67850e-08 Reference value :  1.71850e-08 Reference value :  1.75050e-08 Reference value :  1.81850e-08 Reference value :  1.90150e-08 Reference value :  1.96250e-08 Reference value :  1.99925e-08
+No. of Data Rows : 2032
+v1late              =  -2.15774e-04
+v2late              =  2.99999e+00
+RESULT ssA_f0p30_ckl3.6 vdd=3.0 exp=1 v1late=-0.000215774 v2late=2.99999
+Note: Simulation executed from .control section 

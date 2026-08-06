@@ -229,3 +229,63 @@ schematic level.
 **Reminder:** `comparator_alt/layout/preamp_dyn.gds` tail device is now two
 revisions stale (m=5→m=1, then W=2u→1u) — redraw before COMP-ALT-12/13. PEX
 (COMP-ALT-14) remains the post-layout confirmation of both numbers.
+
+## 2026-08-05 — COMP-ALT-11: full operating-grid characterization, CKL retuned 2.8n → 3.1n — CLOSED
+
+**Method:** two 120-point functional screens (5 corners incl. sf/fs × VDD 3.0/3.3/3.6 ×
+8 input points, single-shot, polarity-aware verdicts sampled late in the strobe window),
+plus boundary probes, delay re-cert, and deep MC. Harnesses:
+`comparator_alt/sim/run_alt11_screen.sh` (pure common-mode, both inputs together — a
+stress test beyond what the ADC can produce) and `run_alt11_screen_realistic.sh`
+(VIN2 pinned to VDD/2 as in the SAR, VIN1 swept 3–97% of VDD — every condition the ADC
+CAN produce).
+
+**Finding 1 — low-Vcm wrong-polarity zone (pure-Vcm screen).** Below a corner-dependent
+common-mode (~0.7–1.6 V), the preamp input pair cannot conduct; the latch then fires
+into two undrained (full-VDD) inputs and decides by its own internal asymmetry —
+**deterministic wrong answers, not non-decisions**. Boundary tracks VT: worst at
+ss/3.0V (needs ≥1.3V at CKL=3.1n), best at ff (≥0.7V). This is device physics (NMOS
+input pair), same class as COMP-5's documented ≥0.85V limit; unfixable by sizing.
+
+**Finding 2 — the realistic-drive screen caught a real ADC-level bug at CKL=2.8n.**
+With VIN2=VDD/2, the ss/3.0V row still failed WRONGPOL for inputs ≤0.30·VDD: at that
+triple pileup, mid-rail (1.5V) itself drives the reference-side pair so weakly that the
+correct differential develops too slowly for a 2.8n strobe — the latch fires while the
+buckets are still nearly equal. The "one faucet is always open" argument was falsified
+by measurement at exactly one row of fifteen. Fix: strobe later.
+
+**Window edges measured** (probe scripts `probe_ckl_retune.sh` / `probe_ckl_edges.sh`):
+ss/3.0 floor between 2.8–2.9n (below: wrong answers); FF ceiling ≈3.25n for 0.1mV
+overdrive (~3.35n at 0.5LSB; above: no decision). **Global fixed-strobe window ≈
+(2.9, 3.25) ns. CKL retuned to 3.1n**, biased away from the floor because its failure
+mode (systematic wrong codes over an input range) is worse than the ceiling's
+(occasional non-decision on ~0.1mV ties). tb_2stage.sch updated.
+
+**Re-certification at CKL=3.1n:**
+- Realistic-drive grid: **all 15 corner×supply rows PASS over the full input range.**
+  Correct decision for every input the ADC can present — no restrictions.
+- Pure-Vcm grid: dead-zone boundary improves ~one column at every corner vs 2.8n
+  (later strobe gives weak drive more time); ss/3.0 boundary 1.65→1.3V.
+- Delay (od=0.5LSB / 0.1mV): TT 1.32/1.38 ns; **SS 1.52/1.58 ns (binding, 21% margin
+  to 2 ns)**; FF 1.29/1.36 ns. Budget split ≈1.05ns strobe wait + ≈0.5ns latch.
+- Offset MC: **TT N=200, 200/200 good: mean −0.12 mV, σ = 1.141 mV** (sign-off number;
+  consistent with N=100 runs 1.10–1.13). **Worst survivor ss/125C/3.0V, N=100, ramp
+  re-centered to 1.5V (`make_mc_ss30_deck.sh`): mean −0.21 mV, σ = 1.287 mV** — 36%
+  margin to 2 mV even there (0.11 LSB at that supply's 11.7mV LSB).
+
+**Standing notes for layout/PEX and integration:**
+1. Parasitics slow the preamp and slide the whole CKL window later — re-map the edges
+   at COMP-ALT-14 and retune the number if needed. The deliverable is the WINDOW MAP,
+   not the 3.1n constant: whoever designs the on-chip CKL generator designs against it.
+2. If post-layout margins pinch, the by-construction fallback is a self-timed strobe:
+   a skewed NAND across DIP1/DIP2 (fires when EITHER bucket crosses trip — a NOR would
+   deadlock on the ss/3.0 slow-drip case, which this campaign is what taught us).
+3. The pure-Vcm dead zone stays out of PROGRESS-level caveats because the ADC cannot
+   reach it (reference input is hard-wired to VDD/2) — but any future reuse of this
+   comparator in another context must re-check input common-mode against the pure grid.
+
+**Artifacts:** `comparator_alt/sim/alt11_screen{,_realistic}/` (grids + CSVs; grid-file
+titles from before 2026-08-05 may carry a stale hardcoded "CKL=2.8n" label — runs after
+the tb update used 3.1n; scripts now self-label from the netlist),
+`alt11_probe_{retune,edges}/`, `comp2_delay/comp2_delay_corners_summary.txt`,
+`comparator_alt/results/{comp2_mc_*,mc_ss30_*}`.

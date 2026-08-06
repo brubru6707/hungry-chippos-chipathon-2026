@@ -1,0 +1,194 @@
+** sch_path: /foss/designs/comparator_alt/schematic/tb_2stage.sch
+**.subckt tb_2stage
+x1 CKL VIN2 VDD VOUT2 VIN1 VOUT1 CK 0 comparator_2stage
+**** begin user architecture code
+
+
+.param sw_stat_global   = 0
+.param sw_stat_mismatch = 0
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice sf
+
+
+
+
+* ===== stimulus =====
+Vvdd  VDD  0 3.6
+Vvin1 VIN1 0 3.060000
+Vvin2 VIN2 0 1.800000
+Vck   CK   0 PULSE(0 3.6 2n   100p 100p 8n 20n)
+Vckl  CKL  0 PULSE(0 3.6 3.1n 100p 100p 5n 20n)
+
+
+
+
+
+* SPICE component: <name> <node+> <node-> <value>
+* V means voltage source, M is MOSFET, X is a subcircuit
+* Node 0 is global ground
+* PWL is a linear sweep from t=0, V=1.64, to t=1u, V=1.66, +/- 10 mV
+* PULSE(v_low v_high initial_delay t_rise t_fall up_time period)
+*
+*
+* Above .control is static netlist, below is simulation scripting
+* let creates a vector (including length 1), set creates a shell var
+* svt = sigma (standard deviation) of V threshold
+* _pre = preamp input pair transistors, XM1P/XM2P
+* _sa = strongarm input pair, XM8/XM10
+* Random seed so that our results are reproducible exactly
+* Create a vector with the number of slots equal to the number of runs
+* Keep track of the sum of offsets and the sum of squares of offsets
+* It lets us calculate variance later
+*
+* A new .tran opens a new plot, so keep track of the current plot
+* Loop the following for each run of the Monte Carlo
+* Print run number to terminal
+* Clear s_up and s_dn so a failed run doesn't use last run's value
+*
+* alter changes an already-loaded variable. @=device instance parameter,
+* m=MOSFET, x1.x1=preamp_dyn, m1p=transistor, m0=MOSFET inside nfet_03v3,
+* [delvto]=parameter (delta v threshold), s_gauss(0)=random distribution
+* centered on 0 with std. dev. 1, multiply by sigma to scale it right
+* Start the up sweep of vin1 (Vvin1 denotes voltage of vin1)
+* Transient simulation with 10ps steps ending at 1us
+* Define t_up with a nonsense value so we know if it didn't change
+* measure, let t_up=time when comparator flips (hits 1.5V)
+* fall=LAST excludes the precharge to VDD; we want the most recent flip
+* if there wasn't a flip, t_up would stay at -1 ^
+* measure, let vin_up be the voltage at t_up that caused the flip ^
+* save it in a shell variable so it doesn't get erased with the plot
+* destroy the plot so we only have to remember our s_up voltage
+* Do it again sweeping down to eliminate systematic bias
+*
+*
+*
+*
+*
+*
+*
+*
+* Get back to the home plot where our variables are
+* $?s_up asks if it exists (0 or 1), so this checks if both exist
+* Calculate offset with average of up and down sweep offsets
+* Add it to the vector of all the offsets
+* Increase number of good runs, since we made it to this point
+* Add to the sum of offsets and the sum of their squares
+*
+* Print the outputs for every run
+*
+* If we missed, set the value to -999 so it's clearly wrong
+* Also give a warning of a miss in the terminal
+*
+* Increase run number
+*
+* Back to homeplot (a little bit of redundancy)
+* mu is the mean
+* sig calculates variance, mean of squares minus square of the mean
+* and then take the square root of that number
+* Convert to mV for readability
+*
+* echo to print results to terminal
+*
+*
+*
+*
+* wrdata writes to a plain text file for plotting elsewhere
+* Single bracket (>) creates a file, double (>>) appends
+
+
+
+* per-DEVICE sigma(Vth) = A_VT / sqrt(W*L), A_VT = 6.2 mV*um (NMOS, per-device convention)
+* pair mismatch is sqrt(2)x larger, but MC produces that automatically
+* preamp XM1P/XM2P: 4u x 16 x 1u  = 64 um^2 -> 0.78 mV
+* latch  XM8/XM10:  8u x 1u       =  8 um^2 -> 2.19 mV
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  comparator_alt/schematic/comparator_2stage.sym # of pins=8
+** sym_path: /foss/designs/comparator_alt/schematic/comparator_2stage.sym
+** sch_path: /foss/designs/comparator_alt/schematic/comparator_2stage.sch
+.subckt comparator_2stage CKL VIN2 VDD VOUT2 VIN1 VOUT1 CK VSS
+*.ipin CK
+*.iopin VDD
+*.iopin VSS
+*.ipin VIN1
+*.ipin VIN2
+*.opin VOUT2
+*.opin VOUT1
+*.ipin CKL
+x1 VDD DIP1 DIP2 VIN2 VIN1 CK VSS preamp_dyn
+x2 VDD CKL VOUT2 VOUT1 DIP2 DIP1 VSS strongarm_2
+.ends
+
+
+* expanding   symbol:  comparator_alt/schematic/preamp_dyn.sym # of pins=7
+** sym_path: /foss/designs/comparator_alt/schematic/preamp_dyn.sym
+** sch_path: /foss/designs/comparator_alt/schematic/preamp_dyn.sch
+.subckt preamp_dyn VDD DIP2 DIP1 VIN2 VIN1 CK VSS
+*.ipin VIN1
+*.ipin VIN2
+*.iopin VDD
+*.iopin VSS
+*.opin DIP1
+*.opin DIP2
+*.ipin CK
+XM1P DIP1 VIN1 TAIL VSS nfet_03v3 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=16
+XMT1 TAIL CK VSS VSS nfet_03v3 L=1u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2P DIP2 VIN2 TAIL VSS nfet_03v3 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=16
+XMP1 DIP1 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XMP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  comparator_alt/schematic/strongarm_2.sym # of pins=7
+** sym_path: /foss/designs/comparator_alt/schematic/strongarm_2.sym
+** sch_path: /foss/designs/comparator_alt/schematic/strongarm_2.sch
+.subckt strongarm_2 VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
+*.opin VOUT1
+*.opin VOUT2
+*.ipin VIN1
+*.ipin VIN2
+*.ipin CK
+*.iopin VDD
+*.iopin VSS
+XM1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 net3 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM5 net1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM8 net1 VIN2 net2 VSS nfet_03v3 L=1u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM10 net3 VIN1 net2 VSS nfet_03v3 L=1u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+.temp 27
+.options reltol=1e-4 vntol=1e-9
+.control
+save v(vout1) v(vout2) v(ck)
+tran 0.01n 20n
+meas tran tdelay trig v(ck) val=1.800000 rise=1 targ v(vout2) val=1.800000 fall=1
+meas tran v1late FIND v(vout1) at=7.5n
+meas tran v2late FIND v(vout2) at=7.5n
+echo RESULT sf 3.6 0.85 exp=2 delay=$&tdelay v1late=$&v1late v2late=$&v2late
+.endc
+.end

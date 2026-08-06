@@ -25,10 +25,10 @@ Vvdd  VDD  0 3.3
 Vvin1 VIN1 0 PWL(0 1.64 1e-6 1.66)
 Vvin2 VIN2 0 1.65
 Vck   CK   0 PULSE(0 3.3 2n   100p 100p 8n 20n)
-Vckl  CKL  0 PULSE(0 3.3 2.8n 100p 100p 5n 20n)
+Vckl  CKL  0 PULSE(0 3.3 3.1n 100p 100p 5n 20n)
 
 .control
-let mc_runs = 100
+let mc_runs = 200
 let svt_pre = 0.78e-3
 let svt_sa = 2.19e-3
 let run = 0
@@ -39,7 +39,7 @@ let sumx = 0
 let sumx2 = 0
 set homeplot = $curplot
 dowhile run < mc_runs
-  echo ---- run $&run ----
+  echo ---- run $&run/$&mc_runs ----
   unset s_up
   unset s_dn
   alter @m.x1.x1.xm1p.m0[delvto] = svt_pre * sgauss(0)
