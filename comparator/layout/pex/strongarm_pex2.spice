@@ -1,0 +1,49 @@
+* NGSPICE file created from strongarm.ext - technology: gf180mcuD
+
+.subckt pfet a_28_144# w_n232_n142# a_n92_n2# VSUBS
+X0 w_n232_n142# a_28_144# a_n92_n2# w_n232_n142# pfet_03v3 ad=0.6034p pd=3.64u as=0.2822p ps=2.18u w=0.42u l=0.28u
+C0 w_n232_n142# a_n92_n2# 0.03594f
+C1 w_n232_n142# a_28_144# 0.1485f
+C2 a_n92_n2# VSUBS 0.03334f
+C3 a_28_144# VSUBS 0.08277f
+C4 w_n232_n142# VSUBS 0.8661f
+.ends
+
+.subckt nfet m1_278_60# a_n84_0# a_94_0# a_30_460#
+X0 a_94_0# a_30_460# a_n84_0# a_94_0# nfet_03v3 ad=2.64p pd=6.64u as=1.22p ps=5.22u w=2u l=0.28u
+C0 a_30_460# a_n84_0# 0.01165f
+C1 m1_278_60# a_94_0# 0.3111f
+C2 a_n84_0# a_94_0# 0.17745f
+C3 a_30_460# a_94_0# 0.22991f
+.ends
+
+.subckt strongarm VOUT1 VIN1 VIN2 VSS CK
+Xpfet_0 CK VSS m1_2142_n1776# VSS pfet
+Xpfet_1 CK VSS VSS VSS pfet
+Xpfet_2 CK VSS VSS VSS pfet
+Xpfet_3 VSS VSS VOUT1 VSS pfet
+Xpfet_4 CK VSS VOUT1 VSS pfet
+Xpfet_5 VOUT1 VSS VSS VSS pfet
+Xnfet_0 VSS m1_2142_n1776# VSS VOUT1 nfet
+Xnfet_2 VSS VOUT1 VSS VSS nfet
+Xnfet_1 VSS VSS VSS CK nfet
+Xnfet_3 VSS VSS VSS VIN1 nfet
+Xnfet_4 VSS m1_2142_n1776# VSS VIN2 nfet
+C0 VOUT1 m2_n1012_3678# 0.01109f
+C1 m2_1518_n980# VIN2 0.02788f
+C2 m1_2142_n1776# VOUT1 0.09562f
+C3 m1_2142_n1776# m2_1518_n980# 0.02089f
+C4 m1_2142_n1776# VIN2 0.04011f
+C5 m1_2142_n1776# CK 0.15321f
+C6 VOUT1 m2_1518_n980# 0.02791f
+C7 VOUT1 VIN2 0.01169f
+C8 VOUT1 CK 0.21864f
+C9 m2_1518_n980# VSS 0.38966f $ **FLOATING
+C10 m2_n1012_3678# VSS 0.75688f $ **FLOATING
+C11 m1_2142_n1776# VSS 2.48049f
+C12 VIN2 VSS 0.1504f
+C13 VIN1 VSS 0.54773f
+C14 CK VSS 21.33511f
+C15 VOUT1 VSS 9.88071f
+.ends
+
