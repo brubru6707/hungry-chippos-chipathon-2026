@@ -77,3 +77,4 @@ adc_top/sim/.vt_sweeps_done*
 # ngspice stdout dumps from batch testbench runs (regenerate by rerunning)
 adc_top/sim/tb_adc_top_out.txt
 sar_logic/sim/*_out.txt
+adc_top/sim/tb_adc_top_alt_out.txt
