@@ -1,8 +1,8 @@
-** sch_path: /foss/designs/comparator/schematic/preamp_dyn.sch
+** sch_path: /foss/designs/comparator_alt/schematic/preamp_dyn.sch
 .subckt preamp_dyn VDD DIP2 DIP1 VIN2 VIN1 CK VSS
 *.PININFO VIN1:I VIN2:I VDD:B VSS:B DIP1:O DIP2:O CK:I
 M1P DIP1 VIN1 TAIL VSS nfet_03v3 L=1u W=4u nf=1 m=16
-MT1 TAIL CK VSS VSS nfet_03v3 L=0.4u W=2u nf=1 m=5
+MT1 TAIL CK VSS VSS nfet_03v3 L=1u W=1u nf=1
 M2P DIP2 VIN2 TAIL VSS nfet_03v3 L=1u W=4u nf=1 m=16
 MP1 DIP1 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1
 MP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1

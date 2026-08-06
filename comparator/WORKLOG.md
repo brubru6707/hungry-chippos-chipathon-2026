@@ -289,3 +289,50 @@ titles from before 2026-08-05 may carry a stale hardcoded "CKL=2.8n" label — r
 the tb update used 3.1n; scripts now self-label from the netlist),
 `alt11_probe_{retune,edges}/`, `comp2_delay/comp2_delay_corners_summary.txt`,
 `comparator_alt/results/{comp2_mc_*,mc_ss30_*}`.
+
+## 2026-08-06 — COMP-ALT-12/13: two-stage top-level layout — DRC/LVS clean, polarity verified in extracted metal
+
+**Assembly:** `comparator_alt/layout/comparator_2stage.gds` — vertical stack (preamp
+below, latch above), both verified bricks placed as instances. DIP1/DIP2 risers are
+mirror-image Metal2 twins about the shared symmetry axis (DIP1→VIN1, DIP2→VIN2, same
+order both cells — no crossing), each crossing the mid VDD rail identically. CK made
+to cross both twins at equal width (equal coupling → common-mode, cancels). VDD/VSS
+strapped on BOTH sides symmetrically (VSS inner / VDD outer verticals, 2×2 via arrays).
+DRC clean. Flat LVS (per-cell-reference-assembled netlist
+`comparator_2stage.spice`): netlists match.
+
+**Challenges worth remembering:**
+1. **PCell regeneration on cross-layout paste.** PDK transistors are parametric
+   cells; GUI copy-paste re-runs their generators in the target layout's context. A
+   new layout accidentally created at DBU 0.01 (bricks are 0.005) regenerated every
+   PCell at the wrong scale — devices shrank while hand-drawn wires stayed put.
+   Rules: match DBU before importing; verify a known device dimension with the ruler
+   after any cross-layout move; batch-mode file merges avoid regeneration entirely.
+2. **Inherited labels & crossed net names.** Both cells internally name their inputs
+   VIN1/VIN2 and their clock CK, so flat extraction sees duplicate names on different
+   nets — tolerated (topology decides matching; names are bookkeeping). Separately,
+   the schematic's lab_wire names DIP1/DIP2 are crossed relative to the pin-to-pin
+   connectivity (diagonal wires + labels cancel): electrically straight, visually
+   misleading. TODO (post-deadline): rename the lab_wires so net names match pins.
+3. **THE catch — swapped CK/CKL labels, and what LVS cannot promise.** Both cells
+   call their clock pin "CK"; the two top-level clock texts ended up on each other's
+   nets (CKL on the preamp clock, CK on the latch clock). **LVS passed anyway** —
+   KLayout pairs top-level pins topologically, and the netlists are isomorphic under
+   a CK↔CKL identity exchange. The extracted-netlist behavior check
+   (`comparator_alt/sim/run_polarity_check.sh`, drives ports BY NAME) immediately
+   produced consistent wrong-direction decisions; reading the extracted X-lines
+   showed CKL on the preamp instance's clock pin. Fix: swap the two texts (zero
+   metal). At SAR integration the wrong-named clock would have been a chip-level
+   timing bug. **Lesson: LVS validates the graph; labels are identity; only a
+   behavioral simulation validates intent.**
+
+**Final verification:** LVS re-run clean with corrected labels; polarity check on
+`comparator_2stage_extracted.cir` (device-level extraction, M→X + AS/AD/PS/PD-strip
+conversion automated in the script): **PASS both directions** (VIN1<VIN2 → VOUT1
+falls; VIN1>VIN2 → VOUT2 falls) at the CKL=3.1n design point. Twins confirmed
+straight in extracted connectivity (preamp DIP1→latch VIN1 via net $3).
+
+**Standing notes:** standalone `strongarm_2.gds` is the pre-clock-symmetry-edit
+archive — the assembly's copy is the living version. Next: COMP-ALT-14 PEX — re-verify
+offset σ, delay, and the CKL window edges with parasitics, plus the twins' extracted
+C-symmetry (the one asymmetry source device-level extraction cannot see).

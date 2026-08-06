@@ -1,0 +1,37 @@
+** comparator_2stage — flat LVS reference netlist
+** assembled 2026-08-06 from the verified per-cell references
+** (preamp_dyn.spice + strongarm_2.spice, unmodified) plus the top-level
+** subckt per comparator_2stage.sch: DIP1 -> latch VIN1, DIP2 -> latch VIN2,
+** latch clock pin (cell-internal name CK) driven by top-level CKL.
+** VERIFY the X1/X2 connectivity against the xschem sim netlist before use:
+**   grep -A3 "subckt comparator_2stage" /headless/.xschem/simulations/tb_2stage.spice
+.subckt comparator_2stage VIN1 VIN2 CK CKL VDD VSS VOUT1 VOUT2
+X1 VDD DIP2 DIP1 VIN2 VIN1 CK VSS preamp_dyn
+X2 VDD CKL VOUT2 VOUT1 DIP1 DIP2 VSS strongarm_2
+.ends
+
+** sch_path: /foss/designs/comparator_alt/schematic/preamp_dyn.sch
+.subckt preamp_dyn VDD DIP2 DIP1 VIN2 VIN1 CK VSS
+*.PININFO VIN1:I VIN2:I VDD:B VSS:B DIP1:O DIP2:O CK:I
+M1P DIP1 VIN1 TAIL VSS nfet_03v3 L=1u W=4u nf=1 m=16
+MT1 TAIL CK VSS VSS nfet_03v3 L=1u W=1u nf=1
+M2P DIP2 VIN2 TAIL VSS nfet_03v3 L=1u W=4u nf=1 m=16
+MP1 DIP1 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1
+MP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1
+.ends
+
+** sch_path: /foss/designs/comparator/schematic/strongarm_2.sch
+.subckt strongarm_2 VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
+*.PININFO VOUT1:O VOUT2:O VIN1:I VIN2:I CK:I VDD:B VSS:B
+M1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1
+M2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+M3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
+M4 net3 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
+M5 net1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
+M6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1
+M7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+M8 net1 VIN2 net2 VSS nfet_03v3 L=1u W=8u nf=1
+M9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1
+M10 net3 VIN1 net2 VSS nfet_03v3 L=1u W=8u nf=1
+M11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1
+.ends
