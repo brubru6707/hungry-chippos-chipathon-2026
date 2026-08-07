@@ -1,0 +1,43 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /foss/designs/comparator_alt/schematic/tb_2stage.sch
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+x1.dip2                                    3.3
+vin1                                  0.393555
+x1.x1.tail                            0.269729
+ck                                           0
+x1.dip1                                    3.3
+vin2                                       0.4
+vdd                                        3.3
+vout2                                      3.3
+vout1                                      3.3
+x1.x2.net1                                 3.3
+ckl                                          0
+x1.x2.net3                                 3.3
+x1.x2.net2                             2.50444
+vckl#branch                                  0
+vck#branch                                   0
+vvin2#branch                                 0
+vvin1#branch                                 0
+vvdd#branch                       -1.48562e-10
+
+ Reference value :  6.40000e-12 Reference value :  2.82800e-10 Reference value :  5.72800e-10 Reference value :  8.52800e-10 Reference value :  1.15280e-09 Reference value :  1.44280e-09 Reference value :  1.73280e-09 Reference value :  2.01500e-09 Reference value :  2.22500e-09 Reference value :  2.49500e-09 Reference value :  2.79500e-09 Reference value :  3.10100e-09 Reference value :  3.25075e-09 Reference value :  3.52075e-09 Reference value :  3.75075e-09 Reference value :  4.02075e-09 Reference value :  4.33075e-09 Reference value :  4.64075e-09 Reference value :  4.94075e-09 Reference value :  5.19075e-09 Reference value :  5.43075e-09 Reference value :  5.61075e-09 Reference value :  5.81075e-09 Reference value :  6.01075e-09 Reference value :  6.21075e-09 Reference value :  6.42075e-09 Reference value :  6.64075e-09 Reference value :  6.86075e-09 Reference value :  7.11075e-09 Reference value :  7.36075e-09 Reference value :  7.60075e-09 Reference value :  7.86075e-09 Reference value :  8.12075e-09 Reference value :  8.30700e-09 Reference value :  8.51205e-09 Reference value :  8.76205e-09 Reference value :  9.04205e-09 Reference value :  9.31205e-09 Reference value :  9.62205e-09 Reference value :  9.92205e-09 Reference value :  1.01750e-08 Reference value :  1.03850e-08 Reference value :  1.06650e-08 Reference value :  1.08250e-08 Reference value :  1.08750e-08 Reference value :  1.11350e-08 Reference value :  1.13950e-08 Reference value :  1.16950e-08 Reference value :  1.19650e-08 Reference value :  1.22450e-08 Reference value :  1.25450e-08 Reference value :  1.28450e-08 Reference value :  1.31250e-08 Reference value :  1.34350e-08 Reference value :  1.37550e-08 Reference value :  1.40650e-08 Reference value :  1.43950e-08 Reference value :  1.47050e-08 Reference value :  1.50250e-08 Reference value :  1.53450e-08 Reference value :  1.56550e-08 Reference value :  1.59850e-08 Reference value :  1.63150e-08 Reference value :  1.66450e-08 Reference value :  1.69650e-08 Reference value :  1.72750e-08 Reference value :  1.75750e-08 Reference value :  1.78950e-08 Reference value :  1.82250e-08 Reference value :  1.85350e-08 Reference value :  1.88550e-08 Reference value :  1.91850e-08 Reference value :  1.95150e-08 Reference value :  1.98150e-08
+No. of Data Rows : 2032
+tdelay              =  1.35863e-09 targ=  3.40863e-09 trig=  2.05000e-09
+v1min               =  1.28906e+00 at=  3.52075e-09
+v2min               =  -1.11880e-04 at=  7.78075e-09
+v1late              =  3.30000e+00
+v2late              =  -1.11636e-04
+RESULT fs 3.3 0.4 delay=1.35864E-09 v1late=3.3 v2late=-0.000111636 v1min=1.28906 v2min=-0.00011188
+Note: Simulation executed from .control section 

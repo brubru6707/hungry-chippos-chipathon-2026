@@ -1,0 +1,69 @@
+* ============================================================
+* StrongARM comparator - decision delay t_clk->Q vs overdrive
+* Schematic-level, TT / 27C / VDD=3.3V, mid-rail Vcm = 1.65V
+* (mid-rail deliberately: known full-rail Vcm problem, see PROGRESS COMP-5)
+*
+* DUT subckt is a 1:1 copy of comparator/schematic/strongarm.spice
+* (xschem netlist of strongarm.sch), devices X-prefixed because the
+* GF180MCU ngspice models are subckt-based (M-prefix is LVS-only).
+*
+* Delay definition: CK rising edge crossing VDD/2 -> losing output
+* (VOUT1, since VIN1 > VIN2 here) crossing VDD/2 falling. Outputs
+* precharge to VDD while CK=0, decision on CK rising edge.
+*
+* Run (from host):
+*   docker exec iic-osic-tools_xvnc_uid_501 bash -c \
+*     'cd /foss/designs/comparator/sim && ngspice -b tb_comp_delay.spice'
+* Results: comparator/sim/comp_delay_results.txt
+* ============================================================
+
+.temp 27
+.param sw_stat_global=0
+.param sw_stat_mismatch=0
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+
+.subckt strongarm VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
+XM1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM4 net3 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM5 net1 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1
+XM8 net1 VIN2 net2 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM10 net3 VIN1 net2 VSS nfet_03v3 L=0.28u W=2u nf=1
+XM11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1
+.ends
+
+X1 VDD CK OUT2 OUT1 VIN1 VIN2 0 strongarm
+
+* Nominal SAR-logic input load (fallback estimate: a couple of 3.3V gate
+* inputs + wiring; sar_logic gates are ~1-2 fF/input). Conservative 10 fF.
+CL1 OUT1 0 10f
+CL2 OUT2 0 10f
+
+VVDD  VDD  0 3.3
+VVIN1 VIN1 0 1.65
+VVIN2 VIN2 0 1.65
+* CK low 0..5n = precharge phase (outputs reset to VDD), rising edge at 5n
+VCK   CK   0 PULSE(0 3.3 5n 200p 200p 10n 20n)
+
+.control
+* do NOT save all - memory blowup; only what the measures need
+save v(ck) v(out1) v(out2) v(vin1) v(vin2)
+echo od_V  t_clk2q_s  vout1_at_14n  vout2_at_14n > comp_delay_results.txt
+foreach od 6.457e-3 12.914e-3 100e-3
+  let vv = 1.65 + $od
+  alter @vvin1[dc] = $&vv
+  tran 1p 16n
+  meas tran t_clk2q trig v(ck) val=1.65 rise=1 targ v(out1) val=1.65 fall=1
+  meas tran vo1_end find v(out1) at=14n
+  meas tran vo2_end find v(out2) at=14n
+  echo $od  $&t_clk2q  $&vo1_end  $&vo2_end >> comp_delay_results.txt
+  destroy $curplot
+end
+echo results written to comp_delay_results.txt
+.endc
+.end

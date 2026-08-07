@@ -1,0 +1,11 @@
+* One-device reference netlist for the DAC-5 unit-cell LVS check (variant=D,
+* mim_option=B, 5LM). Single cap_mim_2f0fF (50fF: 5um x 5um @ 2fF/um^2, m=1),
+* matching dac/layout/cu_cell.gds topcell name "dac_cap_unit".
+* NOTE: must use native SPICE "C" element syntax (not an X subcircuit
+* call) -- gf180mcu.lvs's SubcircuitModelsReader delegate only special-
+* cases ele=='C'/'R' primitive cards; X-instances of unresolved
+* subcircuit names are silently dropped, extracting to 0 devices on the
+* reference side (a false pass if the layout side also shows 0 devices).
+.subckt dac_cap_unit BOT TOP
+C1 BOT TOP cap_mim_2f0fF W=5e-6 L=5e-6 M=1
+.ends

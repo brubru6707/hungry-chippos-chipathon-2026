@@ -1,6 +1,0 @@
-** sch_path: /foss/designs/inv.sch
-.subckt inv VDD vin vout VSS
-*.PININFO vin:I vout:O VDD:B VSS:B
-M1 vout vin VDD VDD pfet_03v3 L=0.28u W=1u nf=1
-M2 vout vin VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1
-.ends

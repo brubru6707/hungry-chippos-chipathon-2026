@@ -1,0 +1,7 @@
+* Native-element LVS reference for SAR nand2 (sar_logic/sar_designs/nand2.sch)
+.subckt nand2 VDD Z A B VSS
+M1 Z A VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M2 Z B VDD VDD pfet_03v3 L=0.28u W=1u nf=1
+M3 Z A net1 VSS nfet_03v3 L=0.28u W=1u nf=1
+M4 net1 B VSS VSS nfet_03v3 L=0.28u W=1u nf=1
+.ends

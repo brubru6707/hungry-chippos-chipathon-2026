@@ -1,0 +1,393 @@
+* adc_top_alt -- full ADC integration variant B: identical cap-DAC, sar_logic
+* and glue to adc_top, with the StrongARM comparator replaced by Luc's
+* two-stage comparator (comparator_alt: dynamic preamp + strongarm_2 latch).
+* CKL (latch clock) is derived on-chip from CK via a loaded 2-inverter delay
+* chain targeting ~0.8 ns (COMP-ALT-10 survival window 0.6-1.0 ns).
+** sch_path: /foss/designs/adc_top/schematic/adc_top.sch
+.subckt adc_top_alt VDD VSS VIN CLK RST_N BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC
+*.iopin VDD
+*.iopin VSS
+*.ipin VIN
+*.ipin CLK
+*.ipin RST_N
+*.opin BIT_7
+*.opin BIT_6
+*.opin BIT_5
+*.opin BIT_4
+*.opin BIT_3
+*.opin BIT_2
+*.opin BIT_1
+*.opin BIT_0
+*.opin EOC
+x_dac VSS VDD SAMPLE BIT_0 BIT_1 BIT_2 BIT_3 BIT_4 BIT_5 BIT_6 BIT_7 DAC_TOP cap_array
+* Luc's two-stage comparator (dynamic preamp + StrongARM latch).
+* Port order: CKL VIN2 VDD VOUT2 VIN1 VOUT1 CK VSS
+* NOTE inputs are swapped vs the StrongARM variant (VIN1=DAC_TOP, VIN2=VIN):
+* comparator_2stage resolves VOUT1 high for VIN1>VIN2 (measured,
+* tb_ckl_delay.spice) which is the opposite decision polarity of the bare
+* strongarm at the same pins, so the swap restores the SAR loop convention.
+x_cmp CKL VIN VDD VOUT2 DAC_TOP VOUT1 CK VSS comparator_2stage
+* CKL: latch clock, CK delayed ~0.8 ns (COMP-ALT window 0.6-1.0 ns)
+* by a 2-inverter chain with MiM-sized load caps
+x_dly1 VDD CK CKD1 VSS inv
+x_dly2 VDD CKD1 CKL VSS inv
+Cdly1 CKD1 VSS 20f
+Cdly2 CKL VSS 20f
+x_sar VDD VSS BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC RST_N CMP_OUT CLK sar_logic
+x_inv_ck VDD CLK CK VSS inv
+x_inv_smp VDD RST_N SAMPLE VSS inv
+x_ib1 VDD VOUT1 V1B VSS inv
+x_ib2 VDD VOUT2 V2B VSS inv
+x_nq VDD V2B QB CMP_OUT VSS nor2
+x_nqb VDD V1B CMP_OUT QB VSS nor2
+.ends
+
+* expanding   symbol:  dac/schematic/cap_array.sym # of pins=12
+** sym_path: /foss/designs/dac/schematic/cap_array.sym
+** sch_path: /foss/designs/dac/schematic/cap_array.sch
+.subckt cap_array VIN VDD SAMPLE B0 B1 B2 B3 B4 B5 B6 B7 DAC_TOP
+*.ipin VIN
+*.ipin VDD
+*.ipin SAMPLE
+*.ipin B0
+*.ipin B1
+*.ipin B2
+*.ipin B3
+*.ipin B4
+*.ipin B5
+*.ipin B6
+*.ipin B7
+*.opin DAC_TOP
+x_sw0 net1 B0NAND VDD 0 unit_switch pfet_wid=0.84u nfet_wid=0.42u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC0 net1 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6
+x_sw1 net2 B1NAND VDD 0 unit_switch pfet_wid=1.68u nfet_wid=0.84u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC1 net2 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=2
+x_sw2 net3 B2NAND VDD 0 unit_switch pfet_wid=3.36u nfet_wid=1.68u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC2 net3 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=4
+x_sw3 net4 B3NAND VDD 0 unit_switch pfet_wid=6.72u nfet_wid=3.36u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC3 net4 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=8
+x_sw4 net5 B4NAND VDD 0 unit_switch pfet_wid=13.44u nfet_wid=6.72u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC4 net5 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=16
+x_sw5 net6 B5NAND VDD 0 unit_switch pfet_wid=26.88u nfet_wid=13.44u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC5 net6 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=32
+x_sw6 net7 B6NAND VDD 0 unit_switch pfet_wid=53.76u nfet_wid=26.88u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+XC6 net7 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=64
+x_sw7 net8 B7NAND VDD 0 unit_switch pfet_wid=53.76u nfet_wid=53.76u pfet_len=0.28u nfet_len=0.28u pfet_m=2 nfet_m=1
+XC7 net8 DAC_TOP cap_mim_2f0fF c_width=5e-6 c_length=5e-6 m=128
+x_nand0 VDD B0 SAMPLE_N B0NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand1 VDD B1 SAMPLE_N B1NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand2 VDD B2 SAMPLE_N B2NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand3 VDD B3 SAMPLE_N B3NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand4 VDD B4 SAMPLE_N B4NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand5 VDD B5 SAMPLE_N B5NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand6 VDD B6 SAMPLE_N B6NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_nand7 VDD B7 SAMPLE_N B7NAND 0 dac_nand2 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+x_sampinv VDD SAMPLE SAMPLE_N 0 dac_inv1
+x_tg VIN DAC_TOP SAMPLE SAMPLE_N VDD 0 tgate pfet_wid=8u nfet_wid=4u pfet_len=0.28u nfet_len=0.28u
+.ends
+
+
+
+
+* expanding   symbol:  sar_logic/sar_designs/sar_logic.sym # of pins=14
+** sym_path: /foss/designs/sar_logic/sar_designs/sar_logic.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/sar_logic.sch
+.subckt sar_logic VDD VSS BIT_7 BIT_6 BIT_5 BIT_4 BIT_3 BIT_2 BIT_1 BIT_0 EOC RST_N CMP_OUT CLK
+*.iopin VDD
+*.iopin VSS
+*.opin BIT_7
+*.opin BIT_6
+*.opin BIT_5
+*.opin BIT_4
+*.opin BIT_3
+*.opin BIT_2
+*.opin BIT_1
+*.opin BIT_0
+*.opin EOC
+*.ipin RST_N
+*.ipin CMP_OUT
+*.ipin CLK
+XS7 VDD CLK VSS net1 RST_N VSS dff_set_n
+XS6 VDD CLK net1 net8 RST_N VSS dff_rst_n
+XS5 VDD CLK net8 net2 RST_N VSS dff_rst_n
+XS4 VDD CLK net2 net3 RST_N VSS dff_rst_n
+XS3 VDD CLK net3 net4 RST_N VSS dff_rst_n
+XS2 VDD CLK net4 net7 RST_N VSS dff_rst_n
+XS1 VDD CLK net7 net5 RST_N VSS dff_rst_n
+XS0 VDD CLK net5 net6 RST_N VSS dff_rst_n
+XSEOC VDD CLK net6 EOC RST_N VSS dff_rst_n
+XC7 VDD net8 CMP_OUT net9 RST_N VSS dff_rst_n
+XC6 VDD net2 CMP_OUT net10 RST_N VSS dff_rst_n
+XC5 VDD net3 CMP_OUT net11 RST_N VSS dff_rst_n
+XC4 VDD net4 CMP_OUT net12 RST_N VSS dff_rst_n
+XC3 VDD net7 CMP_OUT net13 RST_N VSS dff_rst_n
+XC2 VDD net5 CMP_OUT net14 RST_N VSS dff_rst_n
+XC1 VDD net6 CMP_OUT net15 RST_N VSS dff_rst_n
+XC0 VDD EOC CMP_OUT net16 RST_N VSS dff_rst_n
+x1 VDD net9 net1 net17 VSS nor2
+x2 VDD net17 BIT_7 VSS inv
+x3 VDD net10 net8 net18 VSS nor2
+x4 VDD net18 BIT_6 VSS inv
+x5 VDD net11 net2 net19 VSS nor2
+x6 VDD net19 BIT_5 VSS inv
+x7 VDD net12 net3 net20 VSS nor2
+x8 VDD net20 BIT_4 VSS inv
+x9 VDD net13 net4 net21 VSS nor2
+x10 VDD net21 BIT_3 VSS inv
+x11 VDD net14 net7 net22 VSS nor2
+x12 VDD net22 BIT_2 VSS inv
+x13 VDD net15 net5 net23 VSS nor2
+x14 VDD net23 BIT_1 VSS inv
+x15 VDD net16 net6 net24 VSS nor2
+x16 VDD net24 BIT_0 VSS inv
+.ends
+
+
+* expanding   symbol:  sar_logic/sar_designs/inv.sym # of pins=4
+** sym_path: /foss/designs/sar_logic/sar_designs/inv.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/inv.sch
+.subckt inv VDD vin vout VSS
+*.ipin vin
+*.opin vout
+*.iopin VDD
+*.iopin VSS
+XM1 vout vin VDD VDD pfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 vout vin VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  sar_logic/sar_designs/nor2.sym # of pins=5
+** sym_path: /foss/designs/sar_logic/sar_designs/nor2.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/nor2.sch
+.subckt nor2 VDD A B Z VSS
+*.iopin VSS
+*.iopin VDD
+*.ipin A
+*.ipin B
+*.opin Z
+XM1 Z B net1 VDD pfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 net1 A VDD VDD pfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 Z A VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 Z B VSS VSS nfet_03v3 L=0.28u W=0.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  dac/schematic/unit_switch.sym # of pins=4
+** sym_path: /foss/designs/dac/schematic/unit_switch.sym
+** sch_path: /foss/designs/dac/schematic/unit_switch.sch
+.subckt unit_switch VOUT bN_bar VDD GND  pfet_wid=0.84u nfet_wid=0.42u pfet_len=0.28u nfet_len=0.28u pfet_m=1 nfet_m=1
+*.ipin bN_bar
+*.iopin VOUT
+*.iopin VDD
+*.iopin GND
+XM1 VOUT bN_bar VDD VDD pfet_03v3 L='pfet_len' W='pfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u'
++ pd='2*int((nf+1)/2) * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m='pfet_m'
+XM2 VOUT bN_bar GND GND nfet_03v3 L='nfet_len' W='nfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u'
++ pd='2*int((nf+1)/2) * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m='nfet_m'
+.ends
+
+
+* expanding   symbol:  dac/schematic/dac_nand2.sym # of pins=5
+** sym_path: /foss/designs/dac/schematic/dac_nand2.sym
+** sch_path: /foss/designs/dac/schematic/dac_nand2.sch
+.subckt dac_nand2 DVDD a b y DVSS  pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.3u nfet_len=0.3u
+*.ipin a
+*.ipin b
+*.opin y
+*.iopin DVDD
+*.iopin DVSS
+XM1 y a DVDD DVDD pfet_03v3 L='pfet_len' W='pfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 y b DVDD DVDD pfet_03v3 L='pfet_len' W='pfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 y a mid DVSS nfet_03v3 L='nfet_len' W='nfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 mid b DVSS DVSS nfet_03v3 L='nfet_len' W='nfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  dac/schematic/dac_inv1.sym # of pins=4
+** sym_path: /foss/designs/dac/schematic/dac_inv1.sym
+** sch_path: /foss/designs/dac/schematic/dac_inv1.sch
+.subckt dac_inv1 DVDD vin vout DVSS
+*.ipin vin
+*.opin vout
+*.iopin DVDD
+*.iopin DVSS
+XM1 vout vin DVDD DVDD pfet_03v3 L=0.3u W=1.7u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 vout vin DVSS DVSS nfet_03v3 L=0.3u W=0.85u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  dac/schematic/tgate.sym # of pins=6
+** sym_path: /foss/designs/dac/schematic/tgate.sym
+** sch_path: /foss/designs/dac/schematic/tgate.sch
+.subckt tgate A B SAMPLE SAMPLE_N DVDD DVSS  pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.28u nfet_len=0.28u
+*.iopin A
+*.iopin B
+*.ipin SAMPLE
+*.ipin SAMPLE_N
+*.iopin DVDD
+*.iopin DVSS
+XM1 A SAMPLE B DVSS nfet_03v3 L='nfet_len' W='nfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 B SAMPLE_N A DVDD pfet_03v3 L='pfet_len' W='pfet_wid' nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u'
++ pd='2*int((nf+1)/2) * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  dff_set_n.sym # of pins=6
+** sym_path: /foss/designs/sar_logic/sar_designs/dff_set_n.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/dff_set_n.sch
+.subckt dff_set_n VDD CLK D Q RST_N VSS
+*.ipin D
+*.ipin CLK
+*.ipin RST_N
+*.opin Q
+*.iopin VDD
+*.iopin VSS
+x1 CLK VSS net2 net3 VDD net7 tg
+x2 net7 VSS D net3 VDD CLK tg
+x3 CLK VSS net2 net6 VDD net7 tg
+x4 net7 VSS net5 net6 VDD CLK tg
+x7 VDD net1 net2 VSS inv
+x8 VDD net4 Q VSS inv
+x9 VDD net4 net5 VSS inv
+x10 VDD CLK net7 VSS inv
+x5 VDD net3 net8 net1 VSS nor2
+x6 VDD net6 net8 net4 VSS nor2
+x11 VDD RST_N net8 VSS inv
+.ends
+
+
+* expanding   symbol:  dff_rst_n.sym # of pins=6
+** sym_path: /foss/designs/sar_logic/sar_designs/dff_rst_n.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/dff_rst_n.sch
+.subckt dff_rst_n VDD CLK D Q RST_N VSS
+*.ipin D
+*.ipin CLK
+*.ipin RST_N
+*.opin Q
+*.iopin VDD
+*.iopin VSS
+x1 CLK VSS net4 net1 VDD net7 tg
+x2 net7 VSS D net1 VDD CLK tg
+x3 CLK VSS net4 net2 VDD net7 tg
+x4 net7 VSS net6 net2 VDD CLK tg
+x5 VDD net3 net1 RST_N VSS nand2
+x6 VDD net5 net2 RST_N VSS nand2
+x7 VDD net3 net4 VSS inv
+x8 VDD net5 Q VSS inv
+x9 VDD net5 net6 VSS inv
+x10 VDD CLK net7 VSS inv
+.ends
+
+
+* expanding   symbol:  tg.sym # of pins=6
+** sym_path: /foss/designs/sar_logic/sar_designs/tg.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/tg.sch
+.subckt tg CTRL VSS A B VDD CTRL_B
+*.iopin VDD
+*.iopin VSS
+*.iopin A
+*.iopin B
+*.ipin CTRL_B
+*.ipin CTRL
+XM1 A CTRL_B B VDD pfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 A CTRL B VSS nfet_03v3 L=0.28u W=0.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  nand2.sym # of pins=5
+** sym_path: /foss/designs/sar_logic/sar_designs/nand2.sym
+** sch_path: /foss/designs/sar_logic/sar_designs/nand2.sch
+.subckt nand2 VDD Z A B VSS
+*.ipin A
+*.ipin B
+*.iopin VSS
+*.iopin VDD
+*.opin Z
+XM1 Z A VDD VDD pfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 Z B VDD VDD pfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 Z A net1 VSS nfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 net1 B VSS VSS nfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+* ---- comparator_alt subckts (netlisted from xschem 2026-08-05) ----
+.subckt comparator_2stage CKL VIN2 VDD VOUT2 VIN1 VOUT1 CK VSS
+*.ipin CK
+*.iopin VDD
+*.iopin VSS
+*.ipin VIN1
+*.ipin VIN2
+*.opin VOUT2
+*.opin VOUT1
+*.ipin CKL
+x1 VDD DIP1 DIP2 VIN2 VIN1 CK VSS preamp_dyn
+x2 VDD CKL VOUT2 VOUT1 DIP2 DIP1 VSS strongarm_2
+.ends
+.subckt preamp_dyn VDD DIP2 DIP1 VIN2 VIN1 CK VSS
+*.ipin VIN1
+*.ipin VIN2
+*.iopin VDD
+*.iopin VSS
+*.opin DIP1
+*.opin DIP2
+*.ipin CK
+XM1P DIP1 VIN1 TAIL VSS nfet_03v3 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=16
+XMT1 TAIL CK VSS VSS nfet_03v3 L=1u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2P DIP2 VIN2 TAIL VSS nfet_03v3 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=16
+XMP1 DIP1 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XMP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+.subckt strongarm_2 VDD CK VOUT2 VOUT1 VIN1 VIN2 VSS
+*.opin VOUT1
+*.opin VOUT2
+*.ipin VIN1
+*.ipin VIN2
+*.ipin CK
+*.iopin VDD
+*.iopin VSS
+XM1 VOUT2 VOUT1 net1 VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 VOUT1 VOUT2 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 VOUT1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 net3 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM5 net1 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM6 VOUT2 CK VDD VDD pfet_03v3 L=0.28u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM7 VOUT2 VOUT1 VDD VDD pfet_03v3 L=0.28u W=0.42u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM8 net1 VIN2 net2 VSS nfet_03v3 L=1u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM9 VOUT1 VOUT2 net3 VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM10 net3 VIN1 net2 VSS nfet_03v3 L=1u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM11 net2 CK VSS VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends

@@ -1,5 +1,5 @@
 **Describe the bug**
-Running LVS via the KLayout GUI menu action (Tools → gf180mcu PDK → Run KLayout LVS, from gf180mcu_lvs.lylvs) reports a netlist mismatch (a false short between two nets) on a layout that is verified LVS-clean when checked via the documented CLI flow (run_lvs.py, from the same PDK). Both runs use the exact same .gds and .spice files and the same effective settings (confirmed via the GUI's own cached lvs_options.yml), yet only the GUI path fails. Re-running after File → Reload doesn't change the result, ruling out a stale in-memory layout.
+Running LVS via the KLayout GUI menu action (Tools -> gf180mcu PDK -> Run KLayout LVS, from gf180mcu_lvs.lylvs) reports a netlist mismatch (a false short between two nets) on a layout that is verified LVS-clean when checked via the documented CLI flow (run_lvs.py, from the same PDK). Both runs use the exact same .gds and .spice files and the same effective settings (confirmed via the GUI's own cached lvs_options.yml), yet only the GUI path fails. Re-running after File -> Reload doesn't change the result, ruling out a stale in-memory layout.
 
 Root cause as far as I could trace it: in libs.tech/klayout/tech/lvs/gf180mcu.lvs, the CLI wrapper (run_lvs.py) always sets $input, forcing source($input) to freshly re-read the GDS from disk. The GUI macro (gf180mcu_lvs.lylvs) never sets $input and instead relies on KLayout's implicit "current active view" as the layout source. I confirmed the on-disk file and the GUI's already-open view are byte-identical (matching polygon counts on the COMP layer, 45 merged polygons both ways). Something about extracting from the active view vs. an explicitly re-sourced layout produces a different (incorrect) result even for identical geometry.
 
@@ -34,7 +34,7 @@ python /foss/pdks/gf180mcuD/libs.tech/klayout/tech/lvs/run_lvs.py \
 
 GUI steps (fails):
 1. Open the .gds in the KLayout GUI.
-2. Go to Tools → gf180mcu PDK → Run KLayout LVS with sub_name=vss, run_mode=flat, variant=D, simplify=false, top_lvl_pins=true, purge_nets=true, schematic_translate=false.
+2. Go to Tools -> gf180mcu PDK -> Run KLayout LVS with sub_name=vss, run_mode=flat, variant=D, simplify=false, top_lvl_pins=true, purge_nets=true, schematic_translate=false.
 3. Observe `ERROR: Netlists don't match`, with every net/device flagged and two nets that should be distinct merged into one.
 
 **Expected behavior**

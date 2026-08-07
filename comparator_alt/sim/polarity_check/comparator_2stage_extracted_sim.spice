@@ -1,0 +1,34 @@
+* Extracted by KLayout with GF180MCU LVS runset on : 06/08/2026 22:48
+
+.SUBCKT comparator_2stage VDD CKL CK VIN1 VIN2 VOUT1 VOUT2 VSS
+X$1 VDD VIN1 VIN2 CK \$3 \$2 VSS preamp_dyn
+X$2 CKL \$3 \$2 VOUT2 VOUT1 VDD VSS strongarm_2
+.ENDS comparator_2stage
+
+.SUBCKT strongarm_2 CK VIN1 VIN2 VOUT2 VOUT1 VDD VSS
+XM$1 VDD CK \$4 VDD pfet_03v3 L=0.28U W=5U    
+XM$2 VDD CK \$5 VDD pfet_03v3 L=0.28U W=5U    
+XM$3 VDD CK VOUT2 VDD pfet_03v3 L=0.28U W=5U    
+XM$4 VDD CK VOUT1 VDD pfet_03v3 L=0.28U W=5U    
+XM$5 VDD VOUT1 VOUT2 VDD pfet_03v3 L=0.28U W=0.42U  
++  
+XM$6 VDD VOUT2 VOUT1 VDD pfet_03v3 L=0.28U W=0.42U  
++  
+XM$7 VSS CK \$3 VSS nfet_03v3 L=0.28U W=2U    
+XM$8 \$4 VOUT2 VOUT1 VSS nfet_03v3 L=0.28U W=2U   
++ 
+XM$9 \$5 VOUT1 VOUT2 VSS nfet_03v3 L=0.28U W=2U   
++ 
+XM$10 \$3 VIN2 \$5 VSS nfet_03v3 L=1U W=8U    
+XM$14 \$3 VIN1 \$4 VSS nfet_03v3 L=1U W=8U    
+.ENDS strongarm_2
+
+.SUBCKT preamp_dyn VDD VIN1 VIN2 CK DIP1 DIP2 VSS
+XM$1 DIP1 VIN1 \$8 VSS nfet_03v3 L=1U W=64U   
++ 
+XM$17 DIP2 VIN2 \$8 VSS nfet_03v3 L=1U W=64U   
++ 
+XM$33 VDD CK DIP2 VDD pfet_03v3 L=0.3U W=3U    
+XM$34 VDD CK DIP1 VDD pfet_03v3 L=0.3U W=3U    
+XM$35 VSS CK \$8 VSS nfet_03v3 L=1U W=1U    
+.ENDS preamp_dyn

@@ -1,0 +1,25 @@
+* Native-element LVS references for the six single-device DAC rail drivers.
+.subckt unit_switch_bit1 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=1.68u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=0.84u nf=1
+.ends
+.subckt unit_switch_bit2 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=3.36u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=1.68u nf=1
+.ends
+.subckt unit_switch_bit3 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=6.72u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=3.36u nf=1
+.ends
+.subckt unit_switch_bit4 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=13.44u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=6.72u nf=1
+.ends
+.subckt unit_switch_bit5 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=26.88u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=13.44u nf=1
+.ends
+.subckt unit_switch_bit6 bN_bar VOUT VDD GND
+M1 VOUT bN_bar VDD VDD pfet_03v3 L=0.28u W=53.76u nf=1
+M2 VOUT bN_bar GND GND nfet_03v3 L=0.28u W=26.88u nf=1
+.ends

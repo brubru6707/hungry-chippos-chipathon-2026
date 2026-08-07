@@ -1,0 +1,61 @@
+** sch_path: /foss/designs/comparator/schematic/tb_preamp.sch
+**.subckt tb_preamp
+x2 VDD DIP2 DIP1 VIN2 VIN1 CK 0 preamp_dyn
+**** begin user architecture code
+
+
+* stimulus
+V1 VDD 0 3.3
+V2 VIN1 0 1.6505
+V3 VIN2 0 1.6495
+V4 CK  0 PULSE(0 3.3 2n 100p 100p 10n 20n)
+C1 DIP1 0 30f
+C2 DIP2 0 30f
+* <-- paste your GF180 model .lib line here -->
+.tran 10p 20n
+.control
+run
+plot v(dip1) v(dip2) v(ck)
+let vd = v(dip2)-v(dip1)
+plot vd
+meas tran vpk MAX vd from=2.1n to=12n
+let gain = vpk/1m
+print gain
+.endc
+
+
+
+
+.param sw_stat_global   = 0
+.param sw_stat_mismatch = 0
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  comparator/schematic/preamp_dyn.sym # of pins=7
+** sym_path: /foss/designs/comparator/schematic/preamp_dyn.sym
+** sch_path: /foss/designs/comparator/schematic/preamp_dyn.sch
+.subckt preamp_dyn VDD DIP2 DIP1 VIN2 VIN1 CK VSS
+*.ipin VIN1
+*.ipin VIN2
+*.iopin VDD
+*.iopin VSS
+*.opin DIP1
+*.opin DIP2
+*.ipin CK
+XM1P DIP1 VIN1 TAIL VSS nfet_03v3 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=16
+XMT1 TAIL CK VSS VSS nfet_03v3 L=0.4u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=5
+XM2P DIP2 VIN2 TAIL VSS nfet_03v3 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=16
+XMP1 DIP1 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XMP2 DIP2 CK VDD VDD pfet_03v3 L=0.3u W=3u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+.end

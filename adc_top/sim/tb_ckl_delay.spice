@@ -1,0 +1,34 @@
+* tb_ckl_delay -- calibrate the adc_top_alt CKL delay chain (target 0.6-1.0 ns
+* CK rise -> CKL rise) with the real comparator_2stage latch-clock load.
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/smbb000149.ngspice typical
+
+.include adc_top_alt_subckt.spice
+
+VVDD VDD 0 3.3
+VCK CK 0 PULSE(0 3.3 2n 0.5n 0.5n 20n 50n)
+Vcm1 VIN1 0 1.65
+Vcm2 VIN2 0 1.64
+
+x_dly1 VDD CK CKD1 VSS_0 inv
+x_dly2 VDD CKD1 CKL VSS_0 inv
+Cdly1 CKD1 0 20f
+Cdly2 CKL 0 20f
+VVSS VSS_0 0 0
+x_cmp CKL VIN2 VDD VOUT2 VIN1 VOUT1 CK VSS_0 comparator_2stage
+
+.tran 0.01n 60n
+.control
+  set num_threads=4
+  run
+  meas tran t_ck_rise WHEN V(CK)=1.65 RISE=1
+  meas tran t_ckl_rise WHEN V(CKL)=1.65 RISE=1
+  let dly = t_ckl_rise - t_ck_rise
+  print dly
+  meas tran v1end FIND V(VOUT1) AT=21n
+  meas tran v2end FIND V(VOUT2) AT=21n
+.endc
+.end

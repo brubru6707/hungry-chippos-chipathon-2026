@@ -1,0 +1,28 @@
+v {xschem version=3.4.8RC file_version=1.3}
+G {}
+K {type=subcircuit
+format="@name @pinlist @symname pfet_wid=@pfet_wid nfet_wid=@nfet_wid pfet_len=@pfet_len nfet_len=@nfet_len"
+spectre_format="@name ( @pinlist ) @symname"
+template="name=x1 pfet_wid=1.7u nfet_wid=1.7u pfet_len=0.28u nfet_len=0.28u"
+}
+V {}
+S {}
+F {}
+E {}
+L 4 -100 0 -60 0 {}
+L 4 60 0 100 0 {}
+B 4 -60 -40 60 40 {fill=false}
+B 5 -102.5 -2.5 -97.5 2.5 {name=A dir=inout}
+B 5 97.5 -2.5 102.5 2.5 {name=B dir=inout}
+B 5 -42.5 -62.5 -37.5 -57.5 {name=SAMPLE dir=in}
+B 5 37.5 -62.5 42.5 -57.5 {name=SAMPLE_N dir=in}
+B 5 37.5 57.5 42.5 62.5 {name=DVDD dir=inout}
+B 5 -42.5 57.5 -37.5 62.5 {name=DVSS dir=inout}
+T {@symname} -50 4 0 0 0.15 0.15 {}
+T {@name} -55 -54 0 0 0.2 0.2 {}
+T {A} -95 -14 0 0 0.2 0.2 {}
+T {B} 82 -14 0 0 0.2 0.2 {}
+T {SAMPLE} -55 -74 0 0 0.2 0.2 {}
+T {SAMPLE_N} 15 -74 0 0 0.2 0.2 {}
+T {DVDD} 15 68 0 0 0.2 0.2 {}
+T {DVSS} -55 68 0 0 0.2 0.2 {}

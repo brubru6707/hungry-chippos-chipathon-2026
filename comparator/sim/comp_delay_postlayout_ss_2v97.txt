@@ -1,0 +1,4 @@
+* corner=ss temp=125 vdd=2.97 vcm=1.485 vth=1.485
+od_V t_clk2q_s vout1_at_14n vout2_at_14n
+6.457e-3 3.62078E-10 9.28008E-08 2.97
+0.1e-3 3.70455E-10 9.29556E-08 2.97

@@ -3,6 +3,9 @@
 # Ignore all spice simulation results
 *.raw
 
+# Ignore raw transient dumps (wrdata CSVs) -- regenerate from the testbench
+dac/sim/*_tran.csv
+
 # Ignore all log files
 *.log
 
@@ -44,3 +47,34 @@ context/
 Tutorials/
 
 *.gds.backup
+backups/
+*.lvsdb
+
+# Generated ngspice decks (regenerate via run_comp_delay_sweeps.sh)
+comparator/sim/gen_tb_*.spice
+
+# DRC/LVS run directories (regenerate via the respective run scripts)
+dac/layout/drc_run_*/
+dac/layout/lvs_run_*/
+comparator/layout/klayout_lvs_run_*/
+adc_top/layout/drc_*/
+adc_top/layout/lvs_*/
+sar_logic/layout/drc_*/
+sar_logic/layout/lvs_*/
+
+# Generated per-code ADC sweep decks (regenerate via gen_adc_sweep_{tt,vt}.py;
+# the checker-result sweep_codes.csv files stay tracked; the tracked
+# sweep_tt_bcmp chunk decks are unaffected by the ignore below)
+adc_top/sim/sweep_*/code_*.spice
+adc_top/sim/sweep_tt/chunk_*.spice
+adc_top/sim/sweep_tt_fine/
+adc_top/sim/sweep_*/sweep_status.txt
+
+# ADC debug transient text dumps + sweep sentinel files
+adc_top/sim/dbg_*.txt
+adc_top/sim/.vt_sweeps_done*
+
+# ngspice stdout dumps from batch testbench runs (regenerate by rerunning)
+adc_top/sim/tb_adc_top_out.txt
+sar_logic/sim/*_out.txt
+adc_top/sim/tb_adc_top_alt_out.txt
