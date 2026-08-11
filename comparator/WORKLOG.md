@@ -336,3 +336,37 @@ straight in extracted connectivity (preamp DIP1→latch VIN1 via net $3).
 archive — the assembly's copy is the living version. Next: COMP-ALT-14 PEX — re-verify
 offset σ, delay, and the CKL window edges with parasitics, plus the twins' extracted
 C-symmetry (the one asymmetry source device-level extraction cannot see).
+
+## 2026-08-11 — COMP-ALT-16 step 1: polarity wrapper `comparator_alt` — built and verified
+
+**What:** new cell `comparator_alt/schematic/comparator_alt.sch`/`.sym` — contains
+`comparator_2stage` with the **outputs deliberately crossed** (instance VOUT2 → wrapper
+VOUT1 and vice versa), so the block presents COMP-5's convention required by the glue:
+**VIN1 > VIN2 ⇒ VOUT1 falls ⇒ SR latch CMP_OUT=1 = keep** (docs/pin_contracts.md §1/§4).
+CKL remains a pin for now; the ALT-16 delay chain replaces it next, and the symbol's
+port order gets reshuffled to the contract's strongarm order at the same time.
+
+**Verified** with `comparator_alt/sim/run_wrapper_polarity.sh` (drives ports by name,
+expects COMP-5 convention, prints which netlist + DUT line it checked):
+- negative control, bare `tb_2stage`: STILL-ALT-CONVENTION both cases ✓
+- `tb_comparator_alt` (wrapper): **PASS both cases** ✓
+
+**Debug story worth keeping:** the first wrapper run ALSO reported STILL-ALT with
+waveforms bit-identical to the bare run — same digits = same circuit (determinism as a
+fingerprint). Cause: after a symbol regeneration, the testbench's VOUT labels had been
+re-attached by position, crossing the outputs a second time — two swaps cancel. Fix:
+reattach tb labels by name. Related detour: an earlier "both PASS" was a run mix-up the
+script couldn't expose because it didn't say what it checked — it now self-labels
+(netlist path + DUT instance line in every verdict block).
+
+**xschem gotchas recorded:** `vdd.sym`/`gnd.sym` are global-net symbols, not pins — use
+`iopin` for supplies that must appear on a generated symbol; "Make schematic from
+symbol" is the REVERSE of "Make symbol from schematic" (key `a`); placed instances keep
+a cached symbol after regeneration — close/reopen the schematic to refresh.
+Also: `grep -l comparator_alt` false-matched a netlist via its sch_path comment (the
+FOLDER is named comparator_alt) — grep the instance line, not any substring.
+
+**Environment note:** the repo lives in iCloud-synced Documents; macOS had evicted
+PROGRESS.md/WORKLOG.md (and previously the COMP-5 sim templates + handoff README) to
+placeholders. Hydrate with `brctl download <repo>` (find -exec for full recursion).
+Long-term fix (post-deadline): move git repos out of iCloud-synced paths.
