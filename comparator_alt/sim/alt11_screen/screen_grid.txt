@@ -1,20 +1,20 @@
-COMP-ALT-11 functional screen — verdict per Vcm point (od=0.5LSB(VDD), CKL=2.8n)
+COMP-ALT-11 functional screen — verdict per Vcm point (od=0.5LSB(VDD), CKL=3.1n from netlist)
 P=PASS  .=NODECIDE  W=WRONGPOL  ?=PARTIAL/MEASFAIL
 
 corn VDD   |   0.4   0.7   1.0   1.3  1.65   2.0   2.4   2.8
 -----------------------------------------------------------------
-tt   3.0   |     W     P     P     P     P     P     P     P
-tt   3.3   |     W     P     P     P     P     P     P     P
-tt   3.6   |     W     P     P     P     P     P     P     P
-ss   3.0   |     W     W     W     P     P     P     P     P
-ss   3.3   |     W     W     P     P     P     P     P     P
-ss   3.6   |     W     W     P     P     P     P     P     P
-ff   3.0   |     W     P     P     P     P     P     P     P
-ff   3.3   |     W     P     P     P     P     P     P     P
-ff   3.6   |     W     P     P     P     P     P     P     P
-sf   3.0   |     W     W     P     P     P     P     P     P
-sf   3.3   |     W     W     P     P     P     P     P     P
-sf   3.6   |     W     W     P     P     P     P     P     P
-fs   3.0   |     W     P     P     P     P     P     P     P
-fs   3.3   |     W     P     P     P     P     P     P     P
-fs   3.6   |     W     P     P     P     P     P     P     P
+tt   3.0   |     -     -     -     -     -     -     -     -
+tt   3.3   |     -     -     -     P     P     -     P     -
+tt   3.6   |     W     P     P     P     P     -     P     -
+ss   3.0   |     ?     ?     W     P     -     P     P     P
+ss   3.3   |     -     -     P     P     -     P     -     P
+ss   3.6   |     -     W     P     ?     P     P     ?     ?
+ff   3.0   |     -     P     -     -     -     P     P     -
+ff   3.3   |     -     P     -     -     -     -     -     -
+ff   3.6   |     -     -     P     P     P     P     P     P
+sf   3.0   |     W     W     P     P     ?     -     -     P
+sf   3.3   |     W     -     P     P     P     P     P     P
+sf   3.6   |     W     W     P     P     ?     P     P     -
+fs   3.0   |     -     -     -     P     -     -     -     -
+fs   3.3   |     -     -     P     -     -     -     P     -
+fs   3.6   |     -     -     -     -     P     P     P     -
