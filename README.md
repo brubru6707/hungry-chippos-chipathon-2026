@@ -29,7 +29,7 @@ All numbers are simulation-verified; see the [Progress Tracker](PROGRESS.md) and
 | Sam | SAR Logic | [@sam581](https://github.com/sam581) | Brown University (2nd Year) |
 | Emily | Layout / Verification | — | Brown University (2nd Year) |
 | Mimi | Switch | — | Brown University (2nd Year) |
-| Luc | Alternative Comparator Design | — | Brown University (3rd Year) |
+| Luc | Alternative Comparator Design | — | Brown University (2nd Year) |
 
 **Per-block scoreboard** (each block individually signed off before chip assembly):
 
