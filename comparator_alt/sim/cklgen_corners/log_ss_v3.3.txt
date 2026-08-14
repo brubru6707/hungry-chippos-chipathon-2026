@@ -1,0 +1,30 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /foss/designs/comparator_alt/schematic/tb_ckl_gen.sch
+
+Doing analysis at TEMP = 125.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+x1.net3                                    3.3
+ck                                           0
+vdd                                        3.3
+x1.net4                            2.23355e-08
+x1.net5                                    3.3
+x1.net6                            2.23355e-08
+x1.net7                                    3.3
+x1.ckd                             2.23355e-08
+x1.net1                                    3.3
+x1.net2                              0.0752698
+ckl                                1.18311e-08
+vck#branch                                   0
+vvdd#branch                       -3.67168e-11
+
+ Reference value :  0.00000e+00 Reference value :  2.12800e-10 Reference value :  4.42800e-10 Reference value :  7.32800e-10 Reference value :  9.72800e-10 Reference value :  1.22280e-09 Reference value :  1.47280e-09 Reference value :  1.71280e-09 Reference value :  2.00000e-09 Reference value :  2.11880e-09 Reference value :  2.35880e-09 Reference value :  2.57880e-09 Reference value :  2.78880e-09 Reference value :  3.00880e-09 Reference value :  3.16880e-09 Reference value :  3.36880e-09 Reference value :  3.53880e-09 Reference value :  3.74880e-09 Reference value :  3.93880e-09 Reference value :  4.12880e-09 Reference value :  4.29880e-09 Reference value :  4.46880e-09 Reference value :  4.72880e-09 Reference value :  4.93880e-09 Reference value :  5.20880e-09 Reference value :  5.37880e-09 Reference value :  5.55880e-09 Reference value :  5.75880e-09 Reference value :  5.95880e-09 Reference value :  6.15880e-09 Reference value :  6.35880e-09 Reference value :  6.54880e-09 Reference value :  6.73880e-09 Reference value :  6.94880e-09 Reference value :  7.14880e-09 Reference value :  7.34880e-09 Reference value :  7.53880e-09 Reference value :  7.69880e-09 Reference value :  7.87880e-09 Reference value :  8.06880e-09 Reference value :  8.25880e-09 Reference value :  8.43880e-09 Reference value :  9.06880e-09 Reference value :  9.27880e-09 Reference value :  9.50880e-09 Reference value :  9.71880e-09 Reference value :  9.85880e-09 Reference value :  1.00588e-08 Reference value :  1.01400e-08 Reference value :  1.02070e-08 Reference value :  1.04250e-08 Reference value :  1.06150e-08 Reference value :  1.08250e-08 Reference value :  1.10350e-08 Reference value :  1.12450e-08 Reference value :  1.14450e-08 Reference value :  1.17050e-08 Reference value :  1.19350e-08 Reference value :  1.20850e-08 Reference value :  1.23050e-08 Reference value :  1.24750e-08 Reference value :  1.27350e-08

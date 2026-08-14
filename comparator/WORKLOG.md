@@ -370,3 +370,61 @@ FOLDER is named comparator_alt) — grep the instance line, not any substring.
 PROGRESS.md/WORKLOG.md (and previously the COMP-5 sim templates + handoff README) to
 placeholders. Hydrate with `brctl download <repo>` (find -exec for full recursion).
 Long-term fix (post-deadline): move git repos out of iCloud-synced paths.
+
+## 2026-08-14 — COMP-ALT-17: native-VT spike PASS, after a day of ghosts
+
+Result: `nfet_06v0_nvt` pair (4u/2u, nf=1 m=16, 128 µm²) → **floor ≤0.4 V at every
+corner** (was 1.0–1.3 V), **σ = 1.27–2.21 mV TT** (assumption bracket, N=200),
+2.04 mV at ss/125°C/3.0V. Corner timing closes under the tracking CKL chain with a
+RE-MAPPED spec: TT ≈1.2n / ff ≤0.8n / ss 1.6–2.6n / sf ≤2.3n, tfall <0.3n.
+ALT now beats COMP-5 on BOTH input range and offset. Row: PROGRESS COMP-ALT-17.
+
+The traps, in the order they bit:
+
+1. **GHOST CAMPAIGN.** A full screen + probes + MC ran against a week-old netlist
+   (03v3 pair). Caught by the determinism fingerprint: MC σ printed 1.14137 mV —
+   the old baseline, digit for digit. Identical digits = identical circuit.
+   **NEW RULE: no campaign starts until the netlist fingerprints** (grep for the
+   device that is supposed to be in it + check the file mtime).
+2. **TAB TRAP.** xschem's Netlist button netlists the ACTIVE TAB; the wrapper tb
+   was active, so tb_2stage.spice stayed a week stale while the button went green.
+   CLI netlisting is deterministic:
+   `xschem --netlist --quit --no_x -o <simdir> <sch>`.
+3. **`model=` ATTRIBUTE TRAP.** After replacing the pair symbol, the canvas showed
+   `nfet_06v0_nvt.sym` but the instances still carried `model=nfet_06v0` (and one
+   device had been auto-renamed M1P→M1, which would have silently broken the MC
+   alter paths). The netlister emits `model=`, not the symbol name. The netlist is
+   the circuit; the canvas is a picture.
+4. **Multi-line netlist lines:** `grep "^XM1P"` misses `+` continuation lines —
+   the m=16 was there all along. Use `grep -A`.
+5. **nvt BIN FLOOR:** the model exists only for **L ≥ 1.8u** ("could not find a
+   valid modelname" on every deck at L=1u). Fix L=2u — which doubled pair area and
+   clawed back most of the native matching penalty. (Related recorded gotcha: the
+   03v3 trips "u0 not positive" at L=2u — tune chain delay by STAGE COUNT, not L.)
+6. **PDK ships NO mismatch statistics for nfet_06v0_nvt** (bare subckt, no
+   mis_vth — unlike 03v3's `agauss(0,var_vth,1)`). σ built from the foundry
+   coefficient of the regular 6V NMOS (par_vth=0.01155 → 8.17 mV·µm per device,
+   ×0.7071 per the PDK's own var_vth formula) with a **2× native penalty as a
+   stated assumption**, bracketed by a 1× run (1.27 mV). The PDK's 03v3
+   coefficient (5.05 mV·µm/dev) independently validates our long-standing
+   6.2 mV·µm as ~20% conservative.
+7. **Mac disk at 99%** silently truncated sim logs mid-line through the grpcfuse
+   mount (no ngspice error — the RESULT line just never landed) and drove the
+   iCloud eviction wave. Sims now write to container-local disk first.
+8. **Repo moved out of iCloud → `~/Developer/`** (mid-session). Note: iCloud's
+   "Desktop & Documents" sync covers `~/Documents`, so a GitHub/ folder there was
+   still being evicted. Docker mount fixed by container remove + recreate from the
+   new cwd (`start_chipathon_vnc.sh` mounts `$(pwd)`; a restart keeps the old
+   mount). The eviction era should be over.
+
+Also drawn today (harness-ready even though Bruno built his own chain): `inv_slow`
+(1u/1u + 2u/1u), `ckl_gen` (6× inv_slow + NAND2 + INV, all verified topology),
+`tb_ckl_gen` — plus lessons: fresh-placed devices need `spiceprefix=X` added, and a
+tb VSS *label* floats — use the gnd symbol (tb_2stage pattern) or a Vvss source.
+Bruno's chain must be characterized against the NEW delay spec above
+(`run_cklgen_corners.sh`); a chain sized to the old ~1.05n target may strobe ff late.
+
+Open items out of the spike: ss×−40°C floor probe (the corner that set the ADC's
+0.70 V bound — if nvt holds ≤0.6 there, promotion WIDENS the ADC input range);
+chain characterization + drop into tb_2stage replacing the ideal Vckl; PEX (ALT-14)
+re-check with nvt; layout pair redraw 4u×2u×16 (ALT-15).

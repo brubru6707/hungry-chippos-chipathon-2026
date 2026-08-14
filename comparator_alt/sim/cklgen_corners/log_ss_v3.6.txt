@@ -1,0 +1,44 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /foss/designs/comparator_alt/schematic/tb_ckl_gen.sch
+
+Doing analysis at TEMP = 125.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+x1.net3                                    3.6
+ck                                           0
+vss                                    3.60021
+vdd                                        3.6
+x1.net4                                3.60016
+x1.net5                                3.60018
+x1.net6                                3.60016
+x1.net7                                3.60017
+x1.ckd                                 3.60016
+x1.net1                                    3.6
+x1.net2                                3.60022
+ckl                                    3.60018
+vck#branch                                   0
+vvdd#branch                        1.08947e-14
+
+ Reference value :  3.22800e-10 Reference value :  8.52800e-10 Reference value :  1.41280e-09 Reference value :  1.83280e-09 Reference value :  2.09250e-09 Reference value :  3.12592e-09 Reference value :  5.70592e-09 Reference value :  7.42592e-09 Reference value :  8.22592e-09 Reference value :  8.53592e-09 Reference value :  8.93592e-09 Reference value :  1.18150e-08 Reference value :  1.45250e-08 Reference value :  1.74950e-08 Reference value :  2.05350e-08 Reference value :  2.38959e-08
+No. of Data Rows : 2529
+
+Error: measure  trise  trig(TARG) : out of interval
+ meas tran trise trig v(ck) val=1.800000 rise=1 targ v(ckl) val=1.800000 rise=1 failed!
+
+
+Error: measure  tfall  trig(TARG) : out of interval
+Error: &trise: no such variable.
+Error: &tfall: no such variable.
+ meas tran tfall trig v(ck) val=1.800000 fall=1 targ v(ckl) val=1.800000 fall=1 failed!
+
+RESULT ss_v3.6 trise= tfall=
+Note: Simulation executed from .control section 

@@ -29,7 +29,7 @@ Vckl  CKL  0 PULSE(0 3.3 3.1n 100p 100p 5n 20n)
 
 .control
 let mc_runs = 200
-let svt_pre = 0.78e-3
+let svt_pre = 1.44e-3
 let svt_sa = 2.19e-3
 let run = 0
 set rndseed = 12345
