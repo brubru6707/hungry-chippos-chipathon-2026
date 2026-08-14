@@ -1,0 +1,44 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /foss/designs/comparator_alt/schematic/tb_ckl_gen.sch
+
+Doing analysis at TEMP = -40.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+x1.net3                                      3
+ck                                           0
+vss                                     2.9999
+vdd                                          3
+x1.net4                                3.00031
+x1.net5                                3.00038
+x1.net6                                3.00042
+x1.net7                                3.00042
+x1.ckd                                 3.00042
+x1.net1                                      3
+x1.net2                                2.99979
+ckl                                    3.00051
+vck#branch                                   0
+vvdd#branch                       -1.03044e-14
+
+ Reference value :  3.42800e-10 Reference value :  4.28900e-09 Reference value :  8.03900e-09 Reference value :  8.70900e-09 Reference value :  9.11900e-09 Reference value :  1.01016e-08 Reference value :  1.06150e-08 Reference value :  1.23650e-08 Reference value :  1.58950e-08 Reference value :  1.64450e-08 Reference value :  1.93850e-08 Reference value :  1.94550e-08 Reference value :  1.96750e-08 Reference value :  1.98650e-08 Reference value :  2.00650e-08 Reference value :  2.03950e-08 Reference value :  2.06650e-08 Reference value :  2.18050e-08 Reference value :  2.32390e-08 Reference value :  2.46290e-08
+No. of Data Rows : 2529
+
+Error: measure  trise  trig(TARG) : out of interval
+ meas tran trise trig v(ck) val=1.500000 rise=1 targ v(ckl) val=1.500000 rise=1 failed!
+
+
+Error: measure  tfall  trig(TARG) : out of interval
+Error: &trise: no such variable.
+Error: &tfall: no such variable.
+ meas tran tfall trig v(ck) val=1.500000 fall=1 targ v(ckl) val=1.500000 fall=1 failed!
+
+RESULT ff_v3.0 trise= tfall=
+Note: Simulation executed from .control section 

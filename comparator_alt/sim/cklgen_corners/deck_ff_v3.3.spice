@@ -1,0 +1,75 @@
+** sch_path: /foss/designs/comparator_alt/schematic/tb_ckl_gen.sch
+**.subckt tb_ckl_gen
+x1 VDD CKL CK VSS ckl_gen
+**** begin user architecture code
+
+
+.param sw_stat_global   = 0
+.param sw_stat_mismatch = 0
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice ff
+
+
+
+
+Vvdd  VDD  0 3.3
+Vck  CK  0 PULSE(0 3.3 2n 100p 100p 8n 20n)
+
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  comparator_alt/schematic/ckl_gen.sym # of pins=4
+** sym_path: /foss/designs/comparator_alt/schematic/ckl_gen.sym
+** sch_path: /foss/designs/comparator_alt/schematic/ckl_gen.sch
+.subckt ckl_gen VDD CKL CK VSS
+*.iopin VDD
+*.iopin VSS
+*.ipin CK
+*.opin CKL
+x1 VDD net3 CK VSS inv_slow
+x2 VDD net4 net3 VSS inv_slow
+x3 VDD net5 net4 VSS inv_slow
+x4 VDD net6 net5 VSS inv_slow
+x5 VDD net7 net6 VSS inv_slow
+x6 VDD CKD net7 VSS inv_slow
+XM1 net1 CK VDD VDD pfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM2 net1 CKD VDD VDD pfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM3 net1 CK net2 VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM4 net2 CKD VSS VSS nfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM5 CKL net1 VSS VSS nfet_03v3 L=0.28u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM6 CKL net1 VDD VDD pfet_03v3 L=0.28u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+
+* expanding   symbol:  comparator_alt/schematic/inv_slow.sym # of pins=4
+** sym_path: /foss/designs/comparator_alt/schematic/inv_slow.sym
+** sch_path: /foss/designs/comparator_alt/schematic/inv_slow.sch
+.subckt inv_slow VDD Y A VSS
+*.iopin VDD
+*.iopin VSS
+*.opin Y
+*.ipin A
+XMT1 Y A VSS VSS nfet_03v3 L=1u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+XM1 Y A VDD VDD pfet_03v3 L=1u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0
+.ends
+
+.temp -40
+.options reltol=1e-4 vntol=1e-9
+.control
+save v(ck) v(ckl)
+tran 0.01n 25n
+meas tran trise trig v(ck) val=1.650000 rise=1 targ v(ckl) val=1.650000 rise=1
+meas tran tfall trig v(ck) val=1.650000 fall=1 targ v(ckl) val=1.650000 fall=1
+echo RESULT ff_v3.3 trise=$&trise tfall=$&tfall
+.endc
+.end

@@ -89,8 +89,8 @@ C {lab_pin.sym} 0 50 1 0 {name=p10 sig_type=std_logic lab=VSS}
 C {lab_pin.sym} -280 -150 0 0 {name=p12 sig_type=std_logic lab=CK}
 C {lab_pin.sym} 260 -150 2 0 {name=p13 sig_type=std_logic lab=CK
 }
-C {symbols/nfet_06v0_nvt.sym} -190 50 0 0 {name=M1P
-L=1u
+C {symbols/nfet_06v0_nvt.sym} 190 50 0 1 {name=M2P
+L=2u
 W=4u
 nf=1
 m=16
@@ -100,11 +100,11 @@ as="'int((nf+2)/2) * W/nf * 0.18u'"
 ps="'2*int((nf+2)/2) * (W/nf + 0.18u)'"
 nrd="'0.18u / W'" nrs="'0.18u / W'"
 sa=0 sb=0 sd=0
-model=nfet_06v0
+model=nfet_06v0_nvt
 spiceprefix=X
 }
-C {symbols/nfet_06v0_nvt.sym} 190 50 0 1 {name=M2P
-L=1u
+C {symbols/nfet_06v0_nvt.sym} -190 50 0 0 {name=M1P
+L=2u
 W=4u
 nf=1
 m=16
@@ -114,6 +114,6 @@ as="'int((nf+2)/2) * W/nf * 0.18u'"
 ps="'2*int((nf+2)/2) * (W/nf + 0.18u)'"
 nrd="'0.18u / W'" nrs="'0.18u / W'"
 sa=0 sb=0 sd=0
-model=nfet_06v0
+model=nfet_06v0_nvt
 spiceprefix=X
 }

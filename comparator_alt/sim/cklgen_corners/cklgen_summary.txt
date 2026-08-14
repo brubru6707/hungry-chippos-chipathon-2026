@@ -1,0 +1,4 @@
+RESULT tt_v3.0 trise=1.70651E-09 tfall=9.18621E-11
+RESULT tt_v3.3 trise=1.53752E-09 tfall=8.59755E-11
+RESULT tt_v3.6 trise=1.40944E-09 tfall=8.10539E-11
+RESULT ss_v3.0 trise=2.48705E-09 tfall=1.2521E-10
