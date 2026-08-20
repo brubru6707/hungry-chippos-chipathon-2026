@@ -18,11 +18,37 @@ project:
   description: "8-bit SAR ADC, 833 kS/s @ 10 MHz CLK, GF180MCU (gf180mcuD variant D)"
   lvs_config: "lvs_config.json"
 
-# ------------------------------------------------------
-# Reference until the official pin-data fields land
-# (issue https://github.com/sscs-ose/sscs-chipathon-2026/issues/18):
-# top cell adc_top, gds adc_top/layout/adc_chip_top.gds,
-# 514.25 x 549.7 um, padring Block B.
-# 14 pads: VDD (power, 3.3 V), VSS (ground), VIN (analog in),
-# CLK + RST_N (digital in), BIT_7..BIT_0 + EOC (digital out).
-# ------------------------------------------------------
+# Pin names match top-level layout text (layer 81/10) exactly.
+# Ground pin first (down-bonded quadrant ground), VDD paired next to it.
+# Order = clockwise pad placement, bottom-left -> upper-right; VIN kept
+# at the far end, away from CLK.
+pins:
+  - name: VSS
+    io_type: ground
+  - name: VDD
+    io_type: power
+  - name: CLK
+    io_type: input_schmitt
+  - name: RST_N
+    io_type: input_cmos
+  - name: EOC
+    io_type: bidirectional
+  - name: BIT_0
+    io_type: bidirectional
+  - name: BIT_1
+    io_type: bidirectional
+  - name: BIT_2
+    io_type: bidirectional
+  - name: BIT_3
+    io_type: bidirectional
+  - name: BIT_4
+    io_type: bidirectional
+  - name: BIT_5
+    io_type: bidirectional
+  - name: BIT_6
+    io_type: bidirectional
+  - name: BIT_7
+    io_type: bidirectional
+  - name: VIN
+    io_type: analog
+    secondary_esd: true
