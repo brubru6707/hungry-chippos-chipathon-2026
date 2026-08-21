@@ -149,6 +149,9 @@ JOG_Y = {"CLK": 23.0, "RST_N": 23.8, "EOC": 24.6,
          "VSS": 31.8, "VDD": 32.6}
 
 # north band lanes (M4) for BIT port->bus: must INCREASE with port x
+OUT_PINS = {"EOC", "BIT_0", "BIT_1", "BIT_2", "BIT_3", "BIT_4",
+            "BIT_5", "BIT_6", "BIT_7"}
+
 BAND_LANE = {"BIT_0": 181.0, "BIT_1": 182.0, "BIT_2": 183.0,
              "BIT_3": 184.0, "BIT_4": 185.0, "BIT_5": 186.0,
              "BIT_6": 187.0, "BIT_7": 188.0}
@@ -325,6 +328,8 @@ def main():
     build_fill(layout, top)
 
     b = top.bbox()
+    # project boundary on 0/0 (padframe spec 2026-08-20): defines our size
+    top.shapes(layout.layer(0, 0)).insert(b)
     opts = db.SaveLayoutOptions()
     opts.write_context_info = False
     out = "/foss/designs/adc_top/layout/adc_chip_top.gds"
@@ -339,7 +344,10 @@ def build_routes(rt):
     # ---------------- south pads + fan-out ----------------
     for net, px in PIN_PADS.items():
         rt.wire(net, 5, px - PAD_HALF, PAD_Y0, px + PAD_HALF, PAD_Y1, w=0.0)
-        rt.label(net, px, (PAD_Y0 + PAD_Y1) / 2.0)
+        # bidirectional pads have separate IN/OUT data paths; the padframe
+        # audit wants the layout text to say which one we use (all are outputs)
+        rt.label(net + "_OUT" if net in OUT_PINS else net,
+                 px, (PAD_Y0 + PAD_Y1) / 2.0)
     for net in ("CLK", "RST_N", "EOC", "BIT_0", "BIT_1", "BIT_2", "BIT_3",
                 "BIT_4", "BIT_5", "BIT_6", "BIT_7"):
         sx, _sy = SAR_PORT[net]
