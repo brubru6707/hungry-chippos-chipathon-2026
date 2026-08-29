@@ -624,10 +624,20 @@ VDD_TIE_X, VSS_TIE_X = 32.0, 44.0
 #   bi_t PAD  function ((A)), three_state ((!OE)) -> OE HIGH to drive
 #   bi_t Y    function ((IE*PAD))                 -> IE LOW, never read back
 #   PU / PD   are the pad's pull resistors        -> LOW on a driven output
-# CS/SL/PDRV0/PDRV1 select drive strength and slew. They do NOT gate the
-# driver (only OE does), so any tie is functional, but the encoding is in
-# neither the PDK liberty nor the spice models. Tied LOW pending the GF
-# IO databook -- flagged as an open item, deliberately not invented.
+# CS/SL/PDRV0/PDRV1: RESOLVED, all four tied LOW deliberately.
+#   PDRV1/PDRV0 selects 4/8/12/16 mA (1/0 = 12 mA), so 0/0 = 4 mA, the
+#   minimum. Asked in #2026-track-d-ai-llm-for-circuits 2026-08-26; track
+#   lead LuighiV: "each team should decide its own configuration according
+#   to their needs" -- there is no mandated convention.
+#   4 mA is the right pick here, not just the low one: into MILOUDIAS's
+#   15-25 pF package estimate that is a ~16 ns edge against our 1.2 us bit
+#   period at 833 kS/s, so slew is a non-issue, and the minimum di/dt is
+#   what we want next to a comparator that the output bus can bounce.
+#   CS and SL appear ONLY inside the `specify` timing block of
+#   gf180mcu_fd_io__bi_t -- the functional model is just
+#   `and (Y, PAD, IE)` / `bufif1 (PAD, A, OE)` plus the two pull rnmos.
+#   Neither changes behaviour; SL is edge rate, CS conditions the PAD->Y
+#   input path we never use (IE is tied low). LOW is safe for both.
 TIEOFF = {"DVSS": "VSS", "DVDD": "VDD",
           "OE": "VDD",
           "IE": "VSS", "PU": "VSS", "PD": "VSS",
