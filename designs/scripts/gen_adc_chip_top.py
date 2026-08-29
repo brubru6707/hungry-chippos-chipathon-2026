@@ -332,6 +332,7 @@ def main():
     build_routes(rt)
     build_taps(rt)
     build_bv_pins(rt)
+    build_signal_pins(rt)
     run_checks(rt, block_regions)
 
     # Project boundary on 0/0 = the full BV slot, not our drawn extent.
@@ -368,8 +369,9 @@ def build_routes(rt):
         rt.wire(net, 5, px - PAD_HALF, PAD_Y0, px + PAD_HALF, PAD_Y1, w=0.0)
         # bidirectional pads have separate IN/OUT data paths; the padframe
         # audit wants the layout text to say which one we use (all are outputs)
-        rt.label(net + "_OUT" if net in OUT_PINS else net,
-                 px, (PAD_Y0 + PAD_Y1) / 2.0)
+        # no label here any more: every net now reaches its real BV pin,
+        # and a second text on the same net at the wrong coordinates is
+        # exactly what the padframe audit reads out of the GDS.
     for net in ("CLK", "RST_N", "EOC", "BIT_0", "BIT_1", "BIT_2", "BIT_3",
                 "BIT_4", "BIT_5", "BIT_6", "BIT_7"):
         sx, _sy = SAR_PORT[net]
@@ -703,6 +705,193 @@ def build_bv_pins(rt):
             placed[net] += 1
     print("  BV pins: tied %d to VDD, %d to VSS; %d signal pins deferred"
           % (placed["VDD"], placed["VSS"], len(skipped)))
+
+
+# ----------------------------------------------------------------------
+# Signal pins on the BV interface.
+#
+# Each signal already exists as a net running from its SAR fold port east
+# on M4 at JOG_Y[net] to a south pad. The pins live on the WEST edge, so
+# every net simply extends its existing M4 jog westward into the empty
+# channel, climbs a private M4 column, and drops to M2 for the last
+# micron. The south pads and their fan-out are deliberately left in place:
+# same net, so they become harmless stubs and no verified routing moves.
+#
+# Column x increases with JOG_Y. That is the ordering rule that keeps the
+# bottom horizontals short-free: a net's westward jog spans [x_col, sx],
+# so it may only cross columns west of it, and those columns belong to
+# nets whose verticals start at a LOWER y and are therefore already gone.
+# Two orderings have to hold at once, and they force each other:
+#   (a) a net's westward lane at wy spans [x_col, sx], so it crosses the
+#       columns west of it -> those columns must start ABOVE wy, i.e.
+#       x_col increasing => wy increasing;
+#   (b) a net descends at its port sx down to wy, crossing the lanes of
+#       nets east of it -> those lanes must sit BELOW, i.e. wy decreasing
+#       as sx increases.
+# JOG_Y and sx both increase CLK -> BIT_7, so (b) pins CLK to the highest
+# lane, and (a) then pins CLK to the easternmost column.
+SIG_COL_X = {"CLK": 18.0, "RST_N": 16.5, "EOC": 15.0,
+             "BIT_0": 13.5, "BIT_1": 12.0, "BIT_2": 10.5, "BIT_3": 9.0,
+             "BIT_4": 7.5, "BIT_5": 6.0, "BIT_6": 4.5, "BIT_7": 3.0}
+# westward lanes on M4, all below the lowest JOG_Y (23.0) so they pass
+# under the existing eastward fan-out instead of through it
+SIG_WEST_Y = {"CLK": 22.6, "RST_N": 21.8, "EOC": 21.0,
+              "BIT_0": 20.2, "BIT_1": 19.4, "BIT_2": 18.6, "BIT_3": 17.8,
+              "BIT_4": 17.0, "BIT_5": 16.2, "BIT_6": 15.4, "BIT_7": 14.6}
+# BIT_6/BIT_7 land on the NORTH edge, so they leave their column on M5.
+# M5 for the top run (not M4) is what makes this safe: the top horizontals
+# would otherwise cross the other net's M4 column.
+SIG_TOP_Y = {"BIT_6": 1088.0, "BIT_7": 1090.0}
+# A pre-existing VSS M4 underpass sits at x=44, y 5.5..27 -- squarely
+# across every westward lane. So a lane stays on M3 until x=30 (clearing
+# both that underpass and the M5 supply spines) and only then drops to M4
+# for the last stretch, where M4 is what clears the M3 channel buses.
+# Keep that M3 detour as SHORT as possible: the BIT nets already carry
+# the DAC's M3 entry lanes, and a full-length M3 lane pushes them over
+# ANT.5 (they came back at ratio 427..627 on a 1.02 um^2 gate). So the
+# lane rides M4 and dips to M3 only for the 2 um that crosses x=44.
+UNDERPASS_X0, UNDERPASS_X1 = 43.0, 45.0
+CLIMB_SEG = 150.0
+
+# VIN is the analog sampling input and the one long haul: ~1100 um from
+# the DAC to N03 on the north edge. It runs west along y=19 on M4 -- below
+# every JOG_Y, so it crosses no signal jog -- then climbs a column at
+# x=2.0, which is west of every signal column and therefore crosses none
+# of them, then east on M5 across the empty north half.
+VIN_SOUTH_Y = 12.0
+VIN_COL_X = 2.0
+VIN_TOP_Y = 1095.0
+VIN_BAR_Y = 1105.5
+VIN_DROP_X = 267.5
+
+
+def climb(rt, net, x, ylo, yhi, seg):
+    """Climb the channel alternating M5/M4 in `seg`-long chunks.
+
+    A signal column is 200..1000 um. Carried whole on M4 it breaks ANT.5,
+    and whole on Metaltop it breaks ANT.7 -- both cap perimeter-area over
+    gate-area at 400, and the DAC switch gates on the BIT nets are only
+    1.02 um^2. Alternating splits the run so neither layer accumulates
+    enough on one net to trip its own rule.
+    """
+    # Metaltop is the binding rule (ANT.7), so it takes the smallest
+    # share: this rotation gives M5 1/5 of the column against 2/5 each
+    # for M4 and M3, which are the layers with headroom.
+    order = (5, 4, 3, 4, 3)
+    widths = {5: 0.5, 4: W_COL, 3: W3}
+    y, i = ylo, 0
+    while y < yhi - 1e-9:
+        lvl = order[i % len(order)]
+        y2 = min(y + seg, yhi)
+        rt.wire(net, lvl, x, y, x, y2, w=widths[lvl])
+        if y2 < yhi - 1e-9:
+            nxt = order[(i + 1) % len(order)]
+            rt.stack(net, x, y2, min(lvl, nxt), max(lvl, nxt))
+            i += 1
+        y = y2
+    return order[i % len(order)]
+
+
+def lane_m4(rt, net, x_west, wy, x_east):
+    """M4 lane from x_east west to x_west, hopping to M3 across the
+    pre-existing VSS M4 underpass at x=44."""
+    rt.wire(net, 4, UNDERPASS_X1, wy, x_east, wy, w=W_COL)
+    rt.stack(net, UNDERPASS_X1, wy, 3, 4)
+    rt.wire(net, 3, UNDERPASS_X0, wy, UNDERPASS_X1, wy, w=W3)
+    rt.stack(net, UNDERPASS_X0, wy, 3, 4)
+    rt.wire(net, 4, x_west, wy, UNDERPASS_X0, wy, w=W_COL)
+
+
+def build_signal_pins(rt):
+    """Route the 12 signal nets to their BV pins; place the 9 unused
+    pad readbacks (Y of each bi_t) as labelled rectangles.
+
+    Y is the pad's output into our block. We drive nothing there and read
+    nothing back (IE is tied low), so those pins are placed so the
+    interface is geometrically complete but left unconnected on purpose.
+    """
+    import yaml
+    with open(BV_IFACE) as f:
+        pins = yaml.safe_load(f)["pins"]
+    by_pin = {p["project_pin"]: p for p in pins}
+
+    def rects(name):
+        return [[v / 200.0 for v in r["translated_user"]]
+                for r in by_pin[name]["rectangles"]]
+
+    # ---- west-edge signals: CLK, RST_N, EOC + BIT_0..BIT_5 outputs ----
+    west = [("CLK", "CLK"), ("RST_N", "RST_N"), ("EOC", "EOC_OUT")] + \
+           [("BIT_%d" % i, "BIT_%d_OUT" % i) for i in range(6)]
+    for net, pin in west:
+        cx_col = SIG_COL_X[net]
+        jy = JOG_Y[net]
+        sx = SAR_PORT[net][0]
+        x0, y0, x1, y1 = rects(pin)[0]
+        cy, h = (y0 + y1) / 2.0, y1 - y0
+        wy = SIG_WEST_Y[net]
+        rt.stack(net, sx, jy, 3, 4)
+        rt.wire(net, 3, sx, wy, sx, jy, w=W3)                 # descend
+        rt.stack(net, sx, wy, 3, 4)
+        lane_m4(rt, net, cx_col, wy, sx)                      # lane west
+        rt.stack(net, cx_col, wy, 4, 5)
+        top_lvl = climb(rt, net, cx_col, wy, cy, CLIMB_SEG)
+        rt.stack(net, cx_col, cy, 2, top_lvl)                 # down to M2
+        rt._add(net, 2, box(x0, y0, x1, y1))                  # the pin
+        rt._add(net, 2, box(x1, cy - h / 2.0,
+                            cx_col + VIA_PAD / 2.0, cy + h / 2.0))
+        rt.label(pin, (x0 + x1) / 2.0, cy, ld=M2LBL)
+
+    # ---- north-edge signals: BIT_6, BIT_7 ----
+    for net in ("BIT_6", "BIT_7"):
+        pin = net + "_OUT"
+        cx_col, jy = SIG_COL_X[net], JOG_Y[net]
+        sx = SAR_PORT[net][0]
+        ty = SIG_TOP_Y[net]
+        x0, y0, x1, y1 = rects(pin)[0]
+        cx, w = (x0 + x1) / 2.0, x1 - x0
+        wy = SIG_WEST_Y[net]
+        rt.stack(net, sx, jy, 3, 4)
+        rt.wire(net, 3, sx, wy, sx, jy, w=W3)
+        rt.stack(net, sx, wy, 3, 4)
+        lane_m4(rt, net, cx_col, wy, sx)
+        rt.stack(net, cx_col, wy, 4, 5)
+        top_lvl = climb(rt, net, cx_col, wy, ty, CLIMB_SEG)
+        if top_lvl != 5:
+            rt.stack(net, cx_col, ty, top_lvl, 5)
+        rt.wire(net, 5, cx_col, ty, cx, ty, w=0.5)            # east on M5
+        rt.stack(net, cx, ty, 2, 5)
+        rt._add(net, 2, box(cx - VIA_PAD / 2.0, ty - VIA_PAD / 2.0,
+                            cx + VIA_PAD / 2.0, y0))          # riser
+        rt._add(net, 2, box(x0, y0, x1, y1))
+        rt.label(pin, cx, (y0 + y1) / 2.0, ld=M2LBL)
+
+    # ---- VIN ----
+    px = PIN_PADS["VIN"]
+    rt.wire("VIN", 5, px, PAD_Y1, px, VIN_SOUTH_Y, w=0.5)     # pad -> y19
+    rt.stack("VIN", px, VIN_SOUTH_Y, 4, 5)
+    lane_m4(rt, "VIN", VIN_COL_X, VIN_SOUTH_Y, px)
+    rt.stack("VIN", VIN_COL_X, VIN_SOUTH_Y, 4, 5)
+    rt.wire("VIN", 5, VIN_COL_X, VIN_SOUTH_Y, VIN_COL_X, VIN_TOP_Y, w=0.5)
+    rt.wire("VIN", 5, VIN_COL_X, VIN_TOP_Y, VIN_DROP_X, VIN_TOP_Y, w=0.5)
+    rt.stack("VIN", VIN_DROP_X, VIN_TOP_Y, 2, 5)
+    rt.wire("VIN", 2, VIN_DROP_X, VIN_TOP_Y, VIN_DROP_X, VIN_BAR_Y, w=0.5)
+    vr = sorted(rects("VIN"))
+    rt._add("VIN", 2, box(vr[0][0], VIN_BAR_Y - 0.25,         # tie bar
+                          vr[-1][2], VIN_BAR_Y + 0.25))
+    for x0, y0, x1, y1 in vr:
+        rt._add("VIN", 2, box(x0, VIN_BAR_Y, x1, y0))         # riser
+        rt._add("VIN", 2, box(x0, y0, x1, y1))
+    rt.label("VIN", (vr[0][0] + vr[0][2]) / 2.0,
+             (vr[0][1] + vr[0][3]) / 2.0, ld=M2LBL)
+
+    # ---- unused pad readbacks: placed, labelled, intentionally floating ----
+    n_idle = 0
+    for name in ["EOC_IN"] + ["BIT_%d_IN" % i for i in range(8)]:
+        for x0, y0, x1, y1 in rects(name):
+            rt.top.shapes(rt.li(METALS[2])).insert(box(x0, y0, x1, y1))
+            rt.label(name, (x0 + x1) / 2.0, (y0 + y1) / 2.0, ld=M2LBL)
+            n_idle += 1
+    print("  BV signal pins: 12 nets routed, %d readback pins placed" % n_idle)
 
 
 def build_taps(rt):
