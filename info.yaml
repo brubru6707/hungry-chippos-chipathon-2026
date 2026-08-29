@@ -18,7 +18,10 @@ project:
   description: "8-bit SAR ADC, 833 kS/s @ 10 MHz CLK, GF180MCU (gf180mcuD variant D)"
   lvs_config: "lvs_config.json"
 
-# Pin names match top-level layout text (layer 81/10) exactly.
+# Pin names match top-level layout text exactly. The BV interface pins
+# carry their labels on Metal2 text (36/10, matching the Metal2 pin
+# shapes); the same 14 names are also on 81/10 at the south pads, so the
+# audit's "pins exist as text at top level" check passes on either layer.
 # Ground pin first (down-bonded quadrant ground), VDD paired next to it.
 # Order = clockwise pad placement, bottom-left -> upper-right; VIN kept
 # at the far end, away from CLK.
