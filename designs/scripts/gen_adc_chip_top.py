@@ -331,6 +331,7 @@ def main():
     rt = Router(layout, top)
     build_routes(rt)
     build_taps(rt)
+    build_bv_pins(rt)
     run_checks(rt, block_regions)
 
     # Project boundary on 0/0 = the full BV slot, not our drawn extent.
@@ -591,6 +592,117 @@ def build_routes(rt):
     # nearest foreign M1 is 1.1um away).
     rt.wire("_patch_v13d", 1, 487.79, 233.54, 488.2, 233.92, w=0.0)
     rt.allow(1, 487.6, 233.4, 488.35, 234.05)
+
+
+# ----------------------------------------------------------------------
+# BV padframe pin interface
+# Pin geometry is read from the organizers' authoritative interface file
+# rather than transcribed: A13_BV_interface.yaml, 99 pins / 116 rectangles,
+# every one Metal2, 1 um deep from the block edge. Coordinates come from
+# each rectangle's "translated_user" field, already in our block frame.
+BV_IFACE = "/foss/designs/adc_top/padframe_defs/BV/A13_BV_interface.yaml"
+M2LBL = (36, 10)
+
+# The west channel x 0..30 is empty on every layer for the full 1110 um
+# height (measured against the real GDS), and the north half y>551 is
+# empty across the full width. Two vertical M3 buses live in the channel.
+# VSS sits WEST of VDD so that a VDD stub crosses only the VSS bus -- M2
+# over M3, no short -- and each bus reaches its spine on its own layer.
+CH_VSS_X, CH_VDD_X = 20.0, 26.0
+CH_BUS_W = 1.0
+CH_Y0, CH_Y1 = 4.0, 1106.0
+# horizontal tie-off buses under the north pin row (pins at y 1109..1110)
+NB_VDD_Y, NB_VSS_Y = 1100.0, 1103.0
+NB_X0, NB_X1 = 33.0, 292.0
+# where each channel bus ties into the existing M5 supply spines
+VDD_TIE_Y, VSS_TIE_Y = 500.0, 200.0
+VDD_TIE_X, VSS_TIE_X = 32.0, 44.0
+
+# Tie-off polarity, from gf180mcu_fd_io__tt_025C_3v30.lib (not guessed):
+#   bi_t PAD  function ((A)), three_state ((!OE)) -> OE HIGH to drive
+#   bi_t Y    function ((IE*PAD))                 -> IE LOW, never read back
+#   PU / PD   are the pad's pull resistors        -> LOW on a driven output
+# CS/SL/PDRV0/PDRV1 select drive strength and slew. They do NOT gate the
+# driver (only OE does), so any tie is functional, but the encoding is in
+# neither the PDK liberty nor the spice models. Tied LOW pending the GF
+# IO databook -- flagged as an open item, deliberately not invented.
+TIEOFF = {"DVSS": "VSS", "DVDD": "VDD",
+          "OE": "VDD",
+          "IE": "VSS", "PU": "VSS", "PD": "VSS",
+          "CS": "VSS", "SL": "VSS", "PDRV0": "VSS", "PDRV1": "VSS"}
+# A (pad driver input), Y (pad readback) and ASIG5V (VIN) carry real
+# signals; they are routed with their nets, not tied off here.
+SIGNAL_TERMS = {"A", "Y", "ASIG5V"}
+
+
+def build_bv_pins(rt):
+    """Place the BV pin rectangles and drive every pad control terminal.
+
+    Mitch, #chipathon-teams 2026-08-29: "You need to drive all the control
+    pins to the pads ... be sure to connect them both in the layout and the
+    schematic." The padring exposes each control as its own port
+    (A13_BV_padring.v), so our block drives them; the padring ties nothing.
+    """
+    import yaml
+    with open(BV_IFACE) as f:
+        pins = yaml.safe_load(f)["pins"]
+
+    # vertical channel buses
+    for net, bx in (("VSS", CH_VSS_X), ("VDD", CH_VDD_X)):
+        rt.wire(net, 3, bx, CH_Y0, bx, CH_Y1, w=CH_BUS_W)
+
+    # channel -> existing M5 spines. VDD leaves east on M3: nothing sits
+    # between its bus (x26) and the VDD spine (x30..34).
+    rt.wire("VDD", 3, CH_VDD_X, VDD_TIE_Y, VDD_TIE_X, VDD_TIE_Y, w=CH_BUS_W)
+    rt.stack("VDD", VDD_TIE_X, VDD_TIE_Y, 3, 5)
+    # VSS has to cross the VDD bus AND the VDD M5 spine to reach its own
+    # spine at x42..46, so it makes the run on M4, which is free there.
+    rt.stack("VSS", CH_VSS_X, VSS_TIE_Y, 3, 4)
+    rt.wire("VSS", 4, CH_VSS_X, VSS_TIE_Y, VSS_TIE_X, VSS_TIE_Y, w=CH_BUS_W)
+    rt.stack("VSS", VSS_TIE_X, VSS_TIE_Y, 4, 5)
+
+    # horizontal buses under the north pin row, fed from the channel.
+    # VDD's feed is a straight M3 run (its bus is the eastern one); VSS
+    # again hops to M4 to clear the VDD bus at x26.
+    rt.wire("VDD", 3, CH_VDD_X, NB_VDD_Y, NB_X1, NB_VDD_Y, w=CH_BUS_W)
+    rt.stack("VSS", CH_VSS_X, NB_VSS_Y, 3, 4)
+    rt.wire("VSS", 4, CH_VSS_X, NB_VSS_Y, NB_X0, NB_VSS_Y, w=CH_BUS_W)
+    rt.stack("VSS", NB_X0, NB_VSS_Y, 3, 4)
+    rt.wire("VSS", 3, NB_X0, NB_VSS_Y, NB_X1, NB_VSS_Y, w=CH_BUS_W)
+
+    placed = {"VDD": 0, "VSS": 0}
+    skipped = []
+    for p in pins:
+        term = p["cell_terminal"]
+        name = p["project_pin"]
+        if term in SIGNAL_TERMS:
+            skipped.append(name)
+            continue
+        net = TIEOFF[term]
+        for r in p["rectangles"]:
+            x0, y0, x1, y1 = [v / 200.0 for v in r["translated_user"]]
+            cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+            # exact rectangles: Router.wire() pads the box by w/2 on BOTH
+            # axes, which would push the 10.25 um supply pins to x=-5.12
+            # and the north pins past y=1110, outside the slot.
+            if x0 < 1.0:                      # west edge pin
+                h = y1 - y0
+                bx = CH_VSS_X if net == "VSS" else CH_VDD_X
+                rt._add(net, 2, box(x0, y0, x1, y1))          # the pin
+                rt._add(net, 2, box(x1, cy - h / 2.0,         # stub east
+                                    bx + VIA_PAD / 2.0, cy + h / 2.0))
+                rt.via(net, 2, bx, cy)
+            else:                             # north edge pin
+                w = x1 - x0
+                by = NB_VSS_Y if net == "VSS" else NB_VDD_Y
+                rt._add(net, 2, box(x0, y0, x1, y1))          # the pin
+                rt._add(net, 2, box(cx - w / 2.0, by - VIA_PAD / 2.0,
+                                    cx + w / 2.0, y0))        # stub south
+                rt.via(net, 2, cx, by)
+            rt.label(name, cx, cy, ld=M2LBL)
+            placed[net] += 1
+    print("  BV pins: tied %d to VDD, %d to VSS; %d signal pins deferred"
+          % (placed["VDD"], placed["VSS"], len(skipped)))
 
 
 def build_taps(rt):
