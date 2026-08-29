@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 INT-8 / Gate 5: assemble the full ADC chip block (topcell adc_top) for
-padring slot B (558.75 x 1117.5 um) from the four proven sub-blocks:
+padring slot BV (550 x 1110 um) from the four proven sub-blocks:
 
   dac/layout/dac_top_floorplan.gds   (dac_top_floorplan, 443.0 x 270.2, M1..M5)
   comparator/layout/strongarm.gds    (strongarm, 83.25 x 49.63, M1/M2 only, dbu=0.005!)
@@ -79,7 +79,14 @@ DAC_DX, DAC_DY = 390.0, 416.87
 CMP_DX, CMP_DY = 460.0, 215.13
 GLUE_DX, GLUE_DY = 339.3, 219.0
 
-SLOT_W, SLOT_H = 558.75, 1117.5
+# Padframe variant BV, from adc_top/padframe_defs/BV/A13_BV.def:
+# DIEAREA (0 0) (110000 222000) at 200 dbu/um. The 0/0 boundary must equal
+# this exactly -- the gds audit rejects a boundary sized to our drawn
+# extent ("one bounding box on layer 0/0 that matches a defined block
+# size"). BH (1110 x 550) is the other offered variant, but our drawn
+# height is 549.7 and reaches y=550.2, so it would not fit BH without
+# moving every block down.
+SLOT_W, SLOT_H = 550.0, 1110.0
 
 # SAR fold port column (local fold coords from sar_folded.gds labels)
 SAR_PORTS_LOCAL = {
@@ -325,19 +332,33 @@ def main():
     build_routes(rt)
     build_taps(rt)
     run_checks(rt, block_regions)
+
+    # Project boundary on 0/0 = the full BV slot, not our drawn extent.
+    # Inserted BEFORE build_fill so the density fill grid covers the whole
+    # slot: density.drc sums drawn + dt-4 fill over the die area, and the
+    # empty region above the blocks would otherwise sit at 0% metal.
+    drawn = top.bbox()
+    assert 0 <= drawn.left * DBU and 0 <= drawn.bottom * DBU \
+        and drawn.right * DBU <= SLOT_W and drawn.top * DBU <= SLOT_H, \
+        "drawn extent (%.2f,%.2f)..(%.2f,%.2f) exceeds slot BV %gx%g" % (
+            drawn.left * DBU, drawn.bottom * DBU,
+            drawn.right * DBU, drawn.top * DBU, SLOT_W, SLOT_H)
+    top.shapes(layout.layer(0, 0)).insert(
+        db.Box(0, 0, um(SLOT_W), um(SLOT_H)))
+
     build_fill(layout, top)
 
     b = top.bbox()
-    # project boundary on 0/0 (padframe spec 2026-08-20): defines our size
-    top.shapes(layout.layer(0, 0)).insert(b)
     opts = db.SaveLayoutOptions()
     opts.write_context_info = False
     out = "/foss/designs/adc_top/layout/adc_chip_top.gds"
     layout.write(out, opts)
-    print("wrote %s topcell=adc_top bbox=(%.2f,%.2f)..(%.2f,%.2f)" % (
-        out, b.left * DBU, b.bottom * DBU, b.right * DBU, b.top * DBU))
-    assert b.right * DBU <= SLOT_W and b.top * DBU <= SLOT_H \
-        and b.left * DBU >= 0 and b.bottom * DBU >= 0, "exceeds slot B"
+    print("wrote %s topcell=adc_top" % out)
+    print("  drawn extent (%.2f,%.2f)..(%.2f,%.2f)" % (
+        drawn.left * DBU, drawn.bottom * DBU,
+        drawn.right * DBU, drawn.top * DBU))
+    print("  0/0 boundary 0,0..%.2f,%.2f   overall bbox %.2f x %.2f" % (
+        SLOT_W, SLOT_H, b.width() * DBU, b.height() * DBU))
 
 
 def build_routes(rt):

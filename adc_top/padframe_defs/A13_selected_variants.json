@@ -1,0 +1,94 @@
+{
+  "project_size": {
+    "source_gds": "/Users/kanobailey/chipathon/2026/gds/A13/adc_chip_top.gds",
+    "top_cell": "adc_top",
+    "layer": 0,
+    "datatype": 0,
+    "layout_dbu_microns": 0.001,
+    "rectangle_dbu": [
+      30000,
+      500,
+      544250,
+      550200
+    ],
+    "width_microns": "514.25",
+    "height_microns": "549.7",
+    "top_cell_text": [
+      {
+        "text": "CLK",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "RST_N",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "EOC_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_0_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_1_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_2_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_3_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_4_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_5_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_6_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "BIT_7_OUT",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "VSS",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "VDD",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "VIN",
+        "layer": 81,
+        "datatype": 10
+      }
+    ]
+  },
+  "participant_pin_count": 14,
+  "selected_variants": [
+    "BV",
+    "BH"
+  ]
+}
