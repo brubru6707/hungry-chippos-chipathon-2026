@@ -333,6 +333,7 @@ def main():
     build_taps(rt)
     build_bv_pins(rt)
     build_signal_pins(rt)
+    build_antenna_diode(rt)
     run_checks(rt, block_regions)
 
     # Project boundary on 0/0 = the full BV slot, not our drawn extent.
@@ -349,6 +350,7 @@ def main():
         db.Box(0, 0, um(SLOT_W), um(SLOT_H)))
 
     build_fill(layout, top)
+    check_metal2_blockages(layout, top)
 
     b = top.bbox()
     opts = db.SaveLayoutOptions()
@@ -937,6 +939,127 @@ def build_taps(rt):
         rt.stack("VSS", x, y, 1, 5)
 
 
+# ---------------------------------------------------------------- #
+# VIN antenna diode
+#
+# ANT.16_i_ANT.7 caps perimeter(Metaltop) * 1.19 / (gate_area +
+# 2 * diode_area) at 400. VIN reaches a 0.56 um^2 thin gate, so with no
+# diode area the whole net gets a 188 um Metaltop budget. It cannot fit:
+# the pre-existing south pad column inside the comparator is 394 um of
+# M5 perimeter on its own (ratio 838, the violation that predates the
+# BV pin work), and the pin routing added the 1083 um west traverse on
+# top, taking it to 3093 um / ratio 6573.
+#
+# Layer rotation -- the trick climb() uses for the BIT columns -- cannot
+# help here. The antenna deck builds connectivity progressively, so a
+# rotation splits a net at the M1..M4 steps, but by the Metaltop step
+# every lower layer is already connected and the rule sees the whole
+# net's M5 at once. A 1080 um traverse has >2100 um of perimeter no
+# matter how it is sliced.
+#
+# So the net needs diode area, which is the textbook fix anyway for a
+# long global net off a pad. 10.4 um^2 of N+ in the p-substrate puts the
+# ratio at 172, a 2.3x margin. It is drawn without diode_mk on purpose:
+# the LVS deck derives diode_nd2ps_* as ncomp.and(diode_mk), so an
+# unmarked N+ tap adds no device to the extracted netlist and the
+# reference netlist stays at its 14 ports.
+DIODE_X, DIODE_Y = 11.0, 726.0    # empty north region; no diffusion
+DIODE_W, DIODE_H = 4.0, 2.6       # exists anywhere above y = 547
+DIODE_TIE_X = 2.0                 # the VIN M5 column
+DIODE_TIE_Y = 727.3               # clear of the west M2 pins at y ~710
+NP_ENC = 0.23                     # NPLUS overlap of COMP
+CONT = 0.22                       # GF180 contact is exactly 0.22 square
+CONT_PITCH = 0.6                  # 0.38 space, vs 0.25 min
+CONT_ENC = 0.13                   # COMP overlap of contact, as in build_taps
+
+
+def build_antenna_diode(rt):
+    """N+ / p-substrate diode on VIN, reverse-biased in operation.
+
+    ~10 fF and picoamps of junction leakage at 125 C against a 12.9 mV
+    LSB -- below the noise floor of every measurement in the campaign.
+    """
+    layout = rt.layout
+    x0, y0 = DIODE_X, DIODE_Y
+    x1, y1 = x0 + DIODE_W, y0 + DIODE_H
+    rt.top.shapes(layout.layer(22, 0)).insert(box(x0, y0, x1, y1))
+    rt.top.shapes(layout.layer(32, 0)).insert(
+        box(x0 - NP_ENC, y0 - NP_ENC, x1 + NP_ENC, y1 + NP_ENC))
+
+    li_cont = layout.layer(33, 0)
+    n = 0
+    cx = x0 + CONT_ENC
+    while cx + CONT <= x1 - CONT_ENC + 1e-9:
+        cy = y0 + CONT_ENC
+        while cy + CONT <= y1 - CONT_ENC + 1e-9:
+            rt.top.shapes(li_cont).insert(box(cx, cy, cx + CONT, cy + CONT))
+            n += 1
+            cy += CONT_PITCH
+        cx += CONT_PITCH
+
+    # M1 plate over the diffusion, strapped west to the VIN M5 column.
+    # The diode only has to be on the net by the Metaltop step, which is
+    # where the rule bites, so it ties in at the top of the stack.
+    rt._add("VIN", 1, box(x0, y0, x1, y1))
+    rt._add("VIN", 1, box(DIODE_TIE_X - 0.25, DIODE_TIE_Y - 0.25,
+                          x0, DIODE_TIE_Y + 0.25))
+    rt.stack("VIN", DIODE_TIE_X, DIODE_TIE_Y, 1, 5)
+    print("  VIN antenna diode: %.2f um^2 N+, %d contacts" % (
+        DIODE_W * DIODE_H, n))
+
+
+# The organizers added Metal2 keep-outs at the block corners on 2026-08-31,
+# after finding possible shorts between the I/O cells of non-A blocks. BV is
+# a non-A block, so the rectangle is binding on us. It is read straight out
+# of the interface YAML rather than transcribed, the same way the pin
+# rectangles are.
+BLOCKAGE_GUARD = 1.0    # extra clearance for the dummy fill grid
+
+
+def bv_metal2_blockages():
+    """[(x0, y0, x1, y1)] in um, from the interface YAML (200 dbu/um)."""
+    import yaml
+    with open(BV_IFACE) as f:
+        spec = yaml.safe_load(f)
+    return [tuple(v / 200.0 for v in r)
+            for r in spec.get("metal2_blockages", [])]
+
+
+def check_metal2_blockages(layout, top):
+    """No Metal2 of any datatype inside a corner keep-out. Runs after
+    build_fill, because the fill grid is the thing most likely to drift
+    into one -- it is placed on a die-relative pitch, not by net."""
+    fails = []
+    for x0, y0, x1, y1 in bv_metal2_blockages():
+        win = db.Region(box(x0, y0, x1, y1))
+        for l, d, nm in [(36, 0, "drawn"), (36, 4, "fill")]:
+            r = db.Region(top.begin_shapes_rec(layout.layer(l, d)))
+            hit = r & win
+            if not hit.is_empty():
+                bb = hit.bbox()
+                fails.append("Metal2 %s in blockage (%.2f,%.2f)-(%.2f,%.2f)"
+                             " at (%.2f,%.2f)" % (
+                                 nm, x0, y0, x1, y1,
+                                 bb.left * DBU, bb.bottom * DBU))
+        it = top.begin_shapes_rec(layout.layer(36, 10))
+        while not it.at_end():
+            sh = it.shape()
+            if sh.is_text():
+                t = sh.text.transformed(it.trans())
+                tx, ty = t.x * DBU, t.y * DBU
+                if x0 <= tx <= x1 and y0 <= ty <= y1:
+                    fails.append("Metal2 text %r in blockage at (%.2f,%.2f)"
+                                 % (sh.text.string, tx, ty))
+            it.next()
+    if fails:
+        print("METAL2 BLOCKAGE FAILURES (%d):" % len(fails))
+        for f in fails:
+            print("  ", f)
+        sys.exit(1)
+    n = len(bv_metal2_blockages())
+    print("  Metal2 corner blockages: %d checked, all clear" % n)
+
+
 FILL_SIZE = 3.0
 FILL_PITCH = 3.8
 FILL_MARGIN = 1.0
@@ -956,6 +1079,10 @@ def build_fill(layout, top):
                            b.right - um(1.0), b.top - um(1.0)))
     dac_bbox = db.Region(box(DAC_DX - 312.0, DAC_DY - 139.0,
                              DAC_DX + 135.0, DAC_DY + 135.5))
+    m2_blk = db.Region()
+    for x0, y0, x1, y1 in bv_metal2_blockages():
+        m2_blk.insert(box(x0 - BLOCKAGE_GUARD, y0 - BLOCKAGE_GUARD,
+                          x1 + BLOCKAGE_GUARD, y1 + BLOCKAGE_GUARD))
 
     def reg(l, d):
         r = db.Region(top.begin_shapes_rec(layout.layer(l, d)))
@@ -972,7 +1099,7 @@ def build_fill(layout, top):
          + poly.sized(um(1.0)), None, FILL_PITCH),
         ((30, 4), poly.sized(um(1.0)) + comp.sized(um(1.0)), None, FILL_PITCH),
         ((34, 4), reg(34, 0).sized(um(FILL_MARGIN)), None, FILL_PITCH),
-        ((36, 4), reg(36, 0).sized(um(FILL_MARGIN)), dac_bbox, 3.5),
+        ((36, 4), reg(36, 0).sized(um(FILL_MARGIN)), dac_bbox + m2_blk, 3.5),
         ((42, 4), reg(42, 0).sized(um(FILL_MARGIN)), dac_bbox, 3.5),
         ((46, 4), reg(46, 0).sized(um(FILL_MARGIN)), dac_bbox, FILL_PITCH),
         ((81, 4), reg(81, 0).sized(um(FILL_MARGIN)), dac_bbox, FILL_PITCH),
