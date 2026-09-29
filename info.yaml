@@ -17,6 +17,10 @@ project:
   discord: ""
   description: "8-bit SAR ADC, 833 kS/s @ 10 MHz CLK, GF180MCU (gf180mcuD variant D)"
   lvs_config: "lvs_config.json"
+  gf_def_ready: true            # BV slot on the GF pad frame: 116/116 pin rects, audit green
+  ws_def_ready: false           # wafer.space pad frame not attempted yet
+  drc_ready: true               # adc_chip_top: DRC main + density + antenna clean
+  lvs_ready: true               # adc_top: LVS "Netlists match", 862 devices
 
 # Pin names match top-level layout text exactly. The BV interface pins
 # carry their labels on Metal2 text (36/10, matching the Metal2 pin
