@@ -21,6 +21,7 @@ project:
   ws_def_ready: false           # wafer.space pad frame not attempted yet
   drc_ready: true               # adc_chip_top: DRC main + density + antenna clean
   lvs_ready: true               # adc_top: LVS "Netlists match", 862 devices
+  export_control: "docs/Export_Control_GF_Rev8.2_A13.docx"   # Brown University; awaiting signature from Brown's export control officer
 
 # Pin names match top-level layout text exactly. The BV interface pins
 # carry their labels on Metal2 text (36/10, matching the Metal2 pin
