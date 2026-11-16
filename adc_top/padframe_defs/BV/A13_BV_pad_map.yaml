@@ -1,11 +1,11 @@
 spec_blob_sha: 7398a4da36e4d6ad9f9b76c06813b073c9c0ed2f
-source_info: info/A13_info.yaml
+source_info: data/A13/info.yaml
 source_template: /Users/kanobailey/chipathon/2026/padring/chipathon2026-system/padring_template.cfg
 block: BV
 team_code: A13_BV
 design_name: A13_BV_padring
 pin_count: 14
-user_slot_count: 16
+user_slot_count: 17
 pads:
 - pin_index: 0
   pin_name: VSS
@@ -98,6 +98,10 @@ pads:
   cell: gf180mcu_fd_io__asig_5p0
 - slot: N05
   instance: N05
+  generated: true
+  cell: gf180mcu_fd_io__asig_5p0
+- slot: N06
+  instance: N06
   generated: true
   cell: gf180mcu_fd_io__asig_5p0
 breaks:

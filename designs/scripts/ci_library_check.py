@@ -39,9 +39,10 @@ def check_gds():
         ("adc_top/layout/adc_glue.gds", "adc_glue", 42.54, 17.66),
         # the chip top is padded out to the full BV padframe slot; its
         # 0/0 boundary IS the DIEAREA from padframe_defs/BV/A13_BV.def,
-        # so the bbox is the slot, not the drawn extent (30.00,0.50)..
-        # (544.25,550.20). The gds audit rejects any other size.
-        ("adc_top/layout/adc_chip_top.gds", "adc_top", 550.0, 1110.0),
+        # (605 x 1110 since the 2026-11-06 DEF rev), so the bbox is the slot,
+        # not the drawn extent (0.00,0.50)..(544.25,1110.00).
+        # The gds audit rejects any other size.
+        ("adc_top/layout/adc_chip_top.gds", "adc_top", 605.0, 1110.0),
     ]
     for path, topname, w, h in specs:
         try:

@@ -1,5 +1,12 @@
 # A13 padframe DEFs (rev received 2026-08-28)
 
+> **Update 2026-11-06 (Mitch, issue #18, `A13.def.tgz`, BV only):** BV DIEAREA is now
+> `(0 0) (121000 222000)` = **605 × 1110 µm** (was 550 × 1110). All 99 BV pin
+> rectangles are unchanged, and the Metal2 corner blockage is gone
+> (`metal2_blockages: []`). The `BV/` files and `A13_selected_variants.json` here are
+> from that revision. `BH/` was not reissued and is stale. The tables below
+> describe the original 2026-08-28 revision.
+
 Authoritative block spec from the Chipathon padframe generator, extracted from
 `A13.def (2).tgz`. Two variants were generated for us; `A13_selected_variants.json`
 lists both `BV` and `BH`, so we choose one.

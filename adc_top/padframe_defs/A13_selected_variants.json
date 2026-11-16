@@ -1,18 +1,35 @@
 {
   "project_size": {
-    "source_gds": "/Users/kanobailey/chipathon/2026/gds/A13/adc_chip_top.gds",
+    "source_gds": "/Users/kanobailey/chipathon/2026/data/A13/adc_top/layout/adc_chip_top.gds",
     "top_cell": "adc_top",
-    "layer": 0,
-    "datatype": 0,
+    "block_type": "analog",
     "layout_dbu_microns": 0.001,
-    "rectangle_dbu": [
+    "physical_bbox_dbu": [
+      11000,
+      41110,
+      542240,
+      728600
+    ],
+    "physical_bbox_microns": [
+      "11",
+      "41.11",
+      "542.24",
+      "728.6"
+    ],
+    "prboundary_dbu": [
       0,
       0,
       550000,
       1110000
     ],
-    "width_microns": "550",
-    "height_microns": "1110",
+    "prboundary_microns": [
+      "0",
+      "0",
+      "550",
+      "1110"
+    ],
+    "width_microns": "531.24",
+    "height_microns": "687.49",
     "top_cell_text": [
       {
         "text": "BIT_6_CS",

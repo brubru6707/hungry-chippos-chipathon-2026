@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 INT-8 / Gate 5: assemble the full ADC chip block (topcell adc_top) for
-padring slot BV (550 x 1110 um) from the four proven sub-blocks:
+padring slot BV (605 x 1110 um) from the four proven sub-blocks:
 
   dac/layout/dac_top_floorplan.gds   (dac_top_floorplan, 443.0 x 270.2, M1..M5)
   comparator/layout/strongarm.gds    (strongarm, 83.25 x 49.63, M1/M2 only, dbu=0.005!)
@@ -80,13 +80,14 @@ CMP_DX, CMP_DY = 460.0, 215.13
 GLUE_DX, GLUE_DY = 339.3, 219.0
 
 # Padframe variant BV, from adc_top/padframe_defs/BV/A13_BV.def:
-# DIEAREA (0 0) (110000 222000) at 200 dbu/um. The 0/0 boundary must equal
+# DIEAREA (0 0) (121000 222000) at 200 dbu/um (rev 2026-11-06 widened BV
+# from 550 to 605 um; pins and height unchanged). The 0/0 boundary must equal
 # this exactly -- the gds audit rejects a boundary sized to our drawn
 # extent ("one bounding box on layer 0/0 that matches a defined block
 # size"). BH (1110 x 550) is the other offered variant, but our drawn
 # height is 549.7 and reaches y=550.2, so it would not fit BH without
 # moving every block down.
-SLOT_W, SLOT_H = 550.0, 1110.0
+SLOT_W, SLOT_H = 605.0, 1110.0
 
 # SAR fold port column (local fold coords from sar_folded.gds labels)
 SAR_PORTS_LOCAL = {
